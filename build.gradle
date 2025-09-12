@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'net.portswigger.burp.extensions:montoya-api:2025.8'
+}
+
+// Fat jar. Bundles everything into one self contained jar.
+jar {
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
