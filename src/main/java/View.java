@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import burp.api.montoya.MontoyaApi;
 
@@ -19,6 +20,7 @@ public class View {
         tabbedPane.addTab("Error Detection", createErrorDetectionPanel());
         tabbedPane.addTab("Corrective Calls", createCorrectiveCallsPanel());
         tabbedPane.addTab("Followup Call", createFollwupPanel());
+        tabbedPane.addTab("Test Calls", createTestCallsPanel());
         tabbedPane.addTab("Settings", createSettingsPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.NORTH);
@@ -45,27 +47,39 @@ public class View {
         return panel;
     }
 
-    private JPanel createSettingsPanel() {
+    private JPanel createTestCallsPanel() {
         JPanel panel = new JPanel();
-        panel.add(createToolSelectorPanel(), BorderLayout.NORTH);
+        panel.add(new JLabel("Test Calls"));
         return panel;
+    }
 
+    private JPanel createSettingsPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT)); // Aligns entire settings menu left
+        JLabel panelHeader = new JLabel("Scope");
+        panel.add(panelHeader);
+        panel.add(createToolSelectorPanel());
+        return panel;
     }
 
     private JPanel createToolSelectorPanel() {
-        JPanel outerPanel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel();
+        JPanel checkBoxGrid = new JPanel(new GridLayout(2,7));
 
-        JPanel contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        checkBoxGrid.add(new JCheckBox("Repeater", true));
+        checkBoxGrid.add(new JCheckBox("Intruder", true));
+        checkBoxGrid.add(new JCheckBox("Burp AI", false));
+        checkBoxGrid.add(new JCheckBox("Comparer", false));
+        checkBoxGrid.add(new JCheckBox("Decoder", false));
+        checkBoxGrid.add(new JCheckBox("Extensions", false));
+        checkBoxGrid.add(new JCheckBox("Logger", false));
+        checkBoxGrid.add(new JCheckBox("Organizer", false));
+        checkBoxGrid.add(new JCheckBox("Proxy", false));
+        checkBoxGrid.add(new JCheckBox("Scanner", false));
+        checkBoxGrid.add(new JCheckBox("Sequencer", false));
+        checkBoxGrid.add(new JCheckBox("Suite", false));
+        checkBoxGrid.add(new JCheckBox("Target", false));
 
-        // Add your checkboxes
-        contentPanel.add(new JCheckBox("Repeater", true));
-        contentPanel.add(new JCheckBox("Intruder", true));
-        // etc...
-
-        // Add to WEST (left) or use LINE_START
-        outerPanel.add(contentPanel, BorderLayout.WEST);
-
-        return outerPanel;
+        panel.add(checkBoxGrid);
+        return panel;
     }
 }

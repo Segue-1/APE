@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/Extension.java" afterDir="false" />
+    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Model.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Model.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/View.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -48,6 +45,9 @@
     &quot;accountId&quot;: &quot;a8508e60-3bc3-46de-b391-bed84cbfb691&quot;
   }
 }</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 7
@@ -85,11 +85,20 @@
       <option name="project" value="LOCAL" />
       <updated>1758476881254</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons.">
+      <option name="closed" value="true" />
+      <created>1758487393946</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1758487393946</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="workspace.xml made changes to itself randomly." />
-    <option name="LAST_COMMIT_MESSAGE" value="workspace.xml made changes to itself randomly." />
+    <MESSAGE value="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons." />
   </component>
 </project>
