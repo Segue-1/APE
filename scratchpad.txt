@@ -1,0 +1,18 @@
+Example of JPanel hierarchy, how to get individual components of UI. It becomes a bit confusing since every single panel
+has a parent / child relationship. This snipped can be copy pasted into controller.getToolType
+
+// view.mainPanel is the root panel "API Processing Engine"
+// getComponent(0) will get the first child of a panel
+// mainPanel > tabbedPane > panel returned from method calls in tabbedPane
+JTabbedPane zero = (JTabbedPane) view.mainPanel.getComponent(0); // tabbedPane
+montoyaApi.logging().logToOutput(zero.getTitleAt(0)); // Error Detection
+montoyaApi.logging().logToOutput(zero.getTitleAt(1)); // Corrective Calls
+montoyaApi.logging().logToOutput(zero.getTitleAt(2)); // Followup Call
+montoyaApi.logging().logToOutput(zero.getTitleAt(3)); // Test Calls
+montoyaApi.logging().logToOutput(zero.getTitleAt(4)); // Settings
+JPanel one = (JPanel) zero.getComponent(4); // gets the panel returned from createSettingsPanel()
+//JLabel two = (JLabel) one.getComponent(0); // Scope (first child of panel returned from createSettingsPanel())
+JPanel two = (JPanel) one.getComponent(1); // Gets panel returned from createToolSelectorPanel()
+JPanel three = (JPanel) two.getComponent(0); // checkBoxGrid. panel from createToolSelectorPanel() has this as its first child.
+JCheckBox four = (JCheckBox) three.getComponent(0); // JCheckBox which are the children of checkBoxGrid.
+montoyaApi.logging().logToOutput(four.getText()); // Repeater

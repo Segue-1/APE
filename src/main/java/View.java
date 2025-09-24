@@ -1,11 +1,11 @@
 import javax.swing.*;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 import burp.api.montoya.MontoyaApi;
 
 public class View {
     private MontoyaApi montoyaApi;
-    private JPanel mainPanel;
+    public JPanel mainPanel;
+
 
     public View(MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
@@ -16,7 +16,6 @@ public class View {
         mainPanel = new JPanel(new BorderLayout());
 
         JTabbedPane tabbedPane = new JTabbedPane();
-
         tabbedPane.addTab("Error Detection", createErrorDetectionPanel());
         tabbedPane.addTab("Corrective Calls", createCorrectiveCallsPanel());
         tabbedPane.addTab("Followup Call", createFollwupPanel());

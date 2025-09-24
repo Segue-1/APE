@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons.">
+    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Improve checkboxes in UI settings">
+      <change afterPath="$PROJECT_DIR$/scratchpad.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Model.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Model.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/View.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -93,12 +96,21 @@
       <option name="project" value="LOCAL" />
       <updated>1758487393946</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Improve checkboxes in UI settings">
+      <option name="closed" value="true" />
+      <created>1758596733970</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1758596733970</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="workspace.xml made changes to itself randomly." />
     <MESSAGE value="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons." />
+    <MESSAGE value="Improve checkboxes in UI settings" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improve checkboxes in UI settings" />
   </component>
 </project>
