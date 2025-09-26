@@ -7,22 +7,6 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 
 public class Model implements HttpHandler{
     private MontoyaApi montoyaApi;
-    public enum toolType {
-        BURP_AI,
-        COMPARER,
-        DECODER,
-        EXTENSIONS,
-        INTRUDER,
-        LOGGER,
-        ORGANIZER,
-        PROXY,
-        RECORDED_LOGIN_REPLAYER,
-        REPEATER,
-        SCANNER,
-        SEQUENCER,
-        SUITE,
-        TARGET
-    }
 
 
     public Model (MontoyaApi montoyaApi) {

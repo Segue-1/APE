@@ -1,5 +1,5 @@
 Example of JPanel hierarchy, how to get individual components of UI. It becomes a bit confusing since every single panel
-has a parent / child relationship. This snipped can be copy pasted into controller.getToolType
+has a parent / child relationship. This snippet can be copy pasted into controller.getToolType
 
 // view.mainPanel is the root panel "API Processing Engine"
 // getComponent(0) will get the first child of a panel

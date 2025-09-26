@@ -54,8 +54,8 @@ public class View {
 
     private JPanel createSettingsPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT)); // Aligns entire settings menu left
-        JLabel panelHeader = new JLabel("Scope");
-        panel.add(panelHeader);
+        JLabel panelLabel = new JLabel("Scope");
+        panel.add(panelLabel);
         panel.add(createToolSelectorPanel());
         return panel;
     }
