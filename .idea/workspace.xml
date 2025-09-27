@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="start building out controller.getToolType().&#10;Deconstruct UI panel hierarchy, add examples in scratchpad.txt. Skeleton for iterating through checkboxes and building hashmap to track scope state.">
+    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="controller.getToolType() now gets the checkboxes and their state. Removed enum from model.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scratchpad.txt" beforeDir="false" afterPath="$PROJECT_DIR$/scratchpad.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Model.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Model.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/View.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -112,7 +109,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758686514809</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="controller.getToolType() now gets the checkboxes and their state. Removed enum from model.">
+      <option name="closed" value="true" />
+      <created>1758859417191</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1758859417191</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -120,6 +125,7 @@
     <MESSAGE value="Added Extension.java. Restructured model and controller, adding more responsibility to controller. Started UI framework. Started settings buttons." />
     <MESSAGE value="Improve checkboxes in UI settings" />
     <MESSAGE value="start building out controller.getToolType().&#10;Deconstruct UI panel hierarchy, add examples in scratchpad.txt. Skeleton for iterating through checkboxes and building hashmap to track scope state." />
-    <option name="LAST_COMMIT_MESSAGE" value="start building out controller.getToolType().&#10;Deconstruct UI panel hierarchy, add examples in scratchpad.txt. Skeleton for iterating through checkboxes and building hashmap to track scope state." />
+    <MESSAGE value="controller.getToolType() now gets the checkboxes and their state. Removed enum from model." />
+    <option name="LAST_COMMIT_MESSAGE" value="controller.getToolType() now gets the checkboxes and their state. Removed enum from model." />
   </component>
 </project>

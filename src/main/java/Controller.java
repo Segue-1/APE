@@ -1,7 +1,11 @@
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.core.ToolType;
+
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,36 +13,53 @@ public class Controller {
     private MontoyaApi montoyaApi;
     private Model model;
     private View view;
-    
-    public Map<String, Boolean> checkBoxStates;
+
+    // Settings related
+    public EnumSet<ToolType> enabledTools;
 
     public Controller(MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
         model = new Model(montoyaApi);
         view = new View(montoyaApi);
 
-        getToolType();
+        getSettings();
     }
 
     
-    private void getToolType() {
+    private void getSettings() {
+        getScopeCheckBoxStates();
+    }
+    
+    private void getScopeCheckBoxStates () {
 
-        checkBoxStates = new HashMap<>();
-
+        // Gets the parent panel of the checkboxes.
         JPanel checkBoxGrid = ((JPanel) ((JPanel) ((JPanel) ((JTabbedPane) view.mainPanel.
                 getComponent(0)).getComponent(4)).getComponent(1)).getComponent(0));
 
+        // Setup a listener
+        ItemListener scopeCheckBoxListener = e -> {
+            JCheckBox source = (JCheckBox) e.getSource();
+            String checkBoxText = source.getText().toUpperCase();
+            boolean isSelected = source.isSelected();
 
+            montoyaApi.logging().logToOutput("Checkbox: " + checkBoxText + " was clicked on and set to " + isSelected);
+            if (isSelected){
+                enabledTools.add(ToolType.INTRUDER);
+                //montoyaApi.logging().logToOutput(enabledTools);
+            }
+
+        };
+
+        // Attach the listener to each checkbox
         for (Component c : checkBoxGrid.getComponents()) {
             JCheckBox cb = (JCheckBox) c;
-            montoyaApi.logging().logToOutput(cb.getText() + " " + cb.isSelected());
-            checkBoxStates.put(cb.getText(), cb.isSelected());
+            cb.addItemListener(scopeCheckBoxListener);
         }
 
-        montoyaApi.logging().logToOutput("Hashmap check");
-        montoyaApi.logging().logToOutput(checkBoxStates);
-
-        // find out how to iterate through stupid fing hashmap
-        //checkBoxStates.forEach
+        /*
+        for (Map.Entry<String, Boolean> entry : scopeCheckBoxStates.entrySet()){
+            montoyaApi.logging().logToOutput(entry);
+        }
+        */
     }
 }
