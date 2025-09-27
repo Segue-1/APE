@@ -38,7 +38,7 @@ public class Controller {
         // Set up a listener which will track checkbox state in enabledTools
         ItemListener scopeCheckBoxListener = e -> {
             JCheckBox source = (JCheckBox) e.getSource();
-            ToolType toolType = (ToolType) source.getClientProperty(source.getText());
+            ToolType toolType = (ToolType) source.getClientProperty("ToolType");
 
             if (source.isSelected()) {
                 enabledTools.add(toolType);
@@ -54,7 +54,7 @@ public class Controller {
             checkBox.addItemListener(scopeCheckBoxListener);
 
             if (checkBox.isSelected()) {
-                ToolType toolType = (ToolType) checkBox.getClientProperty(checkBox.getText());
+                ToolType toolType = (ToolType) checkBox.getClientProperty("ToolType");
                 enabledTools.add(toolType);
                 model.updateEnabledTools(enabledTools);
             }

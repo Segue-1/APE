@@ -66,16 +66,16 @@ public class View {
         JPanel checkBoxGrid = new JPanel(new GridLayout(2,7));
 
         // Creates a checkbox for each possible ToolType in burp and
-        // associates a ToolType with each checkbox.
+        // associates a ToolType with each checkbox. Adds them to checkBoxGrid.
         JCheckBox checkBox;
         for (ToolType toolType : ToolType.values()){
             if (toolType.toolName().equals("Repeater") || toolType.toolName().equals("Intruder")){
                 checkBox = new JCheckBox(toolType.toolName(), true);
-                checkBox.putClientProperty(toolType.toolName(), toolType);
+                checkBox.putClientProperty("ToolType", toolType);
             }
             else {
                 checkBox = new JCheckBox(toolType.toolName(), false);
-                checkBox.putClientProperty(toolType.toolName(), toolType);
+                checkBox.putClientProperty("ToolType", toolType);
             }
             checkBoxGrid.add(checkBox);
         }

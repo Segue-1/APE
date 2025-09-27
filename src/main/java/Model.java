@@ -37,14 +37,13 @@ public class Model implements HttpHandler{
         return RequestToBeSentAction.continueWith(request);
     }
 
-    // Method comes from HttpHandler interface, does nothing.
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
         return null;
     }
 
     // Allows controller to update model's enabledTools
-    public void updateEnabledTools(EnumSet<ToolType> tools) {
-        this.enabledTools = EnumSet.copyOf(tools);
+    public void updateEnabledTools(EnumSet<ToolType> enabledTools) {
+        this.enabledTools = EnumSet.copyOf(enabledTools);
     }
 }
