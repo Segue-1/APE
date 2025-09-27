@@ -2,18 +2,23 @@ import javax.swing.*;
 import java.awt.*;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
+import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
+import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
+import java.util.List;
 
 public class View {
     private MontoyaApi montoyaApi;
     public JPanel mainPanel;
+    public ContextMenuItemsProvider contextMenuProvider;
 
 
     public View(MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
-        initializeUI();
+        initMainPanel();
+        initContextMenus();
     }
 
-    private void initializeUI() {
+    private void initMainPanel() {
         mainPanel = new JPanel(new BorderLayout());
 
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -25,13 +30,18 @@ public class View {
 
         mainPanel.add(tabbedPane, BorderLayout.NORTH);
 
-        // Register mainPanel with montoyaApi
         montoyaApi.userInterface().registerSuiteTab("API Processing Engine", mainPanel);
     }
 
     private JPanel createErrorDetectionPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Error Detection"));
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JTextArea requestDisplay = new JTextArea(20,50);
+        JTextArea responseDisplay = new JTextArea(20, 50);
+
+        panel.add(new JScrollPane(requestDisplay), BorderLayout.NORTH);
+        panel.add(new JScrollPane(responseDisplay), BorderLayout.SOUTH);
+
         return panel;
     }
 
@@ -65,7 +75,7 @@ public class View {
         JPanel panel = new JPanel();
         JPanel checkBoxGrid = new JPanel(new GridLayout(2,7));
 
-        // Creates a checkbox for each possible ToolType in burp and
+        // Creates a checkbox for each ToolType in burp and
         // associates a ToolType with each checkbox. Adds them to checkBoxGrid.
         JCheckBox checkBox;
         for (ToolType toolType : ToolType.values()){
@@ -82,5 +92,19 @@ public class View {
 
         panel.add(checkBoxGrid);
         return panel;
+    }
+
+    private void initContextMenus() {
+        contextMenuProvider = new ContextMenuItemsProvider() {
+            @Override
+            public List<Component> provideMenuItems(ContextMenuEvent event) {
+
+                JMenuItem sendToErrorDetection = new JMenuItem("Send to Error Detection");
+                JMenuItem sendToCorrectiveCalls = new JMenuItem("Send to Corrective Calls");
+
+                return List.of(sendToErrorDetection, sendToCorrectiveCalls);
+            }
+        };
+        montoyaApi.userInterface().registerContextMenuItemsProvider(contextMenuProvider);
     }
 }

@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="THIS IS A SOLID BASE FOR DEVELOPING OTHER BURP EXTENSIONS.&#10;&#10;Associated each checkbox with a ToolType, setup data structure to track checkbox state in model and controller. Added helper function in model to update this data structure.">
+    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controller.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Model.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Model.java" afterDir="false" />
@@ -135,7 +135,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759004754423</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object.">
+      <option name="closed" value="true" />
+      <created>1759008474274</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1759008474274</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -146,6 +154,7 @@
     <MESSAGE value="controller.getToolType() now gets the checkboxes and their state. Removed enum from model." />
     <MESSAGE value="Restructured / refactored controller. Added event listenerfor check boxes." />
     <MESSAGE value="THIS IS A SOLID BASE FOR DEVELOPING OTHER BURP EXTENSIONS.&#10;&#10;Associated each checkbox with a ToolType, setup data structure to track checkbox state in model and controller. Added helper function in model to update this data structure." />
-    <option name="LAST_COMMIT_MESSAGE" value="THIS IS A SOLID BASE FOR DEVELOPING OTHER BURP EXTENSIONS.&#10;&#10;Associated each checkbox with a ToolType, setup data structure to track checkbox state in model and controller. Added helper function in model to update this data structure." />
+    <MESSAGE value="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object." />
+    <option name="LAST_COMMIT_MESSAGE" value="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object." />
   </component>
 </project>

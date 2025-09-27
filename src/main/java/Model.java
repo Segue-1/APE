@@ -27,7 +27,6 @@ public class Model implements HttpHandler{
         // This determines which tool (Repeater, Intruder, etc.) a request came from.
         ToolType toolType = requestToBeSent.toolSource().toolType();
 
-
         if (!enabledTools.contains(toolType)) {
             return null;
         }

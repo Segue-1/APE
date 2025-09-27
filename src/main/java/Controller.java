@@ -1,6 +1,8 @@
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
+import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
+import javax.naming.Context;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemListener;
@@ -14,16 +16,17 @@ public class Controller {
 
     public EnumSet<ToolType> enabledTools;
 
-    public Controller(MontoyaApi montoyaApi){
+    public Controller (MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
         model = new Model(montoyaApi);
         view = new View(montoyaApi);
 
-        getSettings();
+        initSettingsPanel();
+        initErrorDetectionPanel();
     }
 
     
-    private void getSettings() {
+    private void initSettingsPanel() {
         getScopeCheckBoxStates();
     }
     
@@ -59,6 +62,10 @@ public class Controller {
                 model.updateEnabledTools(enabledTools);
             }
         }
+    }
+
+    private void initErrorDetectionPanel() {
+
     }
 
 
