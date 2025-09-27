@@ -4,17 +4,14 @@ import burp.api.montoya.core.ToolType;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
+
 
 public class Controller {
     private MontoyaApi montoyaApi;
     private Model model;
     private View view;
 
-    // Settings related
     public EnumSet<ToolType> enabledTools;
 
     public Controller(MontoyaApi montoyaApi){
@@ -31,35 +28,38 @@ public class Controller {
     }
     
     private void getScopeCheckBoxStates () {
-
-        // Gets the parent panel of the checkboxes.
+        // Get the parent panel of the checkboxes.
         JPanel checkBoxGrid = ((JPanel) ((JPanel) ((JPanel) ((JTabbedPane) view.mainPanel.
                 getComponent(0)).getComponent(4)).getComponent(1)).getComponent(0));
 
-        // Setup a listener
+        // Stores state of checkboxes
+        enabledTools = EnumSet.noneOf(ToolType.class);
+
+        // Set up a listener which will track checkbox state in enabledTools
         ItemListener scopeCheckBoxListener = e -> {
             JCheckBox source = (JCheckBox) e.getSource();
-            String checkBoxText = source.getText().toUpperCase();
-            boolean isSelected = source.isSelected();
+            ToolType toolType = (ToolType) source.getClientProperty(source.getText());
 
-            montoyaApi.logging().logToOutput("Checkbox: " + checkBoxText + " was clicked on and set to " + isSelected);
-            if (isSelected){
-                enabledTools.add(ToolType.INTRUDER);
-                //montoyaApi.logging().logToOutput(enabledTools);
+            if (source.isSelected()) {
+                enabledTools.add(toolType);
+            } else {
+                enabledTools.remove(toolType);
             }
-
+            model.updateEnabledTools(enabledTools);
         };
 
-        // Attach the listener to each checkbox
-        for (Component c : checkBoxGrid.getComponents()) {
-            JCheckBox cb = (JCheckBox) c;
-            cb.addItemListener(scopeCheckBoxListener);
-        }
+        // Attach the listener to each checkbox and store initial state of checkboxes
+        for (Component component : checkBoxGrid.getComponents()) {
+            JCheckBox checkBox = (JCheckBox) component;
+            checkBox.addItemListener(scopeCheckBoxListener);
 
-        /*
-        for (Map.Entry<String, Boolean> entry : scopeCheckBoxStates.entrySet()){
-            montoyaApi.logging().logToOutput(entry);
+            if (checkBox.isSelected()) {
+                ToolType toolType = (ToolType) checkBox.getClientProperty(checkBox.getText());
+                enabledTools.add(toolType);
+                model.updateEnabledTools(enabledTools);
+            }
         }
-        */
     }
+
+
 }

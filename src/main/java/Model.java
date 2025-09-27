@@ -1,13 +1,15 @@
-import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
 import burp.api.montoya.http.handler.*;
 import burp.api.montoya.http.message.requests.HttpRequest;
 
+import java.util.EnumSet;
+
 
 public class Model implements HttpHandler{
     private MontoyaApi montoyaApi;
 
+    public EnumSet<ToolType> enabledTools;
 
     public Model (MontoyaApi montoyaApi) {
         this.montoyaApi = montoyaApi;
@@ -18,14 +20,20 @@ public class Model implements HttpHandler{
         montoyaApi.http().registerHttpHandler(this);
     }
 
-    // HTTP Handler, this is an example that will globally modify all requests being sent with stupid headers.
+    // HTTP Handler which will intercept all traffic generated in burp
     @Override
     public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent requestToBeSent) {
 
-        // An object that can identify what burp tool was used for the request.
+        // This determines which tool (Repeater, Intruder, etc.) a request came from.
         ToolType toolType = requestToBeSent.toolSource().toolType();
 
+
+        if (!enabledTools.contains(toolType)) {
+            return null;
+        }
+
         HttpRequest request = requestToBeSent.withAddedHeader("lol", "lmao");
+
         return RequestToBeSentAction.continueWith(request);
     }
 
@@ -33,5 +41,10 @@ public class Model implements HttpHandler{
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
         return null;
+    }
+
+    // Allows controller to update model's enabledTools
+    public void updateEnabledTools(EnumSet<ToolType> tools) {
+        this.enabledTools = EnumSet.copyOf(tools);
     }
 }

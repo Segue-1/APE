@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.core.ToolType;
 
 public class View {
     private MontoyaApi montoyaApi;
@@ -64,19 +65,20 @@ public class View {
         JPanel panel = new JPanel();
         JPanel checkBoxGrid = new JPanel(new GridLayout(2,7));
 
-        checkBoxGrid.add(new JCheckBox("Repeater", true));
-        checkBoxGrid.add(new JCheckBox("Intruder", true));
-        checkBoxGrid.add(new JCheckBox("Burp AI", false));
-        checkBoxGrid.add(new JCheckBox("Comparer", false));
-        checkBoxGrid.add(new JCheckBox("Decoder", false));
-        checkBoxGrid.add(new JCheckBox("Extensions", false));
-        checkBoxGrid.add(new JCheckBox("Logger", false));
-        checkBoxGrid.add(new JCheckBox("Organizer", false));
-        checkBoxGrid.add(new JCheckBox("Proxy", false));
-        checkBoxGrid.add(new JCheckBox("Scanner", false));
-        checkBoxGrid.add(new JCheckBox("Sequencer", false));
-        checkBoxGrid.add(new JCheckBox("Suite", false));
-        checkBoxGrid.add(new JCheckBox("Target", false));
+        // Creates a checkbox for each possible ToolType in burp and
+        // associates a ToolType with each checkbox.
+        JCheckBox checkBox;
+        for (ToolType toolType : ToolType.values()){
+            if (toolType.toolName().equals("Repeater") || toolType.toolName().equals("Intruder")){
+                checkBox = new JCheckBox(toolType.toolName(), true);
+                checkBox.putClientProperty(toolType.toolName(), toolType);
+            }
+            else {
+                checkBox = new JCheckBox(toolType.toolName(), false);
+                checkBox.putClientProperty(toolType.toolName(), toolType);
+            }
+            checkBoxGrid.add(checkBox);
+        }
 
         panel.add(checkBoxGrid);
         return panel;

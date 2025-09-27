@@ -4,9 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="controller.getToolType() now gets the checkboxes and their state. Removed enum from model.">
+    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Restructured / refactored controller. Added event listenerfor check boxes.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Model.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Model.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/View.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,7 +119,15 @@
       <option name="project" value="LOCAL" />
       <updated>1758859417191</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Restructured / refactored controller. Added event listenerfor check boxes.">
+      <option name="closed" value="true" />
+      <created>1758939497135</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1758939497135</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -126,6 +136,7 @@
     <MESSAGE value="Improve checkboxes in UI settings" />
     <MESSAGE value="start building out controller.getToolType().&#10;Deconstruct UI panel hierarchy, add examples in scratchpad.txt. Skeleton for iterating through checkboxes and building hashmap to track scope state." />
     <MESSAGE value="controller.getToolType() now gets the checkboxes and their state. Removed enum from model." />
-    <option name="LAST_COMMIT_MESSAGE" value="controller.getToolType() now gets the checkboxes and their state. Removed enum from model." />
+    <MESSAGE value="Restructured / refactored controller. Added event listenerfor check boxes." />
+    <option name="LAST_COMMIT_MESSAGE" value="Restructured / refactored controller. Added event listenerfor check boxes." />
   </component>
 </project>
