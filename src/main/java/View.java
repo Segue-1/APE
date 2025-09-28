@@ -6,10 +6,14 @@ import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import java.util.List;
 
-public class View {
+public class View implements ContextMenuItemsProvider {
     private MontoyaApi montoyaApi;
+
+    // Primary GUI panel
     public JPanel mainPanel;
-    public ContextMenuItemsProvider contextMenuProvider;
+    // Context Menus
+    public JMenuItem contextMenuErrorDetection;
+    public JMenuItem contextMenuCorrectiveCalls;
 
 
     public View(MontoyaApi montoyaApi){
@@ -94,17 +98,27 @@ public class View {
         return panel;
     }
 
+    // Loads context menus. Perhaps consider using a nested class or anonymous class
+    // for ContextMenuItemsProvider and pass that only.
     private void initContextMenus() {
-        contextMenuProvider = new ContextMenuItemsProvider() {
-            @Override
-            public List<Component> provideMenuItems(ContextMenuEvent event) {
-
-                JMenuItem sendToErrorDetection = new JMenuItem("Send to Error Detection");
-                JMenuItem sendToCorrectiveCalls = new JMenuItem("Send to Corrective Calls");
-
-                return List.of(sendToErrorDetection, sendToCorrectiveCalls);
-            }
-        };
-        montoyaApi.userInterface().registerContextMenuItemsProvider(contextMenuProvider);
+        montoyaApi.userInterface().registerContextMenuItemsProvider(this);
     }
+
+    // Sets up context menus (right click menu)
+    // This method comes from the ContextMenuItemsProvider interface.
+    // montoya ties the ContextMenuEvent to this method, therefore listeners needed to
+    // be added here to access the event.
+    @Override
+    public List<Component> provideMenuItems(ContextMenuEvent event) {
+        contextMenuErrorDetection = new JMenuItem("Send to Error Detection");
+        /*
+        contextMenuErrorDetection.addActionListener(e -> {
+            if (!event.messageEditorRequestResponse())
+        });
+         */
+        contextMenuCorrectiveCalls = new JMenuItem("Send to Corrective Calls");
+
+        return List.of(contextMenuErrorDetection, contextMenuCorrectiveCalls);
+    }
+
 }

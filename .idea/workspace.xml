@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object.">
+    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Created context menus. Renamed some methods.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Model.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Model.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/View.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -143,7 +142,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759008474274</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Created context menus. Renamed some methods.">
+      <option name="closed" value="true" />
+      <created>1759015352623</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1759015352623</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -155,6 +162,7 @@
     <MESSAGE value="Restructured / refactored controller. Added event listenerfor check boxes." />
     <MESSAGE value="THIS IS A SOLID BASE FOR DEVELOPING OTHER BURP EXTENSIONS.&#10;&#10;Associated each checkbox with a ToolType, setup data structure to track checkbox state in model and controller. Added helper function in model to update this data structure." />
     <MESSAGE value="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object." />
-    <option name="LAST_COMMIT_MESSAGE" value="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object." />
+    <MESSAGE value="Created context menus. Renamed some methods." />
+    <option name="LAST_COMMIT_MESSAGE" value="Created context menus. Renamed some methods." />
   </component>
 </project>

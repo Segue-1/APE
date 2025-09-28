@@ -65,8 +65,6 @@ public class Controller {
     }
 
     private void initErrorDetectionPanel() {
-
+        // TODO
     }
-
-
 }
