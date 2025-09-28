@@ -1,9 +1,13 @@
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
+import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
+import burp.api.montoya.ui.editor.RawEditor;
+
 import java.util.List;
 
 public class View implements ContextMenuItemsProvider {
@@ -14,6 +18,7 @@ public class View implements ContextMenuItemsProvider {
     // Context Menus
     public JMenuItem contextMenuErrorDetection;
     public JMenuItem contextMenuCorrectiveCalls;
+    public HttpRequestResponse reqResp;
 
 
     public View(MontoyaApi montoyaApi){
@@ -40,11 +45,46 @@ public class View implements ContextMenuItemsProvider {
     private JPanel createErrorDetectionPanel() {
         JPanel panel = new JPanel(new BorderLayout());
 
-        JTextArea requestDisplay = new JTextArea(20,50);
-        JTextArea responseDisplay = new JTextArea(20, 50);
+        JPanel editorPanel = new JPanel(new BorderLayout());
+        // Sets up HTTP editors
+        RawEditor requestEditor = montoyaApi.userInterface().createRawEditor();
+        RawEditor responseEditor = montoyaApi.userInterface().createRawEditor();
 
-        panel.add(new JScrollPane(requestDisplay), BorderLayout.NORTH);
-        panel.add(new JScrollPane(responseDisplay), BorderLayout.SOUTH);
+        requestEditor.uiComponent().setPreferredSize(new Dimension(400, 400));
+        responseEditor.uiComponent().setPreferredSize(new Dimension(400, 400));
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(requestEditor.uiComponent());
+        splitPane.setRightComponent(responseEditor.uiComponent());
+        splitPane.setDividerLocation(0.5); // Initial 50/50 split
+        splitPane.setResizeWeight(0.5); // Both sides resize proportionally
+
+        editorPanel.add(splitPane, BorderLayout.EAST);
+        panel.add(editorPanel);
+
+        /*
+        JPanel setErrorConditionPanel = new JPanel(new BorderLayout());
+
+        JLabel testLabel = new JLabel("Test");
+        String[] options = {"Option 1", "Option 2", "Option 3"};
+        JComboBox<String> dropdown = new JComboBox<>(options);
+        JTextField textField = new JTextField();
+        JButton button = new JButton("Submit");
+
+        setErrorConditionPanel.add(testLabel, BorderLayout.NORTH);
+        setErrorConditionPanel.add(dropdown, BorderLayout.EAST);
+        //setErrorConditionPanel.add(textField, BorderLayout.SOUTH);
+        //setErrorConditionPanel.add(button, BorderLayout.EAST);
+
+        panel.add(setErrorConditionPanel, BorderLayout.EAST);
+
+        JPanel listErrorConditions = new JPanel(new BorderLayout());
+        JTextField textField2 = new JTextField();
+
+        listErrorConditions.add(textField2);
+
+        panel.add(listErrorConditions, BorderLayout.WEST);
+         */
 
         return panel;
     }
@@ -111,11 +151,13 @@ public class View implements ContextMenuItemsProvider {
     @Override
     public List<Component> provideMenuItems(ContextMenuEvent event) {
         contextMenuErrorDetection = new JMenuItem("Send to Error Detection");
-        /*
+
         contextMenuErrorDetection.addActionListener(e -> {
-            if (!event.messageEditorRequestResponse())
+            if (!event.messageEditorRequestResponse().isEmpty()){
+                reqResp = event.messageEditorRequestResponse().get().requestResponse();
+            }
         });
-         */
+
         contextMenuCorrectiveCalls = new JMenuItem("Send to Corrective Calls");
 
         return List.of(contextMenuErrorDetection, contextMenuCorrectiveCalls);

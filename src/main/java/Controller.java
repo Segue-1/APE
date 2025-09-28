@@ -1,8 +1,5 @@
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
-import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
-
-import javax.naming.Context;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemListener;
@@ -65,6 +62,6 @@ public class Controller {
     }
 
     private void initErrorDetectionPanel() {
-        // TODO
+        //view.reqResp
     }
 }
