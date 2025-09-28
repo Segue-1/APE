@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Created context menus. Renamed some methods.">
+    <list default="true" id="986b7e94-80df-4523-91f4-e83db8ee6445" name="Changes" comment="Removed anonymous class for ContextMenuItemsProvider, added it as an interface to view and overrode provideMenuItems. Registered context menus with entire view class. Started to build out action listeners for context menus.">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/View.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/View.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -150,7 +149,15 @@
       <option name="project" value="LOCAL" />
       <updated>1759015352623</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Removed anonymous class for ContextMenuItemsProvider, added it as an interface to view and overrode provideMenuItems. Registered context menus with entire view class. Started to build out action listeners for context menus.">
+      <option name="closed" value="true" />
+      <created>1759038514192</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1759038514192</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -163,6 +170,7 @@
     <MESSAGE value="THIS IS A SOLID BASE FOR DEVELOPING OTHER BURP EXTENSIONS.&#10;&#10;Associated each checkbox with a ToolType, setup data structure to track checkbox state in model and controller. Added helper function in model to update this data structure." />
     <MESSAGE value="Cleaned up checkbox client properties. The key being passed was just duplicating the name of the toolType. They key should describe the value which is a ToolType object." />
     <MESSAGE value="Created context menus. Renamed some methods." />
-    <option name="LAST_COMMIT_MESSAGE" value="Created context menus. Renamed some methods." />
+    <MESSAGE value="Removed anonymous class for ContextMenuItemsProvider, added it as an interface to view and overrode provideMenuItems. Registered context menus with entire view class. Started to build out action listeners for context menus." />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed anonymous class for ContextMenuItemsProvider, added it as an interface to view and overrode provideMenuItems. Registered context menus with entire view class. Started to build out action listeners for context menus." />
   </component>
 </project>
