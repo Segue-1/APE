@@ -1,14 +1,12 @@
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
-import burp.api.montoya.ui.editor.RawEditor;
-
+import burp.api.montoya.ui.editor.HttpRequestEditor;
+import burp.api.montoya.ui.editor.HttpResponseEditor;
 import java.util.List;
 
 public class View implements ContextMenuItemsProvider {
@@ -20,9 +18,15 @@ public class View implements ContextMenuItemsProvider {
     public JMenuItem contextMenuErrorDetection;
     public JMenuItem contextMenuCorrectiveCalls;
     public HttpRequestResponse reqResp;
-    // errorHeaderColor / font
-    static Color errorHeaderColor = new Color(255, 50, 0);
+    // Error Detection HTTP Editors
+    public HttpRequestEditor errorDetectionRequestEditor;
+    public HttpResponseEditor errorDetectionResponseEditor;
+    // Color / font
+    static Color errorTextColor = new Color(198, 39, 3);
+    static Color correctiveCallsTextColor = new Color(26, 90, 2);
+    static Color followUpCallTextColor = new Color(9, 30, 172);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
+    private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
 
 
     public View(MontoyaApi montoyaApi){
@@ -50,62 +54,82 @@ public class View implements ContextMenuItemsProvider {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        // Set up header
+        // Label / header
         JLabel errorDetectionLabel = new JLabel("Error Detection");
         errorDetectionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        errorDetectionLabel.setForeground(errorHeaderColor);
+        errorDetectionLabel.setForeground(errorTextColor);
         errorDetectionLabel.setFont(headerFont);
-        errorDetectionLabel.setBorder(new EmptyBorder(5, 0, 20, 0));
-
-        // Set up text under header
-
-
-        // Set up HTTP editors
-        RawEditor requestEditor = montoyaApi.userInterface().createRawEditor();
-        RawEditor responseEditor = montoyaApi.userInterface().createRawEditor();
-
-        requestEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
-        responseEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setLeftComponent(requestEditor.uiComponent());
-        splitPane.setRightComponent(responseEditor.uiComponent());
-        splitPane.setDividerLocation(0.5); // Initial 50/50 split
-        splitPane.setResizeWeight(0.5); // Both sides resize proportionally
-
         panel.add(errorDetectionLabel, BorderLayout.NORTH);
-        panel.add(splitPane, BorderLayout.CENTER);
+
+        // Text below label / header
+        JLabel errorDetectionSubText = new JLabel("Select error conditions which will trigger corrective calls.");
+        errorDetectionSubText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        errorDetectionSubText.setFont(subTextFont);
+        panel.add(errorDetectionSubText, BorderLayout.NORTH);
+
+        // Horizontal line below subText / above editors
+        JSeparator sep = new JSeparator();
+        sep.setForeground(Color.LIGHT_GRAY);  // Change color
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+        panel.add(sep);
+
+        // HTTP editors
+        /*
+        errorDetectionRequestEditor = montoyaApi.userInterface().createRawEditor();
+        errorDetectionResponseEditor = montoyaApi.userInterface().createRawEditor();
+        */
+        errorDetectionRequestEditor = montoyaApi.userInterface().createHttpRequestEditor();
+        errorDetectionResponseEditor = montoyaApi.userInterface().createHttpResponseEditor();
 
 
+        errorDetectionRequestEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
+        errorDetectionResponseEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
 
+        JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        editorPane.setLeftComponent(errorDetectionRequestEditor.uiComponent());
+        editorPane.setRightComponent(errorDetectionResponseEditor.uiComponent());
+        editorPane.setDividerLocation(0.5);
+        editorPane.setResizeWeight(0.5);
+        panel.add(editorPane, BorderLayout.CENTER);
+
+        // UI elements related to adding error conditions in bottom right.
+        // This includes the label, dropdown box, text field, and "Add" button.
         JPanel setErrorConditionPanel = new JPanel();
         setErrorConditionPanel.setLayout(new BoxLayout(setErrorConditionPanel, BoxLayout.Y_AXIS));
 
-        JLabel testLabel = new JLabel("Test");
-        String[] options = {"Option 1", "Option 2", "Option 3"};
-        JComboBox<String> dropdown = new JComboBox<>(options);
-        JTextField textField = new JTextField();
-        JButton button = new JButton("Submit");
+        JLabel errorConditionLabel = new JLabel("Error Condition");
+        errorConditionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        setErrorConditionPanel.add(testLabel);
+        String[] options = {"Status Code", "Body", "Header"};
+        JComboBox<String> dropdown = new JComboBox<>(options);
+        dropdown.setMaximumSize(new Dimension(150,30));
+
+        JTextField textField = new JTextField();
+        textField.setPreferredSize(new Dimension(100,100));
+        textField.setMinimumSize(new Dimension(100,100));
+
+        JButton button = new JButton("Add");
+
+        setErrorConditionPanel.add(errorConditionLabel);
         setErrorConditionPanel.add(dropdown);
         setErrorConditionPanel.add(textField);
         setErrorConditionPanel.add(button);
 
-        panel.add(setErrorConditionPanel);
-
+        // Bottom left portion of UI which lists error conditions which have been added.
         JPanel listErrorConditions = new JPanel();
         listErrorConditions.setLayout(new BoxLayout(listErrorConditions, BoxLayout.Y_AXIS));
         JTextField textField2 = new JTextField();
 
         listErrorConditions.add(textField2);
 
-        panel.add(listErrorConditions);
-
-
+        JSplitPane bottomPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        bottomPane.setLeftComponent(listErrorConditions);
+        bottomPane.setRightComponent(setErrorConditionPanel);
+        bottomPane.setDividerLocation(0.75);
+        bottomPane.setResizeWeight(0.75);
+        panel.add(bottomPane);
 
         return panel;
-
     }
 
     private JPanel createCorrectiveCallsPanel() {
@@ -167,6 +191,7 @@ public class View implements ContextMenuItemsProvider {
     // This method comes from the ContextMenuItemsProvider interface.
     // montoya ties the ContextMenuEvent to this method, therefore listeners needed to
     // be added here to access the event.
+    // Consider moving to controller
     @Override
     public List<Component> provideMenuItems(ContextMenuEvent event) {
         contextMenuErrorDetection = new JMenuItem("Send to Error Detection");
@@ -174,6 +199,8 @@ public class View implements ContextMenuItemsProvider {
         contextMenuErrorDetection.addActionListener(e -> {
             if (!event.messageEditorRequestResponse().isEmpty()){
                 reqResp = event.messageEditorRequestResponse().get().requestResponse();
+                errorDetectionRequestEditor.setRequest(reqResp.request());
+                errorDetectionResponseEditor.setResponse(reqResp.response());
             }
         });
 
