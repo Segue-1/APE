@@ -11,13 +11,12 @@ public class View implements ContextMenuItemsProvider {
     public JPanel mainPanel;
 
     // Context menus
-    public JMenuItem contextMenuErrorDetection;
-    public JMenuItem contextMenuCorrectiveCalls;
+    public ContextMenus contextMenus;
 
     public View(MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
+        contextMenus = new ContextMenus();
         initMainPanel();
-        initContextMenus();
     }
 
     private void initMainPanel() {
@@ -33,10 +32,5 @@ public class View implements ContextMenuItemsProvider {
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
         montoyaApi.userInterface().registerSuiteTab("API Processing Engine", mainPanel);
-    }
-
-    private void initContextMenus(){
-        contextMenuErrorDetection = new JMenuItem("Send to Error Detection");
-        contextMenuCorrectiveCalls = new JMenuItem("Send to Corrective Calls");
     }
 }

@@ -70,14 +70,14 @@ public class Controller implements ContextMenuItemsProvider {
     // Sets up context menus (right click menu)
     @Override
     public java.util.List<Component> provideMenuItems(ContextMenuEvent event) {
-        view.contextMenuErrorDetection.addActionListener(e -> {
+        view.contextMenus.errorDetection.addActionListener(e -> {
             if (event.messageEditorRequestResponse().isPresent()){
                 HttpRequestResponse reqResp = event.messageEditorRequestResponse().get().requestResponse();
                 ErrorDetectionPanel.errorDetectionRequestEditor.setRequest(reqResp.request());
                 ErrorDetectionPanel.errorDetectionResponseEditor.setResponse(reqResp.response());
             }
         });
-        return List.of(view.contextMenuErrorDetection, view.contextMenuCorrectiveCalls);
+        return List.of(view.contextMenus.errorDetection, view.contextMenus.correctiveCalls);
     }
 
     // Loads context menus. Perhaps consider using a nested class or anonymous class
