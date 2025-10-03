@@ -5,6 +5,6 @@ public class Extension implements BurpExtension {
     // Entry point for Burp Suite.
     @Override
     public void initialize(MontoyaApi montoyaApi) {
-        Controller controller = new Controller(montoyaApi);
+        new Controller(montoyaApi);
     }
 }

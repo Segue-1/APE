@@ -14,6 +14,10 @@ public class ErrorDetectionPanel extends JPanel {
     public static HttpRequestEditor errorDetectionRequestEditor;
     public static HttpResponseEditor errorDetectionResponseEditor;
 
+    public static JComboBox<String> dropdown;
+    public static JButton submitButton;
+    public static JTextField conditionTextField;
+
 
     public ErrorDetectionPanel(MontoyaApi montoyaApi) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -51,37 +55,37 @@ public class ErrorDetectionPanel extends JPanel {
 
         // UI elements related to adding error conditions in bottom right.
         // This includes the label, dropdown box, text field, and "Add" button.
-        JPanel setErrorConditionPanel = new JPanel();
-        setErrorConditionPanel.setLayout(new BoxLayout(setErrorConditionPanel, BoxLayout.Y_AXIS));
+        JPanel errorConditionPanel = new JPanel();
+        errorConditionPanel.setLayout(new BoxLayout(errorConditionPanel, BoxLayout.Y_AXIS));
 
         JLabel errorConditionLabel = new JLabel("Error Condition");
         errorConditionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         String[] options = {"Status Code", "Body", "Header"};
-        JComboBox<String> dropdown = new JComboBox<>(options);
+        dropdown = new JComboBox<>(options);
         dropdown.setMaximumSize(new Dimension(150,30));
 
-        JTextField textField = new JTextField();
-        textField.setPreferredSize(new Dimension(100,100));
-        textField.setMinimumSize(new Dimension(100,100));
+        conditionTextField = new JTextField();
+        conditionTextField.setPreferredSize(new Dimension(100,100));
+        conditionTextField.setMinimumSize(new Dimension(100,100));
 
-        JButton button = new JButton("Add");
+        submitButton = new JButton("Add");
 
-        setErrorConditionPanel.add(errorConditionLabel);
-        setErrorConditionPanel.add(dropdown);
-        setErrorConditionPanel.add(textField);
-        setErrorConditionPanel.add(button);
+        errorConditionPanel.add(errorConditionLabel);
+        errorConditionPanel.add(dropdown);
+        errorConditionPanel.add(conditionTextField);
+        errorConditionPanel.add(submitButton);
 
         // Bottom left portion of UI which lists error conditions which have been added.
         JPanel listErrorConditions = new JPanel();
         listErrorConditions.setLayout(new BoxLayout(listErrorConditions, BoxLayout.Y_AXIS));
-        JTextField textField2 = new JTextField();
+        JTextField listConditionsTextField = new JTextField();
 
-        listErrorConditions.add(textField2);
+        listErrorConditions.add(listConditionsTextField);
 
         JSplitPane bottomPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         bottomPane.setLeftComponent(listErrorConditions);
-        bottomPane.setRightComponent(setErrorConditionPanel);
+        bottomPane.setRightComponent(errorConditionPanel);
         bottomPane.setDividerLocation(0.75);
         bottomPane.setResizeWeight(0.75);
         add(bottomPane);

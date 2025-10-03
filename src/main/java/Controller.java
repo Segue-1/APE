@@ -6,9 +6,12 @@ import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class Controller implements ContextMenuItemsProvider {
@@ -16,7 +19,11 @@ public class Controller implements ContextMenuItemsProvider {
     private Model model;
     private View view;
 
+    // Stores which burp suite tools are enabled on the Settings tab
     public EnumSet<ToolType> enabledTools;
+
+    // Stores error conditions set in the Error Conditions tab
+    public Map<String, String> errorConditions;
 
     public Controller (MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
@@ -25,6 +32,7 @@ public class Controller implements ContextMenuItemsProvider {
 
         initSettingsPanel();
         initContextMenus();
+        storeErrorConditions();
     }
     
     private void initSettingsPanel() {
@@ -84,5 +92,20 @@ public class Controller implements ContextMenuItemsProvider {
     // for ContextMenuItemsProvider and pass that only.
     private void initContextMenus() {
         montoyaApi.userInterface().registerContextMenuItemsProvider(this);
+    }
+
+    private void storeErrorConditions(){
+        errorConditions = new HashMap<>();
+
+        // Get conditions type from drop down menu.
+        ActionListener submitButtonListener = e -> {
+            String selectedItem = (String) ErrorDetectionPanel.dropdown.getSelectedItem();
+            errorConditions.put(selectedItem, "test");
+            montoyaApi.logging().logToOutput("Submit button clicked!\n" + errorConditions.entrySet());
+        };
+
+        ErrorDetectionPanel.submitButton.addActionListener(submitButtonListener);
+
+        //TODO Add ActionListener for view.conditionTextField
     }
 }
