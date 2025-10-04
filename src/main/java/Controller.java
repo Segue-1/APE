@@ -1,6 +1,7 @@
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
 import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.ui.Selection;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
@@ -12,6 +13,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 public class Controller implements ContextMenuItemsProvider {
@@ -99,13 +101,15 @@ public class Controller implements ContextMenuItemsProvider {
 
         // Get conditions type from drop down menu.
         ActionListener submitButtonListener = e -> {
+            // TODO Add listener for selected text, line below should get selected text in an editor. Start with the response editor.
+            // Want to support request editor too. Need conditional to check if there is selected text, if so add that, if not add
+            // whatever is in the text box.
+            // Optional<Selection> selectedTextRespEditor = ErrorDetectionPanel.errorDetectionResponseEditor.selection();
             String selectedItem = (String) ErrorDetectionPanel.dropdown.getSelectedItem();
-            errorConditions.put(selectedItem, "test");
+            String textInput = ErrorDetectionPanel.conditionTextField.getText();
+            errorConditions.put(selectedItem, textInput);
             montoyaApi.logging().logToOutput("Submit button clicked!\n" + errorConditions.entrySet());
         };
-
         ErrorDetectionPanel.submitButton.addActionListener(submitButtonListener);
-
-        //TODO Add ActionListener for view.conditionTextField
     }
 }

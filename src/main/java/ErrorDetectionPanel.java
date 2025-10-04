@@ -16,7 +16,7 @@ public class ErrorDetectionPanel extends JPanel {
 
     public static JComboBox<String> dropdown;
     public static JButton submitButton;
-    public static JTextField conditionTextField;
+    public static JTextArea conditionTextField;
 
 
     public ErrorDetectionPanel(MontoyaApi montoyaApi) {
@@ -55,26 +55,38 @@ public class ErrorDetectionPanel extends JPanel {
 
         // UI elements related to adding error conditions in bottom right.
         // This includes the label, dropdown box, text field, and "Add" button.
-        JPanel errorConditionPanel = new JPanel();
-        errorConditionPanel.setLayout(new BoxLayout(errorConditionPanel, BoxLayout.Y_AXIS));
+        JPanel errorConditionPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.CENTER;
 
+        gbc.gridy = 0;
         JLabel errorConditionLabel = new JLabel("Error Condition");
-        errorConditionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        errorConditionPanel.add(errorConditionLabel, gbc);
 
+        gbc.gridy = 1;
         String[] options = {"Status Code", "Body", "Header"};
         dropdown = new JComboBox<>(options);
-        dropdown.setMaximumSize(new Dimension(150,30));
+        errorConditionPanel.add(dropdown, gbc);
 
-        conditionTextField = new JTextField();
-        conditionTextField.setPreferredSize(new Dimension(100,100));
-        conditionTextField.setMinimumSize(new Dimension(100,100));
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        conditionTextField = new JTextArea();
+        conditionTextField.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        JScrollPane scrollPane = new JScrollPane(conditionTextField);
+        scrollPane.setMinimumSize(new Dimension(200, 50));
+        scrollPane.setPreferredSize(new Dimension(200, 100));
+        errorConditionPanel.add(scrollPane, gbc);
 
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
         submitButton = new JButton("Add");
-
-        errorConditionPanel.add(errorConditionLabel);
-        errorConditionPanel.add(dropdown);
-        errorConditionPanel.add(conditionTextField);
-        errorConditionPanel.add(submitButton);
+        errorConditionPanel.add(submitButton, gbc);
 
         // Bottom left portion of UI which lists error conditions which have been added.
         JPanel listErrorConditions = new JPanel();
