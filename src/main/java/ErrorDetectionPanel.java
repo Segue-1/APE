@@ -3,6 +3,8 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 
 public class ErrorDetectionPanel extends JPanel {
@@ -17,6 +19,8 @@ public class ErrorDetectionPanel extends JPanel {
     public static JComboBox<String> dropdown;
     public static JButton submitButton;
     public static JTextArea conditionTextField;
+
+    public static DefaultTableModel tableModel;
 
 
     public ErrorDetectionPanel(MontoyaApi montoyaApi) {
@@ -89,14 +93,17 @@ public class ErrorDetectionPanel extends JPanel {
         errorConditionPanel.add(submitButton, gbc);
 
         // Bottom left portion of UI which lists error conditions which have been added.
-        JPanel listErrorConditions = new JPanel();
-        listErrorConditions.setLayout(new BoxLayout(listErrorConditions, BoxLayout.Y_AXIS));
-        JTextField listConditionsTextField = new JTextField();
-
-        listErrorConditions.add(listConditionsTextField);
+        String[] columns = {"Name", "Category", "Value", "Description"};
+        tableModel = new DefaultTableModel(columns, 0);
+        JTable errorConditionsTable = new JTable(tableModel);
+        // TODO Set static size for category and name. Set auto resize for value an description
+        errorConditionsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        JScrollPane tableScrollPane = new JScrollPane(errorConditionsTable);
+        tableScrollPane.setPreferredSize(new Dimension(400, 200));
 
         JSplitPane bottomPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        bottomPane.setLeftComponent(listErrorConditions);
+        bottomPane.setLeftComponent(tableScrollPane);
+
         bottomPane.setRightComponent(errorConditionPanel);
         bottomPane.setDividerLocation(0.75);
         bottomPane.setResizeWeight(0.75);

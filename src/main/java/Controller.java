@@ -9,11 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
-import java.util.EnumSet;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 
 public class Controller implements ContextMenuItemsProvider {
@@ -25,7 +22,7 @@ public class Controller implements ContextMenuItemsProvider {
     public EnumSet<ToolType> enabledTools;
 
     // Stores error conditions set in the Error Conditions tab
-    public Map<String, String> errorConditions;
+    public ArrayList<String[]> errorConditions;
 
     public Controller (MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
@@ -97,19 +94,40 @@ public class Controller implements ContextMenuItemsProvider {
     }
 
     private void storeErrorConditions(){
-        errorConditions = new HashMap<>();
+        errorConditions = new ArrayList<>();
 
         // Get conditions type from drop down menu.
         ActionListener submitButtonListener = e -> {
-            // TODO Add listener for selected text, line below should get selected text in an editor. Start with the response editor.
-            // Want to support request editor too. Need conditional to check if there is selected text, if so add that, if not add
-            // whatever is in the text box.
-            // Optional<Selection> selectedTextRespEditor = ErrorDetectionPanel.errorDetectionResponseEditor.selection();
             String selectedItem = (String) ErrorDetectionPanel.dropdown.getSelectedItem();
             String textInput = ErrorDetectionPanel.conditionTextField.getText();
-            errorConditions.put(selectedItem, textInput);
-            montoyaApi.logging().logToOutput("Submit button clicked!\n" + errorConditions.entrySet());
+            errorConditions.add(new String[]{selectedItem, textInput});
+            montoyaApi.logging().logToOutput("Submit button clicked!\n");
+            errorConditions.forEach(pair -> montoyaApi.logging().logToOutput(Arrays.toString(pair)));
+            populateErrorDetectionTable(selectedItem, textInput);
         };
         ErrorDetectionPanel.submitButton.addActionListener(submitButtonListener);
+    }
+
+    // Populates the table on the bottom left hand side of the Error Detection tab.
+    private void populateErrorDetectionTable(String category, String input) {
+        String numberOfConditions = String.valueOf(ErrorDetectionPanel.tableModel.getRowCount());
+        String name = "Condition-" + numberOfConditions;
+        String description;
+
+        if (category.equals("Status Code")){
+            description = "APE will trigger if Status Code is " + input;
+        }
+        else if (category.equals("Body")) {
+            description = "APE will trigger if text '" + input + " is found in response Body";
+        }
+        else if (category.equals("Header")) {
+            description = "APE will trigger if text '" + input + " is found in response Header";
+        }
+        else{
+            description = "How did you do that?";
+        }
+
+
+        ErrorDetectionPanel.tableModel.addRow(new Object[]{name, category, input, description});
     }
 }
