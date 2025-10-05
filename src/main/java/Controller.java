@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -23,6 +25,7 @@ public class Controller implements ContextMenuItemsProvider {
 
     // Stores error conditions set in the Error Conditions tab
     public ArrayList<String[]> errorConditions;
+    private int numberOfConditions = 0;
 
     public Controller (MontoyaApi montoyaApi){
         this.montoyaApi = montoyaApi;
@@ -32,6 +35,7 @@ public class Controller implements ContextMenuItemsProvider {
         initSettingsPanel();
         initContextMenus();
         storeErrorConditions();
+        createTablePopupMenu();
     }
     
     private void initSettingsPanel() {
@@ -80,8 +84,8 @@ public class Controller implements ContextMenuItemsProvider {
         view.contextMenus.errorDetection.addActionListener(e -> {
             if (event.messageEditorRequestResponse().isPresent()){
                 HttpRequestResponse reqResp = event.messageEditorRequestResponse().get().requestResponse();
-                ErrorDetectionPanel.errorDetectionRequestEditor.setRequest(reqResp.request());
-                ErrorDetectionPanel.errorDetectionResponseEditor.setResponse(reqResp.response());
+                view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
+                view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
             }
         });
         return List.of(view.contextMenus.errorDetection, view.contextMenus.correctiveCalls);
@@ -93,24 +97,30 @@ public class Controller implements ContextMenuItemsProvider {
         montoyaApi.userInterface().registerContextMenuItemsProvider(this);
     }
 
+    // Stores error conditions into an array list.
     private void storeErrorConditions(){
         errorConditions = new ArrayList<>();
 
         // Get conditions type from drop down menu.
         ActionListener submitButtonListener = e -> {
-            String selectedItem = (String) ErrorDetectionPanel.dropdown.getSelectedItem();
-            String textInput = ErrorDetectionPanel.conditionTextField.getText();
+            String selectedItem = (String) view.errorDetectionPanel.dropdown.getSelectedItem();
+            String textInput = view.errorDetectionPanel.conditionTextField.getText();
+
+            if (selectedItem.equals("Status Code") && textInput.isBlank()){
+                return;
+            }
+
             errorConditions.add(new String[]{selectedItem, textInput});
-            montoyaApi.logging().logToOutput("Submit button clicked!\n");
+            montoyaApi.logging().logToOutput("Submit button clicked!");
             errorConditions.forEach(pair -> montoyaApi.logging().logToOutput(Arrays.toString(pair)));
+            numberOfConditions++;
             populateErrorDetectionTable(selectedItem, textInput);
         };
-        ErrorDetectionPanel.submitButton.addActionListener(submitButtonListener);
+        view.errorDetectionPanel.submitButton.addActionListener(submitButtonListener);
     }
 
     // Populates the table on the bottom left hand side of the Error Detection tab.
     private void populateErrorDetectionTable(String category, String input) {
-        String numberOfConditions = String.valueOf(ErrorDetectionPanel.tableModel.getRowCount());
         String name = "Condition-" + numberOfConditions;
         String description;
 
@@ -118,16 +128,67 @@ public class Controller implements ContextMenuItemsProvider {
             description = "APE will trigger if Status Code is " + input;
         }
         else if (category.equals("Body")) {
-            description = "APE will trigger if text '" + input + " is found in response Body";
+            description = "APE will trigger if text '" + input + "' is found in response Body";
         }
         else if (category.equals("Header")) {
-            description = "APE will trigger if text '" + input + " is found in response Header";
+            description = "APE will trigger if text '" + input + "' is found in response Header";
         }
         else{
             description = "How did you do that?";
         }
+        view.errorDetectionPanel.tableModel.addRow(new Object[]{name, category, input, description});
+        view.errorDetectionPanel.resizeColumnsToFitContent();
+    }
+    
+    // Create context menu for bottom left table to delete entries
+    private void createTablePopupMenu() {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem deleteItem = new JMenuItem("Delete");
 
+        // Deletes selected row when "Delete" is clicked.
+        deleteItem.addActionListener(e -> {
+            int selectedRow = view.errorDetectionPanel.table.getSelectedRow();
+            if (selectedRow != -1){
+                view.errorDetectionPanel.tableModel.removeRow(selectedRow);
+                view.errorDetectionPanel.resizeColumnsToFitContent();
 
-        ErrorDetectionPanel.tableModel.addRow(new Object[]{name, category, input, description});
+                montoyaApi.logging().logToOutput("Delete button clicked!");
+                errorConditions.remove(selectedRow);
+
+                errorConditions.forEach(pair -> montoyaApi.logging().logToOutput(Arrays.toString(pair)));
+
+                // If last row is deleted, reset numberOfConditions count.
+                if (selectedRow == 1){
+                    numberOfConditions = 0;
+                }
+            }
+        });
+
+        popupMenu.add(deleteItem);
+
+        // Displays popup menu and selects row.
+        view.errorDetectionPanel.table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e){
+                if (e.isPopupTrigger()){
+                    showPopup(e);
+                }
+            }
+
+            private void showPopup(MouseEvent e) {
+                int row = view.errorDetectionPanel.table.rowAtPoint(e.getPoint());
+                if (row >= 0) {
+                    view.errorDetectionPanel.table.setRowSelectionInterval(row, row);
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
     }
 }

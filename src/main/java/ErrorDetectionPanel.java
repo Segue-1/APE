@@ -4,6 +4,7 @@ import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 
@@ -13,16 +14,18 @@ public class ErrorDetectionPanel extends JPanel {
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
     // Error Detection HTTP Editors
-    public static HttpRequestEditor errorDetectionRequestEditor;
-    public static HttpResponseEditor errorDetectionResponseEditor;
+    public HttpRequestEditor requestEditor;
+    public HttpResponseEditor responseEditor;
 
-    public static JComboBox<String> dropdown;
-    public static JButton submitButton;
-    public static JTextArea conditionTextField;
+    public JComboBox<String> dropdown;
+    public JButton submitButton;
+    public JTextArea conditionTextField;
 
-    public static DefaultTableModel tableModel;
+    public DefaultTableModel tableModel;
+    public JTable table;
 
 
+    // TODO Refactor, split up into smaller methods
     public ErrorDetectionPanel(MontoyaApi montoyaApi) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -45,14 +48,14 @@ public class ErrorDetectionPanel extends JPanel {
         sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
         add(sep);
 
-        errorDetectionRequestEditor = montoyaApi.userInterface().createHttpRequestEditor();
-        errorDetectionResponseEditor = montoyaApi.userInterface().createHttpResponseEditor();
-        errorDetectionRequestEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
-        errorDetectionResponseEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
+        requestEditor = montoyaApi.userInterface().createHttpRequestEditor();
+        responseEditor = montoyaApi.userInterface().createHttpResponseEditor();
+        requestEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
+        responseEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
 
         JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        editorPane.setLeftComponent(errorDetectionRequestEditor.uiComponent());
-        editorPane.setRightComponent(errorDetectionResponseEditor.uiComponent());
+        editorPane.setLeftComponent(requestEditor.uiComponent());
+        editorPane.setRightComponent(responseEditor.uiComponent());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
         add(editorPane, BorderLayout.CENTER);
@@ -94,11 +97,18 @@ public class ErrorDetectionPanel extends JPanel {
 
         // Bottom left portion of UI which lists error conditions which have been added.
         String[] columns = {"Name", "Category", "Value", "Description"};
-        tableModel = new DefaultTableModel(columns, 0);
-        JTable errorConditionsTable = new JTable(tableModel);
-        // TODO Set static size for category and name. Set auto resize for value an description
-        errorConditionsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        JScrollPane tableScrollPane = new JScrollPane(errorConditionsTable);
+        tableModel = new DefaultTableModel(columns, 0){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        table = new JTable(tableModel);
+        table.getColumnModel().getColumn(0).setMinWidth(75);
+        table.getColumnModel().getColumn(1).setMinWidth(75);
+
+        JScrollPane tableScrollPane = new JScrollPane(table);
         tableScrollPane.setPreferredSize(new Dimension(400, 200));
 
         JSplitPane bottomPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -108,5 +118,20 @@ public class ErrorDetectionPanel extends JPanel {
         bottomPane.setDividerLocation(0.75);
         bottomPane.setResizeWeight(0.75);
         add(bottomPane);
+    }
+
+    public void resizeColumnsToFitContent() {
+        for (int col = 0; col < table.getColumnCount(); col++) {
+            int maxWidth = 0;
+            for (int row = 0; row < table.getRowCount(); row++) {
+                TableCellRenderer renderer = table.getCellRenderer(row, col);
+                Component comp = table.prepareRenderer(renderer, row, col);
+                maxWidth = Math.max(maxWidth, comp.getPreferredSize().width);
+            }
+            TableColumn column = table.getColumnModel().getColumn(col);
+            int calculatedWidth = maxWidth + 3;
+            int minWidth = column.getMinWidth();
+            table.getColumnModel().getColumn(col).setPreferredWidth(Math.max(calculatedWidth, minWidth));
+        }
     }
 }

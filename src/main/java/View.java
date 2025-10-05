@@ -9,6 +9,11 @@ public class View implements ContextMenuItemsProvider {
 
     // Primary GUI panel
     public JPanel mainPanel;
+    public ErrorDetectionPanel errorDetectionPanel;
+    public CorrectiveCallsPanel correctiveCallsPanel;
+    public FollowUpPanel followUpPanel;
+    public TestCallsPanel testCallsPanel;
+    public SettingsPanel settingsPanel;
 
     // Context menus
     public ContextMenus contextMenus;
@@ -23,11 +28,11 @@ public class View implements ContextMenuItemsProvider {
         mainPanel = new JPanel(new BorderLayout());
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Error Detection", new ErrorDetectionPanel(montoyaApi));
-        tabbedPane.addTab("Corrective Calls", new CorrectiveCallsPanel());
-        tabbedPane.addTab("Followup Call", new FollowUpPanel());
-        tabbedPane.addTab("Test Calls", new TestCallsPanel());
-        tabbedPane.addTab("Settings", new SettingsPanel());
+        tabbedPane.addTab("Error Detection", errorDetectionPanel = new ErrorDetectionPanel(montoyaApi));
+        tabbedPane.addTab("Corrective Calls", correctiveCallsPanel = new CorrectiveCallsPanel());
+        tabbedPane.addTab("Followup Call", followUpPanel = new FollowUpPanel());
+        tabbedPane.addTab("Test Calls", testCallsPanel = new TestCallsPanel());
+        tabbedPane.addTab("Settings", settingsPanel = new SettingsPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
