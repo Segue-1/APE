@@ -27,7 +27,7 @@ public class Controller implements ContextMenuItemsProvider {
     public ArrayList<String[]> errorConditions;
     private int numberOfConditions = 0;
 
-    public Controller (MontoyaApi montoyaApi){
+    public Controller (MontoyaApi montoyaApi) {
         this.montoyaApi = montoyaApi;
         model = new Model(montoyaApi);
         view = new View(montoyaApi);

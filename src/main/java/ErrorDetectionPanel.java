@@ -12,7 +12,8 @@ public class ErrorDetectionPanel extends JPanel {
     // Color / font
     static Color errorTextColor = new Color(198, 39, 3);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
-    private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
+    private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
+    private Font labelFont = new Font("Dialog", Font.PLAIN, 12);
     // Error Detection HTTP Editors
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
@@ -25,43 +26,49 @@ public class ErrorDetectionPanel extends JPanel {
     public JTable table;
 
 
-    // TODO Refactor, split up into smaller methods
+    // TODO Refactor, split up into smaller methods. Don't pass in montoyaApi as arg through constructor, setup an attribute.
     public ErrorDetectionPanel(MontoyaApi montoyaApi) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         // Label / header
-        JLabel errorDetectionLabel = new JLabel("Error Detection");
-        errorDetectionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        errorDetectionLabel.setForeground(errorTextColor);
-        errorDetectionLabel.setFont(headerFont);
-        add(errorDetectionLabel, BorderLayout.NORTH);
+        // TODO, rename label to label or something smaller.
+        JLabel label = new JLabel("Error Detection");
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setForeground(errorTextColor);
+        label.setFont(headerFont);
+        add(label, BorderLayout.NORTH);
 
         // Text below label / header
-        JLabel errorDetectionSubText = new JLabel("Select error conditions which will trigger corrective calls.");
-        errorDetectionSubText.setAlignmentX(Component.LEFT_ALIGNMENT);
-        errorDetectionSubText.setFont(subTextFont);
-        add(errorDetectionSubText, BorderLayout.NORTH);
+        // TODO Rename this label as well
+        JLabel subText = new JLabel("Select error conditions which will trigger corrective calls.");
+        subText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        subText.setFont(labelFont);
+        add(subText, BorderLayout.NORTH);
 
-        // Horizontal line below subText / above editors
+        // Horizontal line below label / above editors
+        // TODO Disappeared after removing max / preffered size on editors and adding max / preferred
         JSeparator sep = new JSeparator();
         sep.setForeground(Color.LIGHT_GRAY);  // Change color
         sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+        sep.setPreferredSize(new Dimension(Integer.MAX_VALUE, 2));
         add(sep);
+
 
         requestEditor = montoyaApi.userInterface().createHttpRequestEditor();
         responseEditor = montoyaApi.userInterface().createHttpResponseEditor();
-        requestEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
-        responseEditor.uiComponent().setPreferredSize(new Dimension(600, 600));
 
         JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         editorPane.setLeftComponent(requestEditor.uiComponent());
         editorPane.setRightComponent(responseEditor.uiComponent());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
+        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 875));
+        editorPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 875));
         add(editorPane, BorderLayout.CENTER);
 
         // UI elements related to adding error conditions in bottom right.
         // This includes the label, dropdown box, text field, and "Add" button.
+        // TODO rename errorConditionPanel, it's confusing since this is in an ErrorDetectionClass but it is something else
         JPanel errorConditionPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -69,7 +76,12 @@ public class ErrorDetectionPanel extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
 
         gbc.gridy = 0;
+
+        add(sep);
+
         JLabel errorConditionLabel = new JLabel("Error Condition");
+        //errorConditionLabel.setForeground(errorTextColor);
+        errorConditionLabel.setFont(subHeaderFont);
         errorConditionPanel.add(errorConditionLabel, gbc);
 
         gbc.gridy = 1;
@@ -83,6 +95,7 @@ public class ErrorDetectionPanel extends JPanel {
         gbc.weighty = 1.0;
         conditionTextField = new JTextArea();
         conditionTextField.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        conditionTextField.setLineWrap(true);
         JScrollPane scrollPane = new JScrollPane(conditionTextField);
         scrollPane.setMinimumSize(new Dimension(200, 50));
         scrollPane.setPreferredSize(new Dimension(200, 100));

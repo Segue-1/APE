@@ -29,7 +29,7 @@ public class View implements ContextMenuItemsProvider {
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Error Detection", errorDetectionPanel = new ErrorDetectionPanel(montoyaApi));
-        tabbedPane.addTab("Corrective Calls", correctiveCallsPanel = new CorrectiveCallsPanel());
+        tabbedPane.addTab("Corrective Calls", correctiveCallsPanel = new CorrectiveCallsPanel(montoyaApi));
         tabbedPane.addTab("Followup Call", followUpPanel = new FollowUpPanel());
         tabbedPane.addTab("Test Calls", testCallsPanel = new TestCallsPanel());
         tabbedPane.addTab("Settings", settingsPanel = new SettingsPanel());
