@@ -3,6 +3,7 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
@@ -95,19 +96,36 @@ public class CorrectiveCallsPanel extends JPanel {
         editorPane.setRightComponent(responseEditor.uiComponent());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
-        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 600));
-        editorPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 600));
+        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 400));
+        //editorPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 600));
         add(editorPane, BorderLayout.CENTER);
     }
 
     private void createReplaceExtract() {
-        JPanel bottomPanel = new JPanel(new GridLayout(1, 2));
-        JPanel bottomLeftPanel = new JPanel(new GridLayout(1, 2));
-        JPanel bottomRightPanel = new JPanel(new GridLayout(1, 2));
-
+        JPanel bottomPanel = new JPanel(new GridBagLayout());
         bottomPanel.setAlignmentX(LEFT_ALIGNMENT);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH; // Each component within this GridbagLayout fills its own space
+        gbc.weightx = 1; // All cells grow along X axis equally.
+        gbc.insets = new Insets(2, 2, 2, 2);
 
-        // Create tables
+        // Row 0: Labels (don't grow vertically)
+        gbc.gridy = 0; gbc.weighty = 0; gbc.gridwidth = 2;
+        gbc.gridx = 0; bottomPanel.add(new JLabel("Text"), gbc);
+        gbc.gridwidth = 1;
+        gbc.gridx = 2; bottomPanel.add(new JLabel("Replace Table"), gbc);
+        gbc.gridwidth = 2;
+        gbc.gridx = 3; bottomPanel.add(new JLabel("Text"), gbc);
+        gbc.gridwidth = 1;
+        gbc.gridx = 5; bottomPanel.add(new JLabel("Extract Table"), gbc);
+
+        // Row 1: Components (grow vertically)
+        gbc.gridy = 1; gbc.weighty = 1.0;
+        gbc.gridx = 0; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+
+        gbc.gridx = 1; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+
+        // Table
         String[] replaceColumns = {"Name", "Id"};
         replaceTableModel = new DefaultTableModel(replaceColumns, 0){
             @Override
@@ -117,19 +135,17 @@ public class CorrectiveCallsPanel extends JPanel {
         };
 
         replaceTable = new JTable(replaceTableModel);
-        //table.getColumnModel().getColumn(0).setMinWidth(75);
-        //table.getColumnModel().getColumn(1).setMinWidth(75);
-
         JScrollPane replaceTableScrollPane = new JScrollPane(replaceTable);
         replaceTableScrollPane.setAlignmentX(Component.CENTER_ALIGNMENT); // For some reason, this was shifting the label right.
-        replaceTableScrollPane.setPreferredSize(new Dimension(75, 75));
-        replaceTableScrollPane.setMaximumSize(new Dimension(75, 75));
 
+        gbc.gridwidth = 1;
+        gbc.gridx = 2; bottomPanel.add(replaceTableScrollPane, gbc);
 
-        bottomLeftPanel.add(new JTextArea());
-        bottomLeftPanel.add(replaceTableScrollPane);
+        gbc.gridwidth = 1;
+        gbc.gridx = 3; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+        gbc.gridx = 4; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
 
-        // Create tables
+        // Table
         String[] columns = {"Name", "Id"};
         extractTableModel = new DefaultTableModel(columns, 0){
             @Override
@@ -139,19 +155,11 @@ public class CorrectiveCallsPanel extends JPanel {
         };
 
         extractTable = new JTable(extractTableModel);
-        //table.getColumnModel().getColumn(0).setMinWidth(75);
-        //table.getColumnModel().getColumn(1).setMinWidth(75);
-
         JScrollPane extractTableScrollPane = new JScrollPane(extractTable);
         extractTableScrollPane.setAlignmentX(Component.CENTER_ALIGNMENT); // For some reason, this was shifting the label right.
-        extractTableScrollPane.setPreferredSize(new Dimension(75, 75));
-        extractTableScrollPane.setMaximumSize(new Dimension(75, 75));
 
-        bottomRightPanel.add(new JTextArea());
-        bottomRightPanel.add(extractTableScrollPane);
-
-        bottomPanel.add(bottomLeftPanel);
-        bottomPanel.add(bottomRightPanel);
+        gbc.gridwidth = 1;
+        gbc.gridx = 5; bottomPanel.add(extractTableScrollPane, gbc);
         add(bottomPanel);
     }
 }
