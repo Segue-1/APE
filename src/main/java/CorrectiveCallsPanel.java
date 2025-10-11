@@ -106,88 +106,112 @@ public class CorrectiveCallsPanel extends JPanel {
         bottomPanel.setAlignmentX(LEFT_ALIGNMENT);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH; // Each component within this GridbagLayout fills its own space
-        gbc.weightx = 1; // All cells grow along X axis equally.
         gbc.insets = new Insets(2, 2, 2, 2);
 
-        // Row 0: Labels (don't grow vertically)
-        gbc.gridy = 0; gbc.weighty = 0; gbc.gridwidth = 2;
-        gbc.gridx = 0; bottomPanel.add(new JLabel("Text"), gbc);
-        gbc.gridwidth = 1;
-        gbc.gridx = 2; bottomPanel.add(new JLabel("Replace Table"), gbc);
+        // Set headers
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0.2; gbc.weighty = 0;
         gbc.gridwidth = 2;
-        gbc.gridx = 3; bottomPanel.add(new JLabel("Text"), gbc);
+        bottomPanel.add(new JLabel("First and second column label"), gbc);
+
+        gbc.gridx = 2; gbc.gridy = 0;
+        gbc.weightx = 1; ; gbc.weighty = 0;
         gbc.gridwidth = 1;
-        gbc.gridx = 5; bottomPanel.add(new JLabel("Extract Table"), gbc);
+        bottomPanel.add(new JLabel("Replace Table"), gbc);
 
-        // Row 1: Components (grow vertically)
-        gbc.gridy = 1; gbc.weighty = 1.0;
-        gbc.gridx = 0;
+        gbc.gridx = 3; gbc.gridy = 0;
+        gbc.weightx = 0.2; gbc.weighty = 0;
+        gbc.gridwidth = 2;
+        bottomPanel.add(new JLabel("Third and fourth column label"), gbc);
 
-        //bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
-        Dimension smallTextBoxLabelD = new Dimension(50, 40);
+        gbc.gridx = 5; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+        gbc.gridwidth = 1;
+        bottomPanel.add(new JLabel("Extract Table"), gbc);
+
+        // Left side text
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 0.2; gbc.weighty = 0;
+        gbc.gridwidth = 1;
+
         JLabel label1 = new JLabel("Text");
-        label1.setPreferredSize(smallTextBoxLabelD);
-        label1.setMaximumSize(smallTextBoxLabelD);
-        label1.setMinimumSize(smallTextBoxLabelD);
         bottomPanel.add(label1, gbc);
+
         gbc.gridy = 2;
+
         JLabel label2 = new JLabel("Text");
-        label2.setPreferredSize(smallTextBoxLabelD);
-        label2.setMaximumSize(smallTextBoxLabelD);
-        label2.setMinimumSize(smallTextBoxLabelD);
         bottomPanel.add(label2, gbc);
+
         gbc.gridy = 3;
+
         JLabel label3 = new JLabel("Text");
-        label3.setPreferredSize(smallTextBoxLabelD);
-        label3.setMaximumSize(smallTextBoxLabelD);
-        label3.setMinimumSize(smallTextBoxLabelD);
         bottomPanel.add(label3, gbc);
+
         gbc.gridy = 4;
+
         JLabel label4 = new JLabel("Text");
-        label4.setPreferredSize(smallTextBoxLabelD);
-        label4.setMaximumSize(smallTextBoxLabelD);
-        label4.setMinimumSize(smallTextBoxLabelD);
         bottomPanel.add(label4, gbc);
+
         gbc.gridy = 5;
+
         JLabel label5 = new JLabel("Text");
-        label5.setPreferredSize(smallTextBoxLabelD);
-        label5.setMaximumSize(smallTextBoxLabelD);
-        label5.setMinimumSize(smallTextBoxLabelD);
         bottomPanel.add(label5, gbc);
-        gbc.gridy = 6;
-        bottomPanel.add(new JButton("Add"), gbc);
 
-        gbc.gridy = 1;
-        gbc.gridx = 1;
-        //bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
-        JTextArea smallTextBox1 = new JTextArea("Text");
-        Dimension smallTextBoxD = new Dimension(50, 40);
-        smallTextBox1.setPreferredSize(smallTextBoxD);
-        smallTextBox1.setMaximumSize(smallTextBoxD);
+        gbc.gridy = 6; gbc.weighty = 1;
+
+        // filler area
+        bottomPanel.add(new JPanel(), gbc);
+
+        gbc.gridy = 7; gbc.weighty = 0;
+
+        JButton addButton = new JButton("Add");
+        addButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 15));
+        addButton.setPreferredSize(new Dimension(Integer.MAX_VALUE, 15));
+        //gbc.fill = GridBagConstraints.HORIZONTAL;
+        bottomPanel.add(addButton, gbc);
+        //gbc.fill = GridBagConstraints.BOTH;
+
+        // Text fields on right
+        gbc.gridx = 1; gbc.gridy = 1;
+        gbc.weighty = 0;
+
+        JTextField smallTextBox1 = new JTextField("Text", 15);
         bottomPanel.add(smallTextBox1, gbc);
-        gbc.gridy = 2;
-        JTextArea smallTextBox2 = new JTextArea("Text");
-        smallTextBox2.setPreferredSize(smallTextBoxD);
-        smallTextBox2.setMaximumSize(smallTextBoxD);
-        bottomPanel.add(smallTextBox2, gbc);
-        gbc.gridy = 3;
-        JTextArea smallTextBox3 = new JTextArea("Text");
-        smallTextBox3.setPreferredSize(smallTextBoxD);
-        smallTextBox3.setMaximumSize(smallTextBoxD);
-        bottomPanel.add(smallTextBox3, gbc);
-        gbc.gridy = 4;
-        JTextArea smallTextBox4 = new JTextArea("Text");
-        smallTextBox4.setPreferredSize(smallTextBoxD);
-        smallTextBox4.setMaximumSize(smallTextBoxD);
-        bottomPanel.add(smallTextBox4, gbc);
-        gbc.gridy = 5;
-        JTextArea smallTextBox5 = new JTextArea("Text");
-        smallTextBox5.setPreferredSize(smallTextBoxD);
-        smallTextBox5.setMaximumSize(smallTextBoxD);
-        bottomPanel.add(smallTextBox5, gbc);
-        gbc.gridy = 6;
-        bottomPanel.add(new JButton("From Selection"), gbc);
 
+        gbc.gridy = 2;
+
+        JTextField smallTextBox2 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox2, gbc);
+
+        gbc.gridy = 3;
+
+        JTextField smallTextBox3 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox3, gbc);
+
+        gbc.gridy = 4;
+
+        JTextField smallTextBox4 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox4, gbc);
+
+        gbc.gridy = 5;
+
+        JTextField smallTextBox5 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox5, gbc);
+
+        gbc.gridy = 6; gbc.weighty = 1;
+
+        // filler area
+        bottomPanel.add(new JPanel(), gbc);
+
+        gbc.gridy = 7; gbc.weighty = 0;
+
+        JButton fromSelectionButton = new JButton("From Selection");
+        fromSelectionButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 15));
+        fromSelectionButton.setPreferredSize(new Dimension(Integer.MAX_VALUE, 15));
+        bottomPanel.add(fromSelectionButton, gbc);
+
+        gbc.weighty = 0;
+        gbc.weightx = 1;
 
         // Table
         String[] replaceColumns = {"Name", "Id"};
@@ -202,14 +226,98 @@ public class CorrectiveCallsPanel extends JPanel {
         JScrollPane replaceTableScrollPane = new JScrollPane(replaceTable);
         replaceTableScrollPane.setAlignmentX(Component.CENTER_ALIGNMENT); // For some reason, this was shifting the label right.
 
-        gbc.gridwidth = 1;
-        gbc.gridy = 1;
-        gbc.gridx = 2;
+        gbc.gridx = 2; gbc.gridy = 1;
+        gbc.gridwidth = 1; gbc.gridheight = 7;
+
         bottomPanel.add(replaceTableScrollPane, gbc);
 
-        gbc.gridwidth = 1;
-        gbc.gridx = 3; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
-        gbc.gridx = 4; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+        // Left side text
+        gbc.gridx = 3; gbc.gridy = 1;
+        gbc.weightx = 0.2; gbc.weighty = 0;
+        gbc.gridwidth = 1; gbc.gridheight = 1;
+
+        JLabel label6 = new JLabel("Text");
+        bottomPanel.add(label6, gbc);
+
+        gbc.gridy = 2;
+
+        JLabel label7 = new JLabel("Text");
+        bottomPanel.add(label7, gbc);
+
+        gbc.gridy = 3;
+
+        JLabel label8 = new JLabel("Text");
+        bottomPanel.add(label8, gbc);
+
+        gbc.gridy = 4;
+
+        JLabel label9 = new JLabel("Text");
+        bottomPanel.add(label9, gbc);
+
+        gbc.gridy = 5;
+
+        JLabel label10 = new JLabel("Text");
+        bottomPanel.add(label10, gbc);
+
+        gbc.gridy = 6; gbc.weighty = 1;
+
+        // filler area
+        JPanel filler = new JPanel();
+
+        // TODO Fix how this filler panel resizes. Not resizing properly.
+        filler.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+        //filler.setMinimumSize(new Dimension(Integer.MAX_VALUE, 20));
+        filler.setPreferredSize(new Dimension(Integer.MAX_VALUE, 30));
+        bottomPanel.add(filler, gbc);
+
+        gbc.gridy = 7; gbc.weighty = 0;
+
+        JButton addButton2 = new JButton("Add");
+        addButton2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 15));
+        addButton2.setPreferredSize(new Dimension(Integer.MAX_VALUE, 15));
+        bottomPanel.add(addButton2, gbc);
+
+        // Text fields on right
+        gbc.gridx = 4; gbc.gridy = 1;
+        gbc.weighty = 0;
+
+        JTextField smallTextBox6 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox6, gbc);
+
+        gbc.gridy = 2;
+
+        JTextField smallTextBox7 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox7, gbc);
+
+        gbc.gridy = 3;
+
+        JTextField smallTextBox8 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox8, gbc);
+
+        gbc.gridy = 4;
+
+        JTextField smallTextBox9 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox9, gbc);
+
+        gbc.gridy = 5;
+
+        JTextField smallTextBox10 = new JTextField("Text", 15);
+        bottomPanel.add(smallTextBox10, gbc);
+
+        gbc.gridy = 6; gbc.weighty = 1;
+
+        // filler area
+        bottomPanel.add(filler, gbc);
+
+        gbc.gridy = 7; gbc.weighty = 0;
+
+        JButton fromSelectionButton2 = new JButton("From Selection");
+        fromSelectionButton2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 15));
+        fromSelectionButton2.setPreferredSize(new Dimension(Integer.MAX_VALUE, 15));
+        bottomPanel.add(fromSelectionButton2, gbc);
+
+        gbc.weighty = 0;
+        gbc.weightx = 1;
 
         // Table
         String[] columns = {"Name", "Id"};
@@ -222,10 +330,12 @@ public class CorrectiveCallsPanel extends JPanel {
 
         extractTable = new JTable(extractTableModel);
         JScrollPane extractTableScrollPane = new JScrollPane(extractTable);
-        extractTableScrollPane.setAlignmentX(Component.CENTER_ALIGNMENT); // For some reason, this was shifting the label right.
+        //extractTableScrollPane.setAlignmentX(Component.CENTER_ALIGNMENT); // For some reason, this was shifting the label right.
 
-        gbc.gridwidth = 1;
-        gbc.gridx = 5; bottomPanel.add(extractTableScrollPane, gbc);
+        gbc.gridx = 5; gbc.gridy = 1;
+        gbc.gridwidth = 1; gbc.gridheight = 7;
+
+        bottomPanel.add(extractTableScrollPane, gbc);
         add(bottomPanel);
     }
 }
