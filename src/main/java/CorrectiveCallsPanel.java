@@ -121,9 +121,73 @@ public class CorrectiveCallsPanel extends JPanel {
 
         // Row 1: Components (grow vertically)
         gbc.gridy = 1; gbc.weighty = 1.0;
-        gbc.gridx = 0; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+        gbc.gridx = 0;
 
-        gbc.gridx = 1; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+        //bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+        Dimension smallTextBoxLabelD = new Dimension(50, 40);
+        JLabel label1 = new JLabel("Text");
+        label1.setPreferredSize(smallTextBoxLabelD);
+        label1.setMaximumSize(smallTextBoxLabelD);
+        label1.setMinimumSize(smallTextBoxLabelD);
+        bottomPanel.add(label1, gbc);
+        gbc.gridy = 2;
+        JLabel label2 = new JLabel("Text");
+        label2.setPreferredSize(smallTextBoxLabelD);
+        label2.setMaximumSize(smallTextBoxLabelD);
+        label2.setMinimumSize(smallTextBoxLabelD);
+        bottomPanel.add(label2, gbc);
+        gbc.gridy = 3;
+        JLabel label3 = new JLabel("Text");
+        label3.setPreferredSize(smallTextBoxLabelD);
+        label3.setMaximumSize(smallTextBoxLabelD);
+        label3.setMinimumSize(smallTextBoxLabelD);
+        bottomPanel.add(label3, gbc);
+        gbc.gridy = 4;
+        JLabel label4 = new JLabel("Text");
+        label4.setPreferredSize(smallTextBoxLabelD);
+        label4.setMaximumSize(smallTextBoxLabelD);
+        label4.setMinimumSize(smallTextBoxLabelD);
+        bottomPanel.add(label4, gbc);
+        gbc.gridy = 5;
+        JLabel label5 = new JLabel("Text");
+        label5.setPreferredSize(smallTextBoxLabelD);
+        label5.setMaximumSize(smallTextBoxLabelD);
+        label5.setMinimumSize(smallTextBoxLabelD);
+        bottomPanel.add(label5, gbc);
+        gbc.gridy = 6;
+        bottomPanel.add(new JButton("Add"), gbc);
+
+        gbc.gridy = 1;
+        gbc.gridx = 1;
+        //bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
+        JTextArea smallTextBox1 = new JTextArea("Text");
+        Dimension smallTextBoxD = new Dimension(50, 40);
+        smallTextBox1.setPreferredSize(smallTextBoxD);
+        smallTextBox1.setMaximumSize(smallTextBoxD);
+        bottomPanel.add(smallTextBox1, gbc);
+        gbc.gridy = 2;
+        JTextArea smallTextBox2 = new JTextArea("Text");
+        smallTextBox2.setPreferredSize(smallTextBoxD);
+        smallTextBox2.setMaximumSize(smallTextBoxD);
+        bottomPanel.add(smallTextBox2, gbc);
+        gbc.gridy = 3;
+        JTextArea smallTextBox3 = new JTextArea("Text");
+        smallTextBox3.setPreferredSize(smallTextBoxD);
+        smallTextBox3.setMaximumSize(smallTextBoxD);
+        bottomPanel.add(smallTextBox3, gbc);
+        gbc.gridy = 4;
+        JTextArea smallTextBox4 = new JTextArea("Text");
+        smallTextBox4.setPreferredSize(smallTextBoxD);
+        smallTextBox4.setMaximumSize(smallTextBoxD);
+        bottomPanel.add(smallTextBox4, gbc);
+        gbc.gridy = 5;
+        JTextArea smallTextBox5 = new JTextArea("Text");
+        smallTextBox5.setPreferredSize(smallTextBoxD);
+        smallTextBox5.setMaximumSize(smallTextBoxD);
+        bottomPanel.add(smallTextBox5, gbc);
+        gbc.gridy = 6;
+        bottomPanel.add(new JButton("From Selection"), gbc);
+
 
         // Table
         String[] replaceColumns = {"Name", "Id"};
@@ -139,7 +203,9 @@ public class CorrectiveCallsPanel extends JPanel {
         replaceTableScrollPane.setAlignmentX(Component.CENTER_ALIGNMENT); // For some reason, this was shifting the label right.
 
         gbc.gridwidth = 1;
-        gbc.gridx = 2; bottomPanel.add(replaceTableScrollPane, gbc);
+        gbc.gridy = 1;
+        gbc.gridx = 2;
+        bottomPanel.add(replaceTableScrollPane, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridx = 3; bottomPanel.add(new JScrollPane(new JTextArea()), gbc);
