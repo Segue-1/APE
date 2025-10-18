@@ -5,6 +5,7 @@ import burp.api.montoya.ui.editor.HttpResponseEditor;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 
 public class CorrectiveCallsPanel extends JPanel {
@@ -31,10 +32,12 @@ public class CorrectiveCallsPanel extends JPanel {
         this.montoyaApi = montoyaApi;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBackground(new Color(99, 255, 108));
         createLabel();
         createTable();
         createHTTPEditors();
-        createReplaceExtract();
+        //createBottomPanel();
+        createBottomPanel2();
     }
 
     private void createLabel() {
@@ -96,14 +99,19 @@ public class CorrectiveCallsPanel extends JPanel {
         editorPane.setRightComponent(responseEditor.uiComponent());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
-        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 400));
+        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 600));
         //editorPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 600));
         add(editorPane, BorderLayout.CENTER);
     }
 
-    private void createReplaceExtract() {
+    private void createBottomPanel() {
         JPanel bottomPanel = new JPanel(new GridBagLayout());
+
+        Color tempColor = new Color(241, 51, 51);
+        bottomPanel.setBackground(tempColor);
+
         bottomPanel.setAlignmentX(LEFT_ALIGNMENT);
+        bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 400));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH; // Each component within this GridbagLayout fills its own space
         gbc.insets = new Insets(2, 2, 2, 2);
@@ -157,7 +165,7 @@ public class CorrectiveCallsPanel extends JPanel {
         JLabel label5 = new JLabel("Text");
         bottomPanel.add(label5, gbc);
 
-        gbc.gridy = 6; gbc.weighty = 1;
+        gbc.gridy = 6; gbc.weighty = 0;
 
         // filler area
         bottomPanel.add(new JPanel(), gbc);
@@ -198,7 +206,7 @@ public class CorrectiveCallsPanel extends JPanel {
         JTextField smallTextBox5 = new JTextField("Text", 15);
         bottomPanel.add(smallTextBox5, gbc);
 
-        gbc.gridy = 6; gbc.weighty = 1;
+        gbc.gridy = 6; gbc.weighty = 0;
 
         // filler area
         bottomPanel.add(new JPanel(), gbc);
@@ -228,6 +236,7 @@ public class CorrectiveCallsPanel extends JPanel {
 
         gbc.gridx = 2; gbc.gridy = 1;
         gbc.gridwidth = 1; gbc.gridheight = 7;
+        gbc.weighty = 0;
 
         bottomPanel.add(replaceTableScrollPane, gbc);
 
@@ -259,7 +268,7 @@ public class CorrectiveCallsPanel extends JPanel {
         JLabel label10 = new JLabel("Text");
         bottomPanel.add(label10, gbc);
 
-        gbc.gridy = 6; gbc.weighty = 1;
+        gbc.gridy = 6; gbc.weighty = 0;
 
         // filler area
         JPanel filler = new JPanel();
@@ -304,7 +313,7 @@ public class CorrectiveCallsPanel extends JPanel {
         JTextField smallTextBox10 = new JTextField("Text", 15);
         bottomPanel.add(smallTextBox10, gbc);
 
-        gbc.gridy = 6; gbc.weighty = 1;
+        gbc.gridy = 6; gbc.weighty = 0;
 
         // filler area
         bottomPanel.add(filler, gbc);
@@ -337,5 +346,111 @@ public class CorrectiveCallsPanel extends JPanel {
 
         bottomPanel.add(extractTableScrollPane, gbc);
         add(bottomPanel);
+    }
+
+    public void createBottomPanel2() {
+        JPanel bottomPanel = new JPanel(new GridBagLayout());
+        bottomPanel.setAlignmentX(LEFT_ALIGNMENT);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        Dimension dimension = new Dimension(250, 250);
+
+        String[] fields = {"Fiedl 1", "Fiedl 2", "Fiedl 3", "Fiedl 4", "Fiedl 5", "Fiedl 6"};
+        JPanel test1 = createInputFields("Input fields header placehold", fields);
+        //test1.setBackground(new Color(255, 126, 0));
+        test1.setPreferredSize(dimension);
+        bottomPanel.add(test1, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        JPanel test2 = new JPanel();
+        test2.setBackground(new Color(0, 0, 0));
+
+        bottomPanel.add(test2, gbc);
+
+
+        gbc.gridx = 2; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        JPanel test3 = new JPanel();
+        test3.setBackground(new Color(255, 0, 0));
+
+        bottomPanel.add(test3, gbc);
+
+        gbc.gridx = 3; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        JPanel test4 = new JPanel();
+        test4.setBackground(new Color(9, 30, 172));
+
+        bottomPanel.add(test4, gbc);
+
+
+
+        add(bottomPanel);
+
+        //String[] fields = {"Name", "Id"};
+        //bottomPanel.add(createInputFields("This is a placeholder header", fields));
+    }
+
+
+    public JPanel createSmallTable(String header, String[] columns){
+        JPanel panel = new JPanel();
+        panel.add(new JLabel(header));
+        TableModel tableModel = new DefaultTableModel(columns, 0){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(table);
+        return panel;
+    }
+
+    public JPanel createInputFields(String header, String[] fieldNames){
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(2, 2, 2, 2);
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0; gbc.weighty = 0;
+        gbc.gridwidth=2;
+
+        panel.add(new JLabel(header), gbc);
+
+        gbc.weighty = 1;
+        gbc.gridwidth=1;
+
+        for (int i = 0; i < fieldNames.length; i++) {
+            gbc.gridx = 0; gbc.gridy = i + 1;
+            gbc.weightx = 0;
+
+            panel.add(new JLabel(fieldNames[i]), gbc);
+            gbc.weightx = 1;
+            gbc.gridx = 1;
+            panel.add(new JTextField("Placeholder Text"), gbc);
+        }
+
+        gbc.gridx = 0; gbc.gridy = fieldNames.length + 1;
+        gbc.weightx = 0; gbc.weighty = 1;
+        JButton fromSelectionButton = new JButton("From Selection");
+        panel.add(fromSelectionButton, gbc);
+
+        gbc.gridx = 1; gbc.gridy = fieldNames.length + 1;
+        gbc.weightx = 0;
+        JButton addButton = new JButton("Add");
+        panel.add(addButton, gbc);
+
+        return panel;
     }
 }
