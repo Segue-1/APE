@@ -106,7 +106,7 @@ public class Controller implements ContextMenuItemsProvider {
             String selectedItem = (String) view.errorDetectionPanel.dropdown.getSelectedItem();
             String textInput = view.errorDetectionPanel.conditionTextField.getText();
 
-            if (selectedItem.equals("Status Code") && textInput.isBlank()){
+            if (selectedItem.equals("Status Code") && (textInput == null || !textInput.matches("\\d{3}"))){
                 return;
             }
 

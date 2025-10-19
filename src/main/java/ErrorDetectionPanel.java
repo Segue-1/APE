@@ -3,6 +3,7 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -26,12 +27,10 @@ public class ErrorDetectionPanel extends JPanel {
     public JTable table;
 
 
-    // TODO Refactor, split up into smaller methods. Don't pass in montoyaApi as arg through constructor, setup an attribute.
     public ErrorDetectionPanel(MontoyaApi montoyaApi) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         // Label / header
-        // TODO, rename label to label or something smaller.
         JLabel label = new JLabel("Error Detection");
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         label.setForeground(errorTextColor);
@@ -39,21 +38,18 @@ public class ErrorDetectionPanel extends JPanel {
         add(label, BorderLayout.NORTH);
 
         // Text below label / header
-        // TODO Rename this label as well
         JLabel subText = new JLabel("Select error conditions which will trigger corrective calls.");
         subText.setAlignmentX(Component.LEFT_ALIGNMENT);
         subText.setFont(labelFont);
         add(subText, BorderLayout.NORTH);
 
         // Horizontal line below label / above editors
-        // TODO Disappeared after removing max / preffered size on editors and adding max / preferred
         JSeparator sep = new JSeparator();
         sep.setForeground(Color.LIGHT_GRAY);  // Change color
         sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
         sep.setPreferredSize(new Dimension(Integer.MAX_VALUE, 2));
         add(sep);
-
-
+        
         requestEditor = montoyaApi.userInterface().createHttpRequestEditor();
         responseEditor = montoyaApi.userInterface().createHttpResponseEditor();
 
@@ -63,52 +59,53 @@ public class ErrorDetectionPanel extends JPanel {
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
         editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 875));
-        editorPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 875));
+        editorPane.setMinimumSize(new Dimension(Integer.MAX_VALUE, 200));
         add(editorPane, BorderLayout.CENTER);
 
-        // UI elements related to adding error conditions in bottom right.
-        // This includes the label, dropdown box, text field, and "Add" button.
-        // TODO rename errorConditionPanel, it's confusing since this is in an ErrorDetectionClass but it is something else
-        JPanel errorConditionPanel = new JPanel(new GridBagLayout());
+        createBottomPanel();
+
+    }
+
+    public void createBottomPanel(){
+        JPanel bottomPanel = new JPanel(new GridBagLayout());
+        bottomPanel.setAlignmentX(LEFT_ALIGNMENT);
+        bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 250));
+        bottomPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
+        bottomPanel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 125));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.CENTER;
-
-        gbc.gridy = 0;
-
-        add(sep);
-
-        JLabel errorConditionLabel = new JLabel("Error Condition");
-        //errorConditionLabel.setForeground(errorTextColor);
-        errorConditionLabel.setFont(subHeaderFont);
-        errorConditionPanel.add(errorConditionLabel, gbc);
-
-        gbc.gridy = 1;
-        String[] options = {"Status Code", "Body", "Header"};
-        dropdown = new JComboBox<>(options);
-        errorConditionPanel.add(dropdown, gbc);
-
-        gbc.gridy = 2;
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        conditionTextField = new JTextArea();
-        conditionTextField.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        conditionTextField.setLineWrap(true);
-        JScrollPane scrollPane = new JScrollPane(conditionTextField);
-        scrollPane.setMinimumSize(new Dimension(200, 50));
-        scrollPane.setPreferredSize(new Dimension(200, 100));
-        errorConditionPanel.add(scrollPane, gbc);
 
-        gbc.gridy = 3;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0;
-        gbc.weighty = 0;
-        submitButton = new JButton("Add");
-        errorConditionPanel.add(submitButton, gbc);
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
 
-        // Bottom left portion of UI which lists error conditions which have been added.
+        JPanel tablePanel = createTable();
+        bottomPanel.add(tablePanel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.33;
+
+        JPanel addErrorConditions = createAddErrorConditions();
+        bottomPanel.add(addErrorConditions, gbc);
+
+        add(bottomPanel);
+    }
+
+    public JPanel createTable(){
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+        JLabel label = new JLabel("Current Error Conditions");
+        label.setFont(subHeaderFont);
+        panel.add(label, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
+
         String[] columns = {"Name", "Category", "Value", "Description"};
         tableModel = new DefaultTableModel(columns, 0){
             @Override
@@ -122,16 +119,49 @@ public class ErrorDetectionPanel extends JPanel {
         table.getColumnModel().getColumn(1).setMinWidth(75);
 
         JScrollPane tableScrollPane = new JScrollPane(table);
-        tableScrollPane.setPreferredSize(new Dimension(400, 200));
+        panel.add(tableScrollPane, gbc);
 
-        JSplitPane bottomPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        bottomPane.setLeftComponent(tableScrollPane);
-
-        bottomPane.setRightComponent(errorConditionPanel);
-        bottomPane.setDividerLocation(0.75);
-        bottomPane.setResizeWeight(0.75);
-        add(bottomPane);
+        return panel;
     }
+
+    public JPanel createAddErrorConditions() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        JLabel errorConditionLabel = new JLabel("Add Error Condition");
+        errorConditionLabel.setFont(subHeaderFont);
+        panel.add(errorConditionLabel, gbc);
+
+        gbc.gridy = 1;
+        String[] options = {"Status Code", "Body", "Header"};
+        dropdown = new JComboBox<>(options);
+        panel.add(dropdown, gbc);
+
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        conditionTextField = new JTextArea();
+        conditionTextField.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        conditionTextField.setLineWrap(true);
+        JScrollPane scrollPane = new JScrollPane(conditionTextField);
+
+        panel.add(scrollPane, gbc);
+
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        submitButton = new JButton("Add");
+        panel.add(submitButton, gbc);
+
+        return panel;
+    }
+
 
     public void resizeColumnsToFitContent() {
         for (int col = 0; col < table.getColumnCount(); col++) {
