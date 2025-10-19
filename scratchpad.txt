@@ -16,3 +16,8 @@ JPanel two = (JPanel) one.getComponent(1); // Gets panel returned from createToo
 JPanel three = (JPanel) two.getComponent(0); // checkBoxGrid. panel from createToolSelectorPanel() has this as its first child.
 JCheckBox four = (JCheckBox) three.getComponent(0); // JCheckBox which are the children of checkBoxGrid.
 montoyaApi.logging().logToOutput(four.getText()); // Repeater
+
+TODO or feature ideas
+You should be able to extract text in step 2 from the error condition call in step one. This call should be accessible
+in some way in step 2 corrective calls. You could automatically populate the top table with a grayed out error condition
+call. Or perhaps add a button to "extract text from error condition". Something like that.

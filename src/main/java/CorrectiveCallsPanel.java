@@ -16,6 +16,7 @@ public class CorrectiveCallsPanel extends JPanel {
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
 
+    // Large table in top panel
     public DefaultTableModel tableModel;
     public JTable table;
 
@@ -28,19 +29,23 @@ public class CorrectiveCallsPanel extends JPanel {
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
 
+    public JRadioButton disableRadioButton;
+    public JRadioButton enableRadioButton;
+
+    public JPanel saveCallSequencePanel;
+
     public CorrectiveCallsPanel(MontoyaApi montoyaApi) {
         this.montoyaApi = montoyaApi;
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         createLabel();
-        createTable();
+        createTopPanel();
         createHTTPEditors();
         createBottomPanel();
     }
 
     private void createLabel() {
-
         JLabel label = new JLabel("Corrective Calls");
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         label.setForeground(correctiveCallsTextColor);
@@ -60,18 +65,28 @@ public class CorrectiveCallsPanel extends JPanel {
         add(sep);
     }
 
-    private void createTable() {
+    private void createTopPanel() {
         JPanel topPanel = new JPanel(new GridBagLayout());
+        topPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 150));
+        topPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
         topPanel.setAlignmentX(LEFT_ALIGNMENT);
+
         GridBagConstraints gbc = new GridBagConstraints();
-
         gbc.fill = GridBagConstraints.BOTH;
-
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        topPanel.setBackground(Color.ORANGE);
+        topPanel.add(createCallSequenceTable(), gbc);
 
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 0.125; gbc.weighty = 1;
+
+        topPanel.add(createSaveCallSequencePanel(), gbc);
+
+        add(topPanel);
+    }
+
+    private JScrollPane createCallSequenceTable() {
         String[] columns = {"Call number", "Host", "Method", "Path"};
         tableModel = new DefaultTableModel(columns, 0){
             @Override
@@ -82,34 +97,85 @@ public class CorrectiveCallsPanel extends JPanel {
 
         table = new JTable(tableModel);
 
-        JScrollPane replaceTableScrollPane = new JScrollPane(table);
-        replaceTableScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-        replaceTableScrollPane.setPreferredSize(new Dimension(400, 160));
-        replaceTableScrollPane.setMaximumSize(new Dimension(400, 160));
+        JScrollPane jScrollPane = new JScrollPane(table);
+        jScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        topPanel.add(replaceTableScrollPane, gbc);
+        return jScrollPane;
+    }
 
-        gbc.gridx = 1; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
+    private JPanel createSaveCallSequencePanel() {
+        saveCallSequencePanel = new JPanel(new GridBagLayout());
+        saveCallSequencePanel.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
 
-        JPanel testPanel = new JPanel();
-        testPanel.setBackground(Color.PINK);
-        topPanel.add(testPanel, gbc);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
 
-        /*
+        saveCallSequencePanel.add(createRadioButtonPanel(), gbc);
+
         ButtonGroup buttonGroup = new ButtonGroup();
-        JRadioButton disableRadioButton = new JRadioButton("Single Set", true);
-        JRadioButton enableRadioButton = new JRadioButton("Mulitple Sets");
-
         buttonGroup.add(disableRadioButton);
         buttonGroup.add(enableRadioButton);
 
-        topPanel.add(disableRadioButton, gbc);
-        //topPanel.add(enableRadioButton, gbc);
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
 
-         */
+        String[] columns = {"Name", "Description"};
+        TableModel tableModel = new DefaultTableModel(columns, 0){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
 
-        add(topPanel);
+        JTable table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+        saveCallSequencePanel.add(scrollPane, gbc);
+
+        gbc.gridy = 2;
+        gbc.weighty = 0;
+
+        saveCallSequencePanel.add(createSaveCallSequenceButtonPanel(), gbc);
+        return saveCallSequencePanel;
+    }
+
+    private JPanel createRadioButtonPanel(){
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        disableRadioButton = new JRadioButton("Single Set", true);
+        panel.add(disableRadioButton, gbc);
+
+        gbc.gridx = 1;
+
+        enableRadioButton = new JRadioButton("Mulitple Sets");
+        panel.add(enableRadioButton, gbc);
+
+        return panel;
+    }
+
+    JPanel createSaveCallSequenceButtonPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        JButton saveButton = new JButton("Save");
+        panel.add(saveButton, gbc);
+
+        gbc.gridx = 1;
+
+        JButton removeButton = new JButton("Remove");
+        panel.add(removeButton, gbc);
+
+        return panel;
     }
 
     private void createHTTPEditors() {
@@ -136,30 +202,30 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        String[] fields = {"Fiedl 1", "Fiedl 2", "Fiedl 3", "Fiedl 4", "Fiedl 5", "Fiedl 6"};
-
-        JPanel test1 = createInputFields("Input fields header placehold", fields);
-        bottomPanel.add(test1, gbc);
+        String[] replaceFieldsLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Reqest:", "Pick from Extraction"};
+        JPanel replaceFields = createInputFields("Replacement", replaceFieldsLabels);
+        bottomPanel.add(replaceFields, gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
         String[] columns = {"Name", "Id"};
 
-        JPanel test2 = createSmallTable("Placeholder Table 1", columns);
-        bottomPanel.add(test2, gbc);
+        JPanel replaceTable = createSmallTable("Replace List", columns);
+        bottomPanel.add(replaceTable, gbc);
 
         gbc.gridx = 2; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel test3 = createInputFields("Input fields header placehold", fields);
-        bottomPanel.add(test3, gbc);
+        String[] extractFieldsLabels  = {"Name:", "Start string:", "Stop string:", "Selected Text from Response:", "URL encode/decode"};
+        JPanel extractFields = createInputFields("Extraction", extractFieldsLabels);
+        bottomPanel.add(extractFields, gbc);
 
         gbc.gridx = 3; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel test4 = createSmallTable("Placeholder Table 2", columns);
-        bottomPanel.add(test4, gbc);
+        JPanel extractTable = createSmallTable("Extract List", columns);
+        bottomPanel.add(extractTable, gbc);
 
         add(bottomPanel);
     }
@@ -176,7 +242,6 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 0;
 
         panel.add(new JLabel(header), gbc);
-
 
         TableModel tableModel = new DefaultTableModel(columns, 0){
             @Override
@@ -214,12 +279,13 @@ public class CorrectiveCallsPanel extends JPanel {
 
         for (int i = 0; i < fieldNames.length; i++) {
             gbc.gridx = 0; gbc.gridy = i + 1;
-            gbc.weightx = 0;
-
+            gbc.weightx = 1;
             panel.add(new JLabel(fieldNames[i]), gbc);
+
             gbc.weightx = 1;
             gbc.gridx = 1;
-            panel.add(new JTextField("Placeholder Text"), gbc);
+            JTextField jtextField = new JTextField("placeholder text");
+            panel.add(jtextField, gbc);
         }
 
         gbc.gridx = 0; gbc.gridy = fieldNames.length + 1;

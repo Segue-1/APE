@@ -1,7 +1,6 @@
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
 import burp.api.montoya.http.message.HttpRequestResponse;
-import burp.api.montoya.ui.Selection;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
@@ -32,13 +31,14 @@ public class Controller implements ContextMenuItemsProvider {
         model = new Model(montoyaApi);
         view = new View(montoyaApi);
 
-        initSettingsPanel();
-        initContextMenus();
-        storeErrorConditions();
-        createTablePopupMenu();
+        // Add listeners, extract data from GUI
+        settingsPanel();
+        contextMenus();
+        errorConditionsPanel();
+        correctiveCallPanel();
     }
     
-    private void initSettingsPanel() {
+    private void settingsPanel() {
         getScopeCheckBoxStates();
     }
 
@@ -93,8 +93,13 @@ public class Controller implements ContextMenuItemsProvider {
 
     // Loads context menus. Perhaps consider using a nested class or anonymous class
     // for ContextMenuItemsProvider and pass that only.
-    private void initContextMenus() {
+    private void contextMenus() {
         montoyaApi.userInterface().registerContextMenuItemsProvider(this);
+    }
+
+    private void errorConditionsPanel(){
+        storeErrorConditions();
+        createErrorConditionTableContextMenu();
     }
 
     // Stores error conditions into an array list.
@@ -121,6 +126,9 @@ public class Controller implements ContextMenuItemsProvider {
 
     // Populates the table on the bottom left hand side of the Error Detection tab.
     private void populateErrorDetectionTable(String category, String input) {
+        /* TODO numberofConditions is still broken, create a list or something to track. If adding a bunch of conditions
+           and something in the middle is deleted, then more conditions are added, the wrong number will appear. When
+           deleting, you could decrement every after that number by 1. */
         String name = "Condition-" + numberOfConditions;
         String description;
 
@@ -141,7 +149,7 @@ public class Controller implements ContextMenuItemsProvider {
     }
     
     // Create context menu for bottom left table to delete entries
-    private void createTablePopupMenu() {
+    private void createErrorConditionTableContextMenu() {
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem deleteItem = new JMenuItem("Delete");
 
@@ -189,6 +197,21 @@ public class Controller implements ContextMenuItemsProvider {
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
+        });
+    }
+
+    private void correctiveCallPanel() {
+        callSequenceRadioButtons();
+    }
+
+    //TODO Doesn't do shit, should gray out entire CallSequencePanel
+    private void callSequenceRadioButtons() {
+        view.correctiveCallsPanel.disableRadioButton.addActionListener(e -> {
+            view.correctiveCallsPanel.saveCallSequencePanel.setEnabled(false);
+        });
+
+        view.correctiveCallsPanel.enableRadioButton.addActionListener(e -> {
+            view.correctiveCallsPanel.saveCallSequencePanel.setEnabled(true);
         });
     }
 }
