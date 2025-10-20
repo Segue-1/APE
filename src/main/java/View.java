@@ -5,7 +5,6 @@ import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
 
 public class View implements ContextMenuItemsProvider {
-    private MontoyaApi montoyaApi;
 
     // Primary GUI panel
     public JPanel mainPanel;
@@ -18,8 +17,7 @@ public class View implements ContextMenuItemsProvider {
     // Context menus
     public ContextMenus contextMenus;
 
-    public View(MontoyaApi montoyaApi){
-        this.montoyaApi = montoyaApi;
+    public View(){
         contextMenus = new ContextMenus();
         initMainPanel();
     }
@@ -28,14 +26,14 @@ public class View implements ContextMenuItemsProvider {
         mainPanel = new JPanel(new BorderLayout());
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Error Detection", errorDetectionPanel = new ErrorDetectionPanel(montoyaApi));
-        tabbedPane.addTab("Corrective Calls", correctiveCallsPanel = new CorrectiveCallsPanel(montoyaApi));
+        tabbedPane.addTab("Error Detection", errorDetectionPanel = new ErrorDetectionPanel());
+        tabbedPane.addTab("Corrective Calls", correctiveCallsPanel = new CorrectiveCallsPanel());
         tabbedPane.addTab("Followup Call", followUpPanel = new FollowUpPanel());
         tabbedPane.addTab("Test Calls", testCallsPanel = new TestCallsPanel());
         tabbedPane.addTab("Settings", settingsPanel = new SettingsPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
 
-        montoyaApi.userInterface().registerSuiteTab("API Processing Engine", mainPanel);
+        Controller.montoyaApi.userInterface().registerSuiteTab("API Processing Engine", mainPanel);
     }
 }

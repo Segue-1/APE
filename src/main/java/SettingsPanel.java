@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SettingsPanel extends JPanel {
+    public JPanel checkBoxGrid;
+
     public SettingsPanel() {
         setLayout(new FlowLayout(FlowLayout.LEFT));
         JLabel panelLabel = new JLabel("Scope");
@@ -13,7 +15,7 @@ public class SettingsPanel extends JPanel {
 
     private JPanel createToolSelectorPanel() {
         JPanel panel = new JPanel();
-        JPanel checkBoxGrid = new JPanel(new GridLayout(2,7));
+        checkBoxGrid = new JPanel(new GridLayout(2,7));
 
         // Creates a checkbox for each ToolType in burp and
         // associates a ToolType with each checkbox. Adds them to checkBoxGrid.

@@ -1,9 +1,7 @@
-import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -27,7 +25,7 @@ public class ErrorDetectionPanel extends JPanel {
     public JTable table;
 
 
-    public ErrorDetectionPanel(MontoyaApi montoyaApi) {
+    public ErrorDetectionPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         // Label / header
@@ -50,8 +48,8 @@ public class ErrorDetectionPanel extends JPanel {
         sep.setPreferredSize(new Dimension(Integer.MAX_VALUE, 2));
         add(sep);
         
-        requestEditor = montoyaApi.userInterface().createHttpRequestEditor();
-        responseEditor = montoyaApi.userInterface().createHttpResponseEditor();
+        requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
+        responseEditor = Controller.montoyaApi.userInterface().createHttpResponseEditor();
 
         JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         editorPane.setLeftComponent(requestEditor.uiComponent());
@@ -72,6 +70,7 @@ public class ErrorDetectionPanel extends JPanel {
         bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 250));
         bottomPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
         bottomPanel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 125));
+        bottomPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;

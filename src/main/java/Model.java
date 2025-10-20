@@ -7,17 +7,13 @@ import java.util.EnumSet;
 
 
 public class Model implements HttpHandler{
-    private MontoyaApi montoyaApi;
 
     public EnumSet<ToolType> enabledTools;
 
-    public Model (MontoyaApi montoyaApi) {
-        this.montoyaApi = montoyaApi;
-
-        montoyaApi.extension().setName("APE");
-        montoyaApi.logging().logToOutput("Welcome to the API Processing Engine (APE)");
-
-        montoyaApi.http().registerHttpHandler(this);
+    public Model () {
+        Controller.montoyaApi.extension().setName("APE");
+        Controller.montoyaApi.logging().logToOutput("Welcome to the API Processing Engine (APE)");
+        Controller.montoyaApi.http().registerHttpHandler(this);
     }
 
     // HTTP Handler which will intercept all traffic generated in burp

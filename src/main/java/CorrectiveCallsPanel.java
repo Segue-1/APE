@@ -1,30 +1,16 @@
-import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
 
 public class CorrectiveCallsPanel extends JPanel {
-    private MontoyaApi montoyaApi;
-
     static Color correctiveCallsTextColor = new Color(26, 90, 2);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
-
-    // Large table in top panel
-    public DefaultTableModel tableModel;
-    public JTable table;
-
-    public DefaultTableModel replaceTableModel;
-    public JTable replaceTable;
-
-    public DefaultTableModel extractTableModel;
-    public JTable extractTable;
 
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
@@ -34,9 +20,18 @@ public class CorrectiveCallsPanel extends JPanel {
 
     public JPanel saveCallSequencePanel;
 
-    public CorrectiveCallsPanel(MontoyaApi montoyaApi) {
-        this.montoyaApi = montoyaApi;
+    public TableModel callSequenceTableModel;
+    public JTable callSequenceTable;
+    public JScrollPane callSequenceScrollPane;
 
+    public TableModel saveCallSequenceTableModel;
+    public JTable saveCallSequenceTable;
+    public JScrollPane saveCallSequenceScrollPane;
+
+    public JButton saveButton;
+    public JButton removeButton;
+
+    public CorrectiveCallsPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         createLabel();
@@ -88,19 +83,19 @@ public class CorrectiveCallsPanel extends JPanel {
 
     private JScrollPane createCallSequenceTable() {
         String[] columns = {"Call number", "Host", "Method", "Path"};
-        tableModel = new DefaultTableModel(columns, 0){
+        callSequenceTableModel = new DefaultTableModel(columns, 0){
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
 
-        table = new JTable(tableModel);
+        callSequenceTable = new JTable(callSequenceTableModel);
 
-        JScrollPane jScrollPane = new JScrollPane(table);
-        jScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        callSequenceScrollPane = new JScrollPane(callSequenceTable);
+        callSequenceScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        return jScrollPane;
+        return callSequenceScrollPane;
     }
 
     private JPanel createSaveCallSequencePanel() {
@@ -122,16 +117,16 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 1;
 
         String[] columns = {"Name", "Description"};
-        TableModel tableModel = new DefaultTableModel(columns, 0){
+        saveCallSequenceTableModel = new DefaultTableModel(columns, 0){
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
 
-        JTable table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
-        saveCallSequencePanel.add(scrollPane, gbc);
+        saveCallSequenceTable = new JTable(saveCallSequenceTableModel);
+        saveCallSequenceScrollPane = new JScrollPane(saveCallSequenceTable);
+        saveCallSequencePanel.add(saveCallSequenceScrollPane, gbc);
 
         gbc.gridy = 2;
         gbc.weighty = 0;
@@ -159,7 +154,7 @@ public class CorrectiveCallsPanel extends JPanel {
         return panel;
     }
 
-    JPanel createSaveCallSequenceButtonPanel() {
+    private JPanel createSaveCallSequenceButtonPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -167,20 +162,20 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JButton saveButton = new JButton("Save");
+        saveButton = new JButton("Save");
         panel.add(saveButton, gbc);
 
         gbc.gridx = 1;
 
-        JButton removeButton = new JButton("Remove");
+        removeButton = new JButton("Remove");
         panel.add(removeButton, gbc);
 
         return panel;
     }
 
     private void createHTTPEditors() {
-        requestEditor = montoyaApi.userInterface().createHttpRequestEditor();
-        responseEditor = montoyaApi.userInterface().createHttpResponseEditor();
+        requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
+        responseEditor = Controller.montoyaApi.userInterface().createHttpResponseEditor();
 
         JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         editorPane.setLeftComponent(requestEditor.uiComponent());
@@ -196,6 +191,7 @@ public class CorrectiveCallsPanel extends JPanel {
         bottomPanel.setAlignmentX(LEFT_ALIGNMENT);
         bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 250));
         bottomPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
+        bottomPanel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
 

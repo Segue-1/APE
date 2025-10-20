@@ -1,8 +1,5 @@
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
-import burp.api.montoya.http.message.HttpRequestResponse;
-import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
-import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,11 +8,10 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
-import java.util.List;
 
 
-public class Controller implements ContextMenuItemsProvider {
-    private MontoyaApi montoyaApi;
+public class Controller {
+    public static MontoyaApi montoyaApi;
     private Model model;
     private View view;
 
@@ -27,15 +23,17 @@ public class Controller implements ContextMenuItemsProvider {
     private int numberOfConditions = 0;
 
     public Controller (MontoyaApi montoyaApi) {
-        this.montoyaApi = montoyaApi;
-        model = new Model(montoyaApi);
-        view = new View(montoyaApi);
+        Controller.montoyaApi = montoyaApi;
+        model = new Model();
+        view = new View();
 
-        // Add listeners, extract data from GUI
+        // Add listeners and extract data from GUI
         settingsPanel();
-        contextMenus();
+        // TODO Refactor settingsPanel() into SettingsController
+        //new SettingsController(view.settingsPanel);
+        new ContextMenusController(view.contextMenus, view.errorDetectionPanel, view.correctiveCallsPanel);
         errorConditionsPanel();
-        correctiveCallPanel();
+        correctiveCallsPanel();
     }
     
     private void settingsPanel() {
@@ -76,25 +74,6 @@ public class Controller implements ContextMenuItemsProvider {
                 model.updateEnabledTools(enabledTools);
             }
         }
-    }
-
-    // Sets up context menus (right click menu)
-    @Override
-    public java.util.List<Component> provideMenuItems(ContextMenuEvent event) {
-        view.contextMenus.errorDetection.addActionListener(e -> {
-            if (event.messageEditorRequestResponse().isPresent()){
-                HttpRequestResponse reqResp = event.messageEditorRequestResponse().get().requestResponse();
-                view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
-                view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
-            }
-        });
-        return List.of(view.contextMenus.errorDetection, view.contextMenus.correctiveCalls);
-    }
-
-    // Loads context menus. Perhaps consider using a nested class or anonymous class
-    // for ContextMenuItemsProvider and pass that only.
-    private void contextMenus() {
-        montoyaApi.userInterface().registerContextMenuItemsProvider(this);
     }
 
     private void errorConditionsPanel(){
@@ -200,18 +179,23 @@ public class Controller implements ContextMenuItemsProvider {
         });
     }
 
-    private void correctiveCallPanel() {
-        callSequenceRadioButtons();
+    private void correctiveCallsPanel() {
+        disableSaveCallSequence(); // Disable by default
+        onCorrectiveCallsPanel();
     }
 
-    //TODO Doesn't do shit, should gray out entire CallSequencePanel
-    private void callSequenceRadioButtons() {
-        view.correctiveCallsPanel.disableRadioButton.addActionListener(e -> {
-            view.correctiveCallsPanel.saveCallSequencePanel.setEnabled(false);
-        });
+    private void onCorrectiveCallsPanel() {
+        view.correctiveCallsPanel.disableRadioButton.addActionListener(e -> disableSaveCallSequence());
+        view.correctiveCallsPanel.enableRadioButton.addActionListener(e -> enableSaveCallSequence());
+    }
 
-        view.correctiveCallsPanel.enableRadioButton.addActionListener(e -> {
-            view.correctiveCallsPanel.saveCallSequencePanel.setEnabled(true);
-        });
+    private void disableSaveCallSequence() {
+        view.correctiveCallsPanel.saveButton.setEnabled(false);
+        view.correctiveCallsPanel.removeButton.setEnabled(false);
+    }
+
+    private void enableSaveCallSequence() {
+        view.correctiveCallsPanel.saveButton.setEnabled(true);
+        view.correctiveCallsPanel.removeButton.setEnabled(true);
     }
 }
