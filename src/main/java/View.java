@@ -1,28 +1,20 @@
 import javax.swing.*;
 import java.awt.*;
-import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
 
-public class View implements ContextMenuItemsProvider {
-
-    // Primary GUI panel
+public class View {
     public JPanel mainPanel;
+
     public ErrorDetectionPanel errorDetectionPanel;
     public CorrectiveCallsPanel correctiveCallsPanel;
     public FollowUpPanel followUpPanel;
     public TestCallsPanel testCallsPanel;
     public SettingsPanel settingsPanel;
 
-    // Context menus
     public ContextMenus contextMenus;
 
-    public View(){
-        contextMenus = new ContextMenus();
-        initMainPanel();
-    }
 
-    private void initMainPanel() {
+    public View(){
         mainPanel = new JPanel(new BorderLayout());
 
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -33,7 +25,8 @@ public class View implements ContextMenuItemsProvider {
         tabbedPane.addTab("Settings", settingsPanel = new SettingsPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
-
         Controller.montoyaApi.userInterface().registerSuiteTab("API Processing Engine", mainPanel);
+
+        contextMenus = new ContextMenus();
     }
 }

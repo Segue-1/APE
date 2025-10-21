@@ -6,39 +6,32 @@ import java.awt.*;
 import java.util.List;
 
 public class ContextMenusController implements ContextMenuItemsProvider {
-    private ContextMenus contextMenus;
-    private ErrorDetectionPanel errorDetectionPanel;
-    private CorrectiveCallsPanel correctiveCallsPanel;
+    private Controller controller;
     
-    ContextMenusController(ContextMenus contextMenus,
-                           ErrorDetectionPanel errorDetectionPanel,
-                           CorrectiveCallsPanel correctiveCallsPanel)
-    {
-        this.contextMenus = contextMenus;
-        this.errorDetectionPanel = errorDetectionPanel;
-        this.correctiveCallsPanel = correctiveCallsPanel;
+    ContextMenusController(Controller controller) {
+        this.controller = controller;
         contextMenus();
     }
 
     // Sets up context menus (right click menu)
     @Override
     public java.util.List<Component> provideMenuItems(ContextMenuEvent event) {
-        contextMenus.sendToErrorDetection.addActionListener(e -> {
+        controller.view.contextMenus.sendToErrorDetection.addActionListener(e -> {
             if (event.messageEditorRequestResponse().isPresent()){
                 HttpRequestResponse reqResp = event.messageEditorRequestResponse().get().requestResponse();
-                errorDetectionPanel.requestEditor.setRequest(reqResp.request());
-                errorDetectionPanel.responseEditor.setResponse(reqResp.response());
+                controller.view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
+                controller.view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
             }
         });
 
-        contextMenus.sendTocorrectiveCalls.addActionListener(e -> {
+        controller.view.contextMenus.sendTocorrectiveCalls.addActionListener(e -> {
             if (event.messageEditorRequestResponse().isPresent()){
                 HttpRequestResponse reqResp = event.messageEditorRequestResponse().get().requestResponse();
-                correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
-                correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
+                controller.view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
+                controller.view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
             }
         });
-        return List.of(contextMenus.sendToErrorDetection, contextMenus.sendTocorrectiveCalls);
+        return List.of(controller.view.contextMenus.sendToErrorDetection, controller.view.contextMenus.sendTocorrectiveCalls);
     }
 
     // Loads context menus.
