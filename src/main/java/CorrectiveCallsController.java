@@ -1,29 +1,29 @@
 public class CorrectiveCallsController {
-    private Controller controller;
+    private CorrectiveCallsPanel correctiveCallsPanel;
     
-    CorrectiveCallsController(Controller controller) {
-        this.controller = controller;
-        correctiveCallsPanel();
+    CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
+        this.correctiveCallsPanel = correctiveCallsPanel;
+        saveCallSequence();
     }
 
-    private void correctiveCallsPanel() {
+    private void saveCallSequence() {
         disableSaveCallSequence(); // Disable by default
-        onCorrectiveCallsPanel();
+        onRadioButton();
     }
 
-    private void onCorrectiveCallsPanel() {
-        controller.view.correctiveCallsPanel.disableRadioButton.addActionListener(e -> disableSaveCallSequence());
-        controller.view.correctiveCallsPanel.enableRadioButton.addActionListener(e -> enableSaveCallSequence());
+    private void onRadioButton() {
+        correctiveCallsPanel.disableRadioButton.addActionListener(e -> disableSaveCallSequence());
+        correctiveCallsPanel.enableRadioButton.addActionListener(e -> enableSaveCallSequence());
     }
 
     private void disableSaveCallSequence() {
-        controller.view.correctiveCallsPanel.saveButton.setEnabled(false);
-        controller.view.correctiveCallsPanel.removeButton.setEnabled(false);
+        correctiveCallsPanel.saveButton.setEnabled(false);
+        correctiveCallsPanel.removeButton.setEnabled(false);
     }
 
     private void enableSaveCallSequence() {
-        controller.view.correctiveCallsPanel.saveButton.setEnabled(true);
-        controller.view.correctiveCallsPanel.removeButton.setEnabled(true);
+        correctiveCallsPanel.saveButton.setEnabled(true);
+        correctiveCallsPanel.removeButton.setEnabled(true);
     }
 }                    
 

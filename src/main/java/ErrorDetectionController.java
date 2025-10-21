@@ -1,4 +1,3 @@
-import javax.naming.ldap.Control;
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -7,36 +6,36 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ErrorDetectionController {
-    private Controller controller;
+    private ErrorDetectionPanel errorDetectionPanel;
     public ArrayList<String[]> errorConditions;
     private int numberOfConditions = 0;
 
-    ErrorDetectionController(Controller controller){
-        this.controller = controller;
+    ErrorDetectionController(ErrorDetectionPanel errorDetectionPanel, Model model){
+        this.errorDetectionPanel = errorDetectionPanel;
         storeErrorConditions();
         createErrorConditionTableContextMenu();
     }
 
-    // Stores error conditions into an array list.
+    // Stores error conditions into an array list. As error conditions are stored, populates table with a list of error
+    // conditions.
     private void storeErrorConditions(){
         errorConditions = new ArrayList<>();
 
         // Get conditions type from drop down menu.
         ActionListener submitButtonListener = e -> {
-            String selectedItem = (String) controller.view.errorDetectionPanel.dropdown.getSelectedItem();
-            String textInput = controller.view.errorDetectionPanel.conditionTextField.getText();
+            String selectedItem = (String) errorDetectionPanel.dropdown.getSelectedItem();
+            String textInput = errorDetectionPanel.conditionTextField.getText();
 
             if (selectedItem.equals("Status Code") && (textInput == null || !textInput.matches("\\d{3}"))){
                 return;
             }
 
             errorConditions.add(new String[]{selectedItem, textInput});
-            Controller.montoyaApi.logging().logToOutput("Submit button clicked!");
             errorConditions.forEach(pair -> Controller.montoyaApi.logging().logToOutput(Arrays.toString(pair)));
             numberOfConditions++;
             populateErrorDetectionTable(selectedItem, textInput);
         };
-        controller.view.errorDetectionPanel.submitButton.addActionListener(submitButtonListener);
+        errorDetectionPanel.submitButton.addActionListener(submitButtonListener);
     }
 
     // Populates the table on the bottom left hand side of the Error Detection tab.
@@ -59,8 +58,8 @@ public class ErrorDetectionController {
         else{
             description = "How did you do that?";
         }
-        controller.view.errorDetectionPanel.tableModel.addRow(new Object[]{name, category, input, description});
-        controller.view.errorDetectionPanel.resizeColumnsToFitContent();
+        errorDetectionPanel.tableModel.addRow(new Object[]{name, category, input, description});
+        errorDetectionPanel.resizeColumnsToFitContent();
     }
 
     // Create context menu for bottom left table to delete entries
@@ -70,14 +69,12 @@ public class ErrorDetectionController {
 
         // Deletes selected row when "Delete" is clicked.
         deleteItem.addActionListener(e -> {
-            int selectedRow = controller.view.errorDetectionPanel.table.getSelectedRow();
+            int selectedRow = errorDetectionPanel.table.getSelectedRow();
             if (selectedRow != -1){
-                controller.view.errorDetectionPanel.tableModel.removeRow(selectedRow);
-                controller.view.errorDetectionPanel.resizeColumnsToFitContent();
+                errorDetectionPanel.tableModel.removeRow(selectedRow);
+                errorDetectionPanel.resizeColumnsToFitContent();
 
-                Controller.montoyaApi.logging().logToOutput("Delete button clicked!");
                 errorConditions.remove(selectedRow);
-
                 errorConditions.forEach(pair -> Controller.montoyaApi.logging().logToOutput(Arrays.toString(pair)));
 
                 // If last row is deleted, reset numberOfConditions count.
@@ -90,7 +87,7 @@ public class ErrorDetectionController {
         popupMenu.add(deleteItem);
 
         // Displays popup menu and selects row.
-        controller.view.errorDetectionPanel.table.addMouseListener(new MouseAdapter() {
+        errorDetectionPanel.table.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
@@ -106,9 +103,9 @@ public class ErrorDetectionController {
             }
 
             private void showPopup(MouseEvent e) {
-                int row = controller.view.errorDetectionPanel.table.rowAtPoint(e.getPoint());
+                int row = errorDetectionPanel.table.rowAtPoint(e.getPoint());
                 if (row >= 0) {
-                    controller.view.errorDetectionPanel.table.setRowSelectionInterval(row, row);
+                    errorDetectionPanel.table.setRowSelectionInterval(row, row);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }

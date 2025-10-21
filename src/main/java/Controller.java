@@ -4,8 +4,8 @@ import burp.api.montoya.MontoyaApi;
 
 public class Controller implements BurpExtension {
     public static MontoyaApi montoyaApi;
-    public Model model;
-    public View view;
+    private Model model;
+    private View view;
 
     // This class is automatically instantiated by burp suite. Burp calls initialize first and
     // passes the monotoyaApi object.
@@ -15,9 +15,9 @@ public class Controller implements BurpExtension {
 
         model = new Model();
         view = new View();
-        new SettingsController(this);
-        new ContextMenusController(this);
-        new ErrorDetectionController(this);
-        new CorrectiveCallsController(this);
+        new SettingsController(view.settingsPanel, model);
+        new ContextMenusController(view, model);
+        new ErrorDetectionController(view.errorDetectionPanel, model);
+        new CorrectiveCallsController(view.correctiveCallsPanel, model);
     }
 }

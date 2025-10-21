@@ -3,6 +3,8 @@ import burp.api.montoya.core.ToolType;
 import javax.swing.*;
 import java.awt.*;
 
+// TODO Rewrite this. Create a large panel for the entire settingsPanel. Add a smaller subpanel for
+// checkboxes that has grid bag layout. Give it a header. Consider adding an expansion type functionality.
 public class SettingsPanel extends JPanel {
     public JPanel checkBoxGrid;
 

@@ -25,8 +25,8 @@ public class View {
         tabbedPane.addTab("Settings", settingsPanel = new SettingsPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
-        Controller.montoyaApi.userInterface().registerSuiteTab("API Processing Engine", mainPanel);
-
         contextMenus = new ContextMenus();
+
+        Controller.montoyaApi.userInterface().registerSuiteTab("API Processing Engine", mainPanel);
     }
 }
