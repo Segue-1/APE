@@ -9,15 +9,41 @@ public class SettingsPanel extends JPanel {
     public JPanel checkBoxGrid;
 
     public SettingsPanel() {
-        setLayout(new FlowLayout(FlowLayout.LEFT));
-        JLabel panelLabel = new JLabel("Scope");
-        add(panelLabel);
-        add(createToolSelectorPanel());
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        add(createCheckboxePanel(), gbc);
     }
 
-    private JPanel createToolSelectorPanel() {
-        JPanel panel = new JPanel();
-        checkBoxGrid = new JPanel(new GridLayout(2,7));
+    private JPanel createCheckboxePanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        panel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, Color.LIGHT_GRAY));
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+
+        JLabel label = new JLabel("Enabled Tools");
+
+        panel.add(label, gbc);
+
+        JLabel subLabel = new JLabel("Select which Burp Suite tools APE will work with");
+
+        gbc.gridy = 1;
+
+        panel.add(subLabel, gbc);
+
+        gbc.gridy = 2;
+        gbc.weighty = 1;
+
+        checkBoxGrid = new JPanel(new GridLayout(5,4));
 
         // Creates a checkbox for each ToolType in burp and
         // associates a ToolType with each checkbox. Adds them to checkBoxGrid.
@@ -34,7 +60,7 @@ public class SettingsPanel extends JPanel {
             checkBoxGrid.add(checkBox);
         }
 
-        panel.add(checkBoxGrid);
+        panel.add(checkBoxGrid, gbc);
         return panel;
     }
 }
