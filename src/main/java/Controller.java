@@ -7,6 +7,12 @@ public class Controller implements BurpExtension {
     private Model model;
     private View view;
 
+    public SettingsController settingsController;
+    public ContextMenusController contextMenusController;
+    public ErrorDetectionController errorDetectionController;
+    public CorrectiveCallsController correctiveCallsController;
+
+
     // This class is automatically instantiated by burp suite. Burp calls initialize first and
     // passes the monotoyaApi object.
     @Override
@@ -15,9 +21,9 @@ public class Controller implements BurpExtension {
 
         model = new Model();
         view = new View();
-        new SettingsController(view.settingsPanel, model);
-        new ContextMenusController(view, model);
-        new ErrorDetectionController(view.errorDetectionPanel, model);
-        new CorrectiveCallsController(view.correctiveCallsPanel, model);
+        settingsController = new SettingsController(view.settingsPanel, model);
+        contextMenusController = new ContextMenusController(view, model, this);
+        errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);
+        correctiveCallsController = new CorrectiveCallsController(view.correctiveCallsPanel, model);
     }
 }

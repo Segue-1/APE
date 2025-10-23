@@ -20,11 +20,11 @@ public class CorrectiveCallsPanel extends JPanel {
 
     public JPanel saveCallSequencePanel;
 
-    public TableModel callSequenceTableModel;
+    public DefaultTableModel callSequenceTableModel;
     public JTable callSequenceTable;
     public JScrollPane callSequenceScrollPane;
 
-    public TableModel saveCallSequenceTableModel;
+    public DefaultTableModel saveCallSequenceTableModel;
     public JTable saveCallSequenceTable;
     public JScrollPane saveCallSequenceScrollPane;
 

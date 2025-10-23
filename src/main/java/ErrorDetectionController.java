@@ -1,3 +1,5 @@
+import burp.api.montoya.http.message.HttpRequestResponse;
+
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -8,6 +10,7 @@ import java.util.Arrays;
 public class ErrorDetectionController {
     private ErrorDetectionPanel errorDetectionPanel;
     public ArrayList<String[]> errorConditions;
+    public HttpRequestResponse errorCall;
     private int numberOfConditions = 0;
 
     ErrorDetectionController(ErrorDetectionPanel errorDetectionPanel, Model model){
