@@ -11,6 +11,8 @@ public class ErrorDetectionController {
     private ErrorDetectionPanel errorDetectionPanel;
     public ArrayList<String[]> errorConditions;
     public HttpRequestResponse errorCall;
+
+    // TODO implement custom table model. no need to track numberOfConditions, just use index of data structure in custom table model
     private int numberOfConditions = 0;
 
     ErrorDetectionController(ErrorDetectionPanel errorDetectionPanel, Model model){

@@ -20,7 +20,7 @@ public class CorrectiveCallsPanel extends JPanel {
 
     public JPanel saveCallSequencePanel;
 
-    public DefaultTableModel callSequenceTableModel;
+    public RequestResponseTableModel callSequenceTableModel;
     public JTable callSequenceTable;
     public JScrollPane callSequenceScrollPane;
 
@@ -82,15 +82,10 @@ public class CorrectiveCallsPanel extends JPanel {
     }
 
     private JScrollPane createCallSequenceTable() {
-        String[] columns = {"Call number", "Host", "Method", "Path"};
-        callSequenceTableModel = new DefaultTableModel(columns, 0){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
+        callSequenceTableModel = new RequestResponseTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
+
+        callSequenceTable.getColumnModel().getColumn(0).setMinWidth(75);
 
         callSequenceScrollPane = new JScrollPane(callSequenceTable);
         callSequenceScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);

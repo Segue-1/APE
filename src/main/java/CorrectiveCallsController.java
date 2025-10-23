@@ -3,16 +3,14 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CorrectiveCallsController {
     private CorrectiveCallsPanel correctiveCallsPanel;
-    public List<HttpRequestResponse> correctiveCalls;
-    private int callNumber;
     
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
         this.correctiveCallsPanel = correctiveCallsPanel;
-        callNumber = 0;
         saveCallSequence();
         callSequenceTableContextMenu();
         storeCorrectiveCalls();
@@ -51,14 +49,6 @@ public class CorrectiveCallsController {
             int selectedRow = correctiveCallsPanel.callSequenceTable.getSelectedRow();
             if (selectedRow != -1){
                 correctiveCallsPanel.callSequenceTableModel.removeRow(selectedRow);
-
-                // Some data structure which stores each call
-                correctiveCalls.remove(selectedRow);
-
-                // If last row is deleted, reset numberOfConditions count.
-                if (selectedRow == 1){
-                    callNumber = 0;
-                }
             }
         });
 

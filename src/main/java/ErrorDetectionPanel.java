@@ -161,7 +161,7 @@ public class ErrorDetectionPanel extends JPanel {
         return panel;
     }
 
-
+// TODO move to view
     public void resizeColumnsToFitContent() {
         for (int col = 0; col < table.getColumnCount(); col++) {
             int maxWidth = 0;
