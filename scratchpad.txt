@@ -21,3 +21,12 @@ TODO or feature ideas
 You should be able to extract text in step 2 from the error condition call in step one. This call should be accessible
 in some way in step 2 corrective calls. You could automatically populate the top table with a grayed out error condition
 call. Or perhaps add a button to "extract text from error condition". Something like that.
+
+Multi set of corrective calls (already started implementation)
+
+More flexible logic for error condition triggers. When using multiple error conditions to trigger APE, users
+should be able to write out logically exactly what they want. This should include logical AND, OR, and negation.
+Also should essentially permit parenthesis to group conditions and within the parenthesis more logical operators can be
+supported.
+
+condition 1 ^ (condition 2 \/ condition 3 \/ !condition4)
