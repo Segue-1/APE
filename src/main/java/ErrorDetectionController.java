@@ -45,9 +45,6 @@ public class ErrorDetectionController {
 
     // Populates the table on the bottom left hand side of the Error Detection tab.
     private void populateErrorDetectionTable(String category, String input) {
-        /* TODO numberofConditions is still broken, create a list or something to track. If adding a bunch of conditions
-           and something in the middle is deleted, then more conditions are added, the wrong number will appear. When
-           deleting, you could decrement every after that number by 1. */
         String name = "Condition-" + numberOfConditions;
         String description;
 
