@@ -24,45 +24,20 @@ public class ErrorDetectionController {
     // Stores error conditions into an array list. As error conditions are stored, populates table with a list of error
     // conditions.
     private void storeErrorConditions(){
-        errorConditions = new ArrayList<>();
-
         // Get conditions type from drop down menu.
         ActionListener submitButtonListener = e -> {
             String selectedItem = (String) errorDetectionPanel.dropdown.getSelectedItem();
-            String textInput = errorDetectionPanel.conditionTextField.getText();
+            String input = errorDetectionPanel.conditionTextField.getText();
 
-            if (selectedItem.equals("Status Code") && (textInput == null || !textInput.matches("\\d{3}"))){
+            if (selectedItem.equals("Status Code") && (input == null || !input.matches("\\d{3}"))){
                 return;
             }
-
-            errorConditions.add(new String[]{selectedItem, textInput});
-            errorConditions.forEach(pair -> Controller.montoyaApi.logging().logToOutput(Arrays.toString(pair)));
-            numberOfConditions++;
-            populateErrorDetectionTable(selectedItem, textInput);
+            errorDetectionPanel.errorConditionTableModel.addRow(new ErrorCondition(selectedItem, input));
+            Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
         };
         errorDetectionPanel.submitButton.addActionListener(submitButtonListener);
     }
 
-    // Populates the table on the bottom left hand side of the Error Detection tab.
-    private void populateErrorDetectionTable(String category, String input) {
-        String name = "Condition-" + numberOfConditions;
-        String description;
-
-        if (category.equals("Status Code")){
-            description = "APE will trigger if Status Code is " + input;
-        }
-        else if (category.equals("Body")) {
-            description = "APE will trigger if text '" + input + "' is found in response Body";
-        }
-        else if (category.equals("Header")) {
-            description = "APE will trigger if text '" + input + "' is found in response Header";
-        }
-        else{
-            description = "How did you do that?";
-        }
-        errorDetectionPanel.tableModel.addRow(new Object[]{name, category, input, description});
-        errorDetectionPanel.resizeColumnsToFitContent();
-    }
 
     // Create context menu for bottom left table to delete entries
     private void createErrorConditionTableContextMenu() {
@@ -71,13 +46,10 @@ public class ErrorDetectionController {
 
         // Deletes selected row when "Delete" is clicked.
         deleteItem.addActionListener(e -> {
-            int selectedRow = errorDetectionPanel.table.getSelectedRow();
+            int selectedRow = errorDetectionPanel.errorConditionTable.getSelectedRow();
             if (selectedRow != -1){
-                errorDetectionPanel.tableModel.removeRow(selectedRow);
-                errorDetectionPanel.resizeColumnsToFitContent();
-
-                errorConditions.remove(selectedRow);
-                errorConditions.forEach(pair -> Controller.montoyaApi.logging().logToOutput(Arrays.toString(pair)));
+                errorDetectionPanel.errorConditionTableModel.removeRow(selectedRow);
+                Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
 
                 // If last row is deleted, reset numberOfConditions count.
                 if (selectedRow == 1){
@@ -89,7 +61,7 @@ public class ErrorDetectionController {
         popupMenu.add(deleteItem);
 
         // Displays popup menu and selects row.
-        errorDetectionPanel.table.addMouseListener(new MouseAdapter() {
+        errorDetectionPanel.errorConditionTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
@@ -105,9 +77,9 @@ public class ErrorDetectionController {
             }
 
             private void showPopup(MouseEvent e) {
-                int row = errorDetectionPanel.table.rowAtPoint(e.getPoint());
+                int row = errorDetectionPanel.errorConditionTable.rowAtPoint(e.getPoint());
                 if (row >= 0) {
-                    errorDetectionPanel.table.setRowSelectionInterval(row, row);
+                    errorDetectionPanel.errorConditionTable.setRowSelectionInterval(row, row);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }

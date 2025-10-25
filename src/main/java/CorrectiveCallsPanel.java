@@ -86,6 +86,7 @@ public class CorrectiveCallsPanel extends JPanel {
         callSequenceTable = new JTable(callSequenceTableModel);
 
         callSequenceTable.getColumnModel().getColumn(0).setMinWidth(75);
+        callSequenceTable.getTableHeader().setReorderingAllowed(false);
 
         callSequenceScrollPane = new JScrollPane(callSequenceTable);
         callSequenceScrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);

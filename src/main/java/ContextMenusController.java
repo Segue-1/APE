@@ -45,7 +45,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
                 view.correctiveCallsPanel.callSequenceTableModel.addRow(reqResp);
-                view.resizeColumnsToFitContent(view.correctiveCallsPanel.callSequenceTable);
+                Utils.resizeColumnsToFitContent(view.correctiveCallsPanel.callSequenceTable);
             }
         });
     }

@@ -21,8 +21,8 @@ public class ErrorDetectionPanel extends JPanel {
     public JButton submitButton;
     public JTextArea conditionTextField;
 
-    public DefaultTableModel tableModel;
-    public JTable table;
+    public ErrorConditionTableModel errorConditionTableModel;
+    public JTable errorConditionTable;
 
 
     public ErrorDetectionPanel() {
@@ -61,7 +61,6 @@ public class ErrorDetectionPanel extends JPanel {
         add(editorPane, BorderLayout.CENTER);
 
         createBottomPanel();
-
     }
 
     public void createBottomPanel(){
@@ -105,19 +104,14 @@ public class ErrorDetectionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        String[] columns = {"Name", "Category", "Value", "Description"};
-        tableModel = new DefaultTableModel(columns, 0){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        errorConditionTableModel = new ErrorConditionTableModel();
 
-        table = new JTable(tableModel);
-        table.getColumnModel().getColumn(0).setMinWidth(75);
-        table.getColumnModel().getColumn(1).setMinWidth(75);
+        errorConditionTable = new JTable(errorConditionTableModel);
+        errorConditionTable.getColumnModel().getColumn(0).setMinWidth(75);
+        errorConditionTable.getColumnModel().getColumn(1).setMinWidth(75);
+        errorConditionTable.getTableHeader().setReorderingAllowed(false);
 
-        JScrollPane tableScrollPane = new JScrollPane(table);
+        JScrollPane tableScrollPane = new JScrollPane(errorConditionTable);
         panel.add(tableScrollPane, gbc);
 
         return panel;
@@ -159,21 +153,5 @@ public class ErrorDetectionPanel extends JPanel {
         panel.add(submitButton, gbc);
 
         return panel;
-    }
-
-// TODO move to view
-    public void resizeColumnsToFitContent() {
-        for (int col = 0; col < table.getColumnCount(); col++) {
-            int maxWidth = 0;
-            for (int row = 0; row < table.getRowCount(); row++) {
-                TableCellRenderer renderer = table.getCellRenderer(row, col);
-                Component comp = table.prepareRenderer(renderer, row, col);
-                maxWidth = Math.max(maxWidth, comp.getPreferredSize().width);
-            }
-            TableColumn column = table.getColumnModel().getColumn(col);
-            int calculatedWidth = maxWidth + 3;
-            int minWidth = column.getMinWidth();
-            table.getColumnModel().getColumn(col).setPreferredWidth(Math.max(calculatedWidth, minWidth));
-        }
     }
 }
