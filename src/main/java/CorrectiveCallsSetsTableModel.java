@@ -2,6 +2,7 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
@@ -51,7 +52,6 @@ public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
         fireTableRowsDeleted(rowIndex, rowIndex);
     }
 
-    // Tie into "Save" button which should be renamed "Add"
     public void addRow(CorrectiveCallsSet correctiveCallSet) {
         correctiveCallSet.index = correctiveCallsSets.size();
         correctiveCallSet.setName();
@@ -66,11 +66,38 @@ public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
     }
 
     @Override
-    public boolean isCellEditable(int row, int column) {
-        if (column == 1) {
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        if (columnIndex == 1) {
             return true;
         }
         else
             return false;
+    }
+
+    @Override
+    public void setValueAt(Object input, int rowIndex, int columnIndex) {
+        if (columnIndex == 1) {
+            correctiveCallsSets.get(rowIndex).description = (String) input;
+        }
+        else
+            return;
+
+        fireTableCellUpdated(rowIndex, columnIndex);
+    }
+
+    public void addRequestResponse(HttpRequestResponse reqResp, int rowIndex) {
+        // If no row selected, select Set 0, shouldn't be possible.
+        if (rowIndex == -1) {
+            rowIndex = 0;
+        }
+        correctiveCallsSets.get(rowIndex).correctiveCalls.add(reqResp);
+    }
+
+    @Override
+    public String toString() {
+        return "CorrectiveCallsSetsTableModel{" +
+                "correctiveCallsSets=" + correctiveCallsSets +
+                ", columns=" + Arrays.toString(columns) +
+                '}';
     }
 }

@@ -24,7 +24,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
 
 
     @Override
-    public java.util.List<Component> provideMenuItems(ContextMenuEvent event) {
+    public List<Component> provideMenuItems(ContextMenuEvent event) {
         this.contextMenuEvent = event;
         return List.of(view.contextMenus.sendToErrorDetection, view.contextMenus.sendTocorrectiveCalls);
     }
@@ -44,10 +44,17 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
-                //view.correctiveCallsPanel.correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet(reqResp));
+                view.correctiveCallsPanel.correctiveCallsSetsTableModel.addRequestResponse(reqResp, view.correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow());
+                Controller.montoyaApi.logging().logToOutput(view.correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(getSelectedRow()).toString());
                 Utils.resizeColumnsToFitContent(view.correctiveCallsPanel.callSequenceTable);
             }
         });
+    }
+
+    int getSelectedRow() {
+        int index;
+        index = view.correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
+        return index;
     }
 
     // Loads context menus.

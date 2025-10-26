@@ -68,21 +68,21 @@ public class CorrectiveCallsPanel extends JPanel {
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        topPanel.add(createCorrectiveCallsSetPanel(), gbc);
-
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 0.125; gbc.weighty = 1;
 
         topPanel.add(createCorrectiveCallsSetsPanel(), gbc);
 
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        topPanel.add(createCorrectiveCallsSetPanel(), gbc);
+
         add(topPanel);
     }
 
     private JScrollPane createCorrectiveCallsSetPanel() {
-        callSequenceTableModel = new CorrectiveCallsSetTableModel();
+        callSequenceTableModel = new CorrectiveCallsSetTableModel(correctiveCallsSetsTableModel.correctiveCallsSets.get(0).correctiveCalls);
         callSequenceTable = new JTable(callSequenceTableModel);
 
         callSequenceTable.getColumnModel().getColumn(0).setMinWidth(75);
@@ -117,6 +117,7 @@ public class CorrectiveCallsPanel extends JPanel {
         correctiveCallsSetsTable = new JTable(correctiveCallsSetsTableModel);
         correctiveCallsSetsTable.setRowSelectionInterval(0,0);
         correctiveCallsSetsTable.getColumnModel().getColumn(0).setMaxWidth(75);
+        correctiveCallsSetsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         saveCallSequenceScrollPane = new JScrollPane(correctiveCallsSetsTable);
         saveCallSequencePanel.add(saveCallSequenceScrollPane, gbc);
 

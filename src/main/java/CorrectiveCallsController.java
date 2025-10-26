@@ -13,6 +13,7 @@ public class CorrectiveCallsController {
         callSequenceTableContextMenu();
         storeCorrectiveCalls();
         setButtonActionListeners();
+        //setSelectedCorrectiveCallsSetListener();
     }
 
     private void storeCorrectiveCalls(){
@@ -95,6 +96,15 @@ public class CorrectiveCallsController {
         };
         correctiveCallsPanel.addBotton.addActionListener(addButtonListener);
         correctiveCallsPanel.removeButton.addActionListener(removeButtonListener);
+    }
+
+    private void setSelectedCorrectiveCallsSetListener() {
+        correctiveCallsPanel.correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
+            int index = correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
+            if (index != -1) {
+                correctiveCallsPanel.callSequenceTableModel.loadCorrectiveCalls(correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(index).correctiveCalls);
+            }
+        });
     }
 
 }                    

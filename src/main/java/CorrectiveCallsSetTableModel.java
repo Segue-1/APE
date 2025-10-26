@@ -6,8 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CorrectiveCallsSetTableModel extends AbstractTableModel {
-    public List<HttpRequestResponse> correctiveCalls = new ArrayList<>();
+    public List<HttpRequestResponse> correctiveCalls;
     private String[] columns = {"Call Number", "Host", "URL", "Method", "Path"};
+
+    CorrectiveCallsSetTableModel (List<HttpRequestResponse> set0CorrectiveCalls) {
+        this.correctiveCalls = set0CorrectiveCalls;
+    }
 
     @Override
     public int getRowCount() {
@@ -48,6 +52,11 @@ public class CorrectiveCallsSetTableModel extends AbstractTableModel {
         correctiveCalls.add(reqResp);
         fireTableRowsInserted(correctiveCalls.size() - 1, correctiveCalls.size() - 1);
     }
+
+    public void loadCorrectiveCalls(List<HttpRequestResponse> correctiveCalls) {
+        this.correctiveCalls = correctiveCalls;
+    }
+
 
     @Override
     public boolean isCellEditable(int row, int column) {
