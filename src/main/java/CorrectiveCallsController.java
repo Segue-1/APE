@@ -1,43 +1,45 @@
-import burp.api.montoya.http.message.HttpRequestResponse;
-
 import javax.swing.*;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class CorrectiveCallsController {
     private CorrectiveCallsPanel correctiveCallsPanel;
     
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
         this.correctiveCallsPanel = correctiveCallsPanel;
-        saveCallSequence();
+        initRadioButtons();
         callSequenceTableContextMenu();
         storeCorrectiveCalls();
+        setButtonActionListeners();
     }
 
     private void storeCorrectiveCalls(){
 
     }
 
-    private void saveCallSequence() {
-        disableSaveCallSequence(); // Disable by default
+    private void initRadioButtons() {
+        singleSet(); // Single set by default
         onRadioButton();
     }
 
     private void onRadioButton() {
-        correctiveCallsPanel.disableRadioButton.addActionListener(e -> disableSaveCallSequence());
-        correctiveCallsPanel.enableRadioButton.addActionListener(e -> enableSaveCallSequence());
+        correctiveCallsPanel.singleSetRadionButton.addActionListener(e -> singleSet());
+        correctiveCallsPanel.multiSetRadioButton.addActionListener(e -> multiSet());
     }
 
-    private void disableSaveCallSequence() {
-        correctiveCallsPanel.saveButton.setEnabled(false);
+    private void singleSet() {
+        correctiveCallsPanel.addBotton.setEnabled(false);
         correctiveCallsPanel.removeButton.setEnabled(false);
+        correctiveCallsPanel.correctiveCallsSetsTable.setRowSelectionInterval(0,0);
+        correctiveCallsPanel.correctiveCallsSetsTable.setEnabled(false);
     }
 
-    private void enableSaveCallSequence() {
-        correctiveCallsPanel.saveButton.setEnabled(true);
+    private void multiSet() {
+        correctiveCallsPanel.addBotton.setEnabled(true);
         correctiveCallsPanel.removeButton.setEnabled(true);
+        correctiveCallsPanel.correctiveCallsSetsTable.setEnabled(true);
     }
 
     private void callSequenceTableContextMenu() {
@@ -78,6 +80,21 @@ public class CorrectiveCallsController {
                 }
             }
         });
+    }
+
+    private void setButtonActionListeners(){
+        ActionListener addButtonListener = e -> {
+            correctiveCallsPanel.correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet());
+            Utils.resizeColumnsToFitContent(correctiveCallsPanel.correctiveCallsSetsTable);
+        };
+
+        ActionListener removeButtonListener = e -> {
+            int selectedRow = correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
+            correctiveCallsPanel.correctiveCallsSetsTableModel.removeRow(selectedRow);
+            Utils.resizeColumnsToFitContent(correctiveCallsPanel.correctiveCallsSetsTable);
+        };
+        correctiveCallsPanel.addBotton.addActionListener(addButtonListener);
+        correctiveCallsPanel.removeButton.addActionListener(removeButtonListener);
     }
 
 }                    

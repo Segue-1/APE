@@ -44,7 +44,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
-                view.correctiveCallsPanel.callSequenceTableModel.addRow(reqResp);
+                //view.correctiveCallsPanel.correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet(reqResp));
                 Utils.resizeColumnsToFitContent(view.correctiveCallsPanel.callSequenceTable);
             }
         });

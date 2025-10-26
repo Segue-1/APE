@@ -37,7 +37,7 @@ public class ErrorConditionTableModel extends AbstractTableModel {
 
     public void removeRow(int rowIndex) {
         errorConditions.remove(rowIndex);
-        setErrorConditionNumber(rowIndex);
+        resetNames(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
     }
 
@@ -49,7 +49,7 @@ public class ErrorConditionTableModel extends AbstractTableModel {
         fireTableRowsInserted(errorConditions.size() - 1, errorConditions.size() - 1);
     }
 
-    private void setErrorConditionNumber(int start) {
+    private void resetNames(int start) {
         for (int i = start; i < errorConditions.size(); i++) {
             errorConditions.get(i).name = "Condition " + --errorConditions.get(i).index;
         }

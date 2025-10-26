@@ -5,13 +5,13 @@ import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequestResponseTableModel extends AbstractTableModel {
-    public List<HttpRequestResponse> reqRespList = new ArrayList<>();
+public class CorrectiveCallsSetTableModel extends AbstractTableModel {
+    public List<HttpRequestResponse> correctiveCalls = new ArrayList<>();
     private String[] columns = {"Call Number", "Host", "URL", "Method", "Path"};
 
     @Override
     public int getRowCount() {
-        return reqRespList.size();
+        return correctiveCalls.size();
     }
 
     @Override
@@ -26,7 +26,7 @@ public class RequestResponseTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        HttpRequestResponse reqResp = reqRespList.get(rowIndex);
+        HttpRequestResponse reqResp = correctiveCalls.get(rowIndex);
         HttpRequest request = reqResp.request();
 
         switch (columnIndex) {
@@ -40,13 +40,13 @@ public class RequestResponseTableModel extends AbstractTableModel {
     }
 
     public void removeRow(int rowIndex) {
-        reqRespList.remove(rowIndex);
+        correctiveCalls.remove(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
     }
 
     public void addRow(HttpRequestResponse reqResp) {
-        reqRespList.add(reqResp);
-        fireTableRowsInserted(reqRespList.size() - 1, reqRespList.size() - 1);
+        correctiveCalls.add(reqResp);
+        fireTableRowsInserted(correctiveCalls.size() - 1, correctiveCalls.size() - 1);
     }
 
     @Override

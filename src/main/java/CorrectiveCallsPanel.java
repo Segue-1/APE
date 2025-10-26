@@ -15,20 +15,20 @@ public class CorrectiveCallsPanel extends JPanel {
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
 
-    public JRadioButton disableRadioButton;
-    public JRadioButton enableRadioButton;
+    public JRadioButton singleSetRadionButton;
+    public JRadioButton multiSetRadioButton;
 
     public JPanel saveCallSequencePanel;
 
-    public RequestResponseTableModel callSequenceTableModel;
+    public CorrectiveCallsSetTableModel callSequenceTableModel;
     public JTable callSequenceTable;
     public JScrollPane callSequenceScrollPane;
 
-    public DefaultTableModel saveCallSequenceTableModel;
-    public JTable saveCallSequenceTable;
+    public CorrectiveCallsSetsTableModel correctiveCallsSetsTableModel;
+    public JTable correctiveCallsSetsTable;
     public JScrollPane saveCallSequenceScrollPane;
 
-    public JButton saveButton;
+    public JButton addBotton;
     public JButton removeButton;
 
     public CorrectiveCallsPanel() {
@@ -71,18 +71,18 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        topPanel.add(createCallSequenceTable(), gbc);
+        topPanel.add(createCorrectiveCallsSetPanel(), gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 0.125; gbc.weighty = 1;
 
-        topPanel.add(createSaveCallSequencePanel(), gbc);
+        topPanel.add(createCorrectiveCallsSetsPanel(), gbc);
 
         add(topPanel);
     }
 
-    private JScrollPane createCallSequenceTable() {
-        callSequenceTableModel = new RequestResponseTableModel();
+    private JScrollPane createCorrectiveCallsSetPanel() {
+        callSequenceTableModel = new CorrectiveCallsSetTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
 
         callSequenceTable.getColumnModel().getColumn(0).setMinWidth(75);
@@ -94,7 +94,7 @@ public class CorrectiveCallsPanel extends JPanel {
         return callSequenceScrollPane;
     }
 
-    private JPanel createSaveCallSequencePanel() {
+    private JPanel createCorrectiveCallsSetsPanel() {
         saveCallSequencePanel = new JPanel(new GridBagLayout());
         saveCallSequencePanel.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
 
@@ -106,28 +106,24 @@ public class CorrectiveCallsPanel extends JPanel {
         saveCallSequencePanel.add(createRadioButtonPanel(), gbc);
 
         ButtonGroup buttonGroup = new ButtonGroup();
-        buttonGroup.add(disableRadioButton);
-        buttonGroup.add(enableRadioButton);
+        buttonGroup.add(singleSetRadionButton);
+        buttonGroup.add(multiSetRadioButton);
 
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
+        
+        correctiveCallsSetsTableModel = new CorrectiveCallsSetsTableModel();
 
-        String[] columns = {"Name", "Description"};
-        saveCallSequenceTableModel = new DefaultTableModel(columns, 0){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
-        saveCallSequenceTable = new JTable(saveCallSequenceTableModel);
-        saveCallSequenceScrollPane = new JScrollPane(saveCallSequenceTable);
+        correctiveCallsSetsTable = new JTable(correctiveCallsSetsTableModel);
+        correctiveCallsSetsTable.setRowSelectionInterval(0,0);
+        correctiveCallsSetsTable.getColumnModel().getColumn(0).setMaxWidth(75);
+        saveCallSequenceScrollPane = new JScrollPane(correctiveCallsSetsTable);
         saveCallSequencePanel.add(saveCallSequenceScrollPane, gbc);
 
         gbc.gridy = 2;
         gbc.weighty = 0;
 
-        saveCallSequencePanel.add(createSaveCallSequenceButtonPanel(), gbc);
+        saveCallSequencePanel.add(createCorrectiveCallsSetsButtonPanel(), gbc);
         return saveCallSequencePanel;
     }
 
@@ -139,18 +135,18 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        disableRadioButton = new JRadioButton("Single Set", true);
-        panel.add(disableRadioButton, gbc);
+        singleSetRadionButton = new JRadioButton("Single Set", true);
+        panel.add(singleSetRadionButton, gbc);
 
         gbc.gridx = 1;
 
-        enableRadioButton = new JRadioButton("Mulitple Sets");
-        panel.add(enableRadioButton, gbc);
+        multiSetRadioButton = new JRadioButton("Mulitple Sets");
+        panel.add(multiSetRadioButton, gbc);
 
         return panel;
     }
 
-    private JPanel createSaveCallSequenceButtonPanel() {
+    private JPanel createCorrectiveCallsSetsButtonPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -158,8 +154,8 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        saveButton = new JButton("Save");
-        panel.add(saveButton, gbc);
+        addBotton = new JButton("Add");
+        panel.add(addBotton, gbc);
 
         gbc.gridx = 1;
 
