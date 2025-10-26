@@ -6,17 +6,17 @@ import java.awt.event.MouseEvent;
 
 public class CorrectiveCallsController {
     private CorrectiveCallsPanel correctiveCallsPanel;
-    
+
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
         this.correctiveCallsPanel = correctiveCallsPanel;
         initRadioButtons();
         callSequenceTableContextMenu();
         storeCorrectiveCalls();
         setButtonActionListeners();
-        //setSelectedCorrectiveCallsSetListener();
+        setSelectedCorrectiveCallsSetListener();
     }
 
-    private void storeCorrectiveCalls(){
+    private void storeCorrectiveCalls() {
 
     }
 
@@ -33,7 +33,7 @@ public class CorrectiveCallsController {
     private void singleSet() {
         correctiveCallsPanel.addBotton.setEnabled(false);
         correctiveCallsPanel.removeButton.setEnabled(false);
-        correctiveCallsPanel.correctiveCallsSetsTable.setRowSelectionInterval(0,0);
+        correctiveCallsPanel.correctiveCallsSetsTable.setRowSelectionInterval(0, 0);
         correctiveCallsPanel.correctiveCallsSetsTable.setEnabled(false);
     }
 
@@ -50,7 +50,7 @@ public class CorrectiveCallsController {
         // Deletes selected row when "Delete" is clicked.
         deleteItem.addActionListener(e -> {
             int selectedRow = correctiveCallsPanel.callSequenceTable.getSelectedRow();
-            if (selectedRow != -1){
+            if (selectedRow != -1) {
                 correctiveCallsPanel.callSequenceTableModel.removeRow(selectedRow);
             }
         });
@@ -67,8 +67,8 @@ public class CorrectiveCallsController {
             }
 
             @Override
-            public void mouseReleased(MouseEvent e){
-                if (e.isPopupTrigger()){
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
                     showPopup(e);
                 }
             }
@@ -83,7 +83,7 @@ public class CorrectiveCallsController {
         });
     }
 
-    private void setButtonActionListeners(){
+    private void setButtonActionListeners() {
         ActionListener addButtonListener = e -> {
             correctiveCallsPanel.correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet());
             Utils.resizeColumnsToFitContent(correctiveCallsPanel.correctiveCallsSetsTable);
@@ -92,20 +92,30 @@ public class CorrectiveCallsController {
         ActionListener removeButtonListener = e -> {
             int selectedRow = correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
             correctiveCallsPanel.correctiveCallsSetsTableModel.removeRow(selectedRow);
+            correctiveCallsPanel.callSequenceTableModel.fireTableDataChanged();
             Utils.resizeColumnsToFitContent(correctiveCallsPanel.correctiveCallsSetsTable);
+            correctiveCallsPanel.correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
         };
         correctiveCallsPanel.addBotton.addActionListener(addButtonListener);
         correctiveCallsPanel.removeButton.addActionListener(removeButtonListener);
     }
 
     private void setSelectedCorrectiveCallsSetListener() {
-        correctiveCallsPanel.correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
-            int index = correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
-            if (index != -1) {
-                correctiveCallsPanel.callSequenceTableModel.loadCorrectiveCalls(correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(index).correctiveCalls);
-            }
-        });
-    }
 
-}                    
+        correctiveCallsPanel.correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
+
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
+
+                if (selectedRow != -1) {
+                    correctiveCallsPanel.callSequenceTableModel.loadCorrectiveCalls(correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).correctiveCalls);
+                    Controller.montoyaApi.logging().logToOutput("\n------ FROM SELECTION -----");
+                    Controller.montoyaApi.logging().logToOutput(correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).toString());
+                }
+            }
+
+        });
+
+    }
+}
 

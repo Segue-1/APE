@@ -44,8 +44,13 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
+
                 view.correctiveCallsPanel.correctiveCallsSetsTableModel.addRequestResponse(reqResp, view.correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow());
+                Controller.montoyaApi.logging().logToOutput("\n------ FROM CONTEXT MENU -----");
                 Controller.montoyaApi.logging().logToOutput(view.correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(getSelectedRow()).toString());
+
+                view.correctiveCallsPanel.callSequenceTableModel.fireTableDataChanged();
+
                 Utils.resizeColumnsToFitContent(view.correctiveCallsPanel.callSequenceTable);
             }
         });

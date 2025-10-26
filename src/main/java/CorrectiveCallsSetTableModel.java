@@ -2,7 +2,6 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CorrectiveCallsSetTableModel extends AbstractTableModel {
@@ -55,6 +54,7 @@ public class CorrectiveCallsSetTableModel extends AbstractTableModel {
 
     public void loadCorrectiveCalls(List<HttpRequestResponse> correctiveCalls) {
         this.correctiveCalls = correctiveCalls;
+        fireTableDataChanged();
     }
 
 

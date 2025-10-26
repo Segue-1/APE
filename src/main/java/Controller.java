@@ -19,8 +19,9 @@ public class Controller implements BurpExtension {
     public void initialize(MontoyaApi montoyaApi) {
         Controller.montoyaApi = montoyaApi;
 
-        model = new Model();
         view = new View();
+        model = new Model();
+
         settingsController = new SettingsController(view.settingsPanel, model);
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);

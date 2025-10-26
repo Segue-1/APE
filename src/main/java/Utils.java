@@ -18,4 +18,24 @@ public class Utils {
             table.getColumnModel().getColumn(col).setPreferredWidth(Math.max(calculatedWidth, minWidth));
         }
     }
+
+    public class Timer {
+        static long startTime;
+        static long endTime;
+        static long elapsedTime;
+
+
+        public static void startTimer() {
+            startTime = System.currentTimeMillis();
+        }
+
+        public static void stopTimer() {
+            endTime = System.currentTimeMillis();
+
+            elapsedTime = endTime - startTime;
+
+            Controller.montoyaApi.logging().logToOutput("\n------ ELAPSED TIME ------\n");
+            Controller.montoyaApi.logging().logToOutput(elapsedTime);
+        }
+    }
 }
