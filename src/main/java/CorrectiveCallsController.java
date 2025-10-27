@@ -1,64 +1,90 @@
+import burp.api.montoya.http.message.HttpRequestResponse;
+
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 
 public class CorrectiveCallsController {
-    private CorrectiveCallsPanel correctiveCallsPanel;
+    private CorrectiveCallsSetsTableModel correctiveCallsSetsTableModel;
+    private JTable correctiveCallsSetsTable;
+
+    private CallSequenceTableModel callSequenceTableModel;
+    private JTable callSequenceTable;
+
+    private JRadioButton singleSetRadioButton;
+    private JRadioButton multiSetRadioButton;
+
+    private JButton addBotton;
+    private JButton removeButton;
+    
 
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
-        this.correctiveCallsPanel = correctiveCallsPanel;
-        initRadioButtons();
-        callSequenceTableContextMenu();
-        storeCorrectiveCalls();
+        correctiveCallsSetsTableModel = correctiveCallsPanel.correctiveCallsSetsTableModel;
+        correctiveCallsSetsTable = correctiveCallsPanel.correctiveCallsSetsTable;
+
+        callSequenceTableModel = correctiveCallsPanel.callSequenceTableModel;
+        callSequenceTable = correctiveCallsPanel.callSequenceTable;
+
+        singleSetRadioButton = correctiveCallsPanel.singleSetRadionButton;
+        multiSetRadioButton = correctiveCallsPanel.multiSetRadioButton;
+
+        addBotton = correctiveCallsPanel.addBotton;
+        removeButton = correctiveCallsPanel.removeButton;
+
+        setRadioButtons();
+        setCallSequenceTableContextMenu();
         setButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
+        loadSet0();
     }
 
-    private void storeCorrectiveCalls() {
-
+    private void loadSet0() {
+        List<HttpRequestResponse> set0 = correctiveCallsSetsTableModel.correctiveCallsSets.getFirst().callSequence;
+        callSequenceTableModel.loadCallSequence(set0);
     }
 
-    private void initRadioButtons() {
+    private void setRadioButtons() {
         singleSet(); // Single set by default
         onRadioButton();
     }
 
     private void onRadioButton() {
-        correctiveCallsPanel.singleSetRadionButton.addActionListener(e -> singleSet());
-        correctiveCallsPanel.multiSetRadioButton.addActionListener(e -> multiSet());
+        singleSetRadioButton.addActionListener(e -> singleSet());
+        multiSetRadioButton.addActionListener(e -> multiSet());
     }
 
     private void singleSet() {
-        correctiveCallsPanel.addBotton.setEnabled(false);
-        correctiveCallsPanel.removeButton.setEnabled(false);
-        correctiveCallsPanel.correctiveCallsSetsTable.setRowSelectionInterval(0, 0);
-        correctiveCallsPanel.correctiveCallsSetsTable.setEnabled(false);
+        addBotton.setEnabled(false);
+        removeButton.setEnabled(false);
+        correctiveCallsSetsTable.setRowSelectionInterval(0, 0);
+        correctiveCallsSetsTable.setEnabled(false);
     }
 
     private void multiSet() {
-        correctiveCallsPanel.addBotton.setEnabled(true);
-        correctiveCallsPanel.removeButton.setEnabled(true);
-        correctiveCallsPanel.correctiveCallsSetsTable.setEnabled(true);
+        addBotton.setEnabled(true);
+        removeButton.setEnabled(true);
+        correctiveCallsSetsTable.setEnabled(true);
     }
 
-    private void callSequenceTableContextMenu() {
+    private void setCallSequenceTableContextMenu() {
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem deleteItem = new JMenuItem("Delete");
 
         // Deletes selected row when "Delete" is clicked.
         deleteItem.addActionListener(e -> {
-            int selectedRow = correctiveCallsPanel.callSequenceTable.getSelectedRow();
+            int selectedRow = callSequenceTable.getSelectedRow();
             if (selectedRow != -1) {
-                correctiveCallsPanel.callSequenceTableModel.removeRow(selectedRow);
+                callSequenceTableModel.removeRow(selectedRow);
             }
         });
 
         popupMenu.add(deleteItem);
 
         // Displays popup menu and selects row.
-        correctiveCallsPanel.callSequenceTable.addMouseListener(new MouseAdapter() {
+        callSequenceTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
@@ -74,9 +100,9 @@ public class CorrectiveCallsController {
             }
 
             private void showPopup(MouseEvent e) {
-                int row = correctiveCallsPanel.callSequenceTable.rowAtPoint(e.getPoint());
+                int row = callSequenceTable.rowAtPoint(e.getPoint());
                 if (row >= 0) {
-                    correctiveCallsPanel.callSequenceTable.setRowSelectionInterval(row, row);
+                    callSequenceTable.setRowSelectionInterval(row, row);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -85,37 +111,33 @@ public class CorrectiveCallsController {
 
     private void setButtonActionListeners() {
         ActionListener addButtonListener = e -> {
-            correctiveCallsPanel.correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet());
-            Utils.resizeColumnsToFitContent(correctiveCallsPanel.correctiveCallsSetsTable);
+            correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet());
+            Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
         };
 
         ActionListener removeButtonListener = e -> {
-            int selectedRow = correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
-            correctiveCallsPanel.correctiveCallsSetsTableModel.removeRow(selectedRow);
-            correctiveCallsPanel.callSequenceTableModel.fireTableDataChanged();
-            Utils.resizeColumnsToFitContent(correctiveCallsPanel.correctiveCallsSetsTable);
-            correctiveCallsPanel.correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
+            int selectedRow = correctiveCallsSetsTable.getSelectedRow();
+            correctiveCallsSetsTableModel.removeRow(selectedRow);
+            callSequenceTableModel.fireTableDataChanged();
+            Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
+            correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
         };
-        correctiveCallsPanel.addBotton.addActionListener(addButtonListener);
-        correctiveCallsPanel.removeButton.addActionListener(removeButtonListener);
+        addBotton.addActionListener(addButtonListener);
+        removeButton.addActionListener(removeButtonListener);
     }
 
     private void setSelectedCorrectiveCallsSetListener() {
-
-        correctiveCallsPanel.correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
-
+        correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                int selectedRow = correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
+                int selectedRow = correctiveCallsSetsTable.getSelectedRow();
 
                 if (selectedRow != -1) {
-                    correctiveCallsPanel.callSequenceTableModel.loadCorrectiveCalls(correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).correctiveCalls);
+                    callSequenceTableModel.loadCallSequence(correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).callSequence);
                     Controller.montoyaApi.logging().logToOutput("\n------ FROM SELECTION -----");
-                    Controller.montoyaApi.logging().logToOutput(correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).toString());
+                    Controller.montoyaApi.logging().logToOutput(correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).toString());
                 }
             }
-
         });
-
     }
 }
 

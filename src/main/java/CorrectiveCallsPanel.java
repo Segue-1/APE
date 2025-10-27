@@ -20,7 +20,7 @@ public class CorrectiveCallsPanel extends JPanel {
 
     public JPanel saveCallSequencePanel;
 
-    public CorrectiveCallsSetTableModel callSequenceTableModel;
+    public CallSequenceTableModel callSequenceTableModel;
     public JTable callSequenceTable;
     public JScrollPane callSequenceScrollPane;
 
@@ -82,7 +82,7 @@ public class CorrectiveCallsPanel extends JPanel {
     }
 
     private JScrollPane createCorrectiveCallsSetPanel() {
-        callSequenceTableModel = new CorrectiveCallsSetTableModel(correctiveCallsSetsTableModel.correctiveCallsSets.get(0).correctiveCalls);
+        callSequenceTableModel = new CallSequenceTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
 
         callSequenceTable.getColumnModel().getColumn(0).setMinWidth(75);

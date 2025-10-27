@@ -3,6 +3,7 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
@@ -12,11 +13,24 @@ public class ContextMenusController implements ContextMenuItemsProvider {
     private Model model;
     private Controller controller;
     private ContextMenuEvent contextMenuEvent;
+
+    private CorrectiveCallsSetsTableModel correctiveCallsSetsTableModel;
+    private JTable correctiveCallsSetsTable;
+
+    private CallSequenceTableModel callSequenceTableModel;
+    private JTable callSequenceTable;
+
     
     ContextMenusController(View view, Model model, Controller controller) {
         this.view = view;
         this.model = model;
         this.controller = controller;
+
+        correctiveCallsSetsTableModel = view.correctiveCallsPanel.correctiveCallsSetsTableModel;
+        correctiveCallsSetsTable = view.correctiveCallsPanel.correctiveCallsSetsTable;
+
+        callSequenceTableModel = view.correctiveCallsPanel.callSequenceTableModel;
+        callSequenceTable = view.correctiveCallsPanel.callSequenceTable;
 
         attachListeners();
         registerContextMenus();
@@ -45,20 +59,19 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
 
-                view.correctiveCallsPanel.correctiveCallsSetsTableModel.addRequestResponse(reqResp, view.correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow());
+                correctiveCallsSetsTableModel.addRequestResponse(reqResp, correctiveCallsSetsTable.getSelectedRow());
                 Controller.montoyaApi.logging().logToOutput("\n------ FROM CONTEXT MENU -----");
-                Controller.montoyaApi.logging().logToOutput(view.correctiveCallsPanel.correctiveCallsSetsTableModel.correctiveCallsSets.get(getSelectedRow()).toString());
+                Controller.montoyaApi.logging().logToOutput(correctiveCallsSetsTableModel.correctiveCallsSets.get(getSelectedRow()).toString());
 
-                view.correctiveCallsPanel.callSequenceTableModel.fireTableDataChanged();
-
-                Utils.resizeColumnsToFitContent(view.correctiveCallsPanel.callSequenceTable);
+                callSequenceTableModel.fireTableDataChanged();
+                Utils.resizeColumnsToFitContent(callSequenceTable);
             }
         });
     }
 
     int getSelectedRow() {
         int index;
-        index = view.correctiveCallsPanel.correctiveCallsSetsTable.getSelectedRow();
+        index = correctiveCallsSetsTable.getSelectedRow();
         return index;
     }
 

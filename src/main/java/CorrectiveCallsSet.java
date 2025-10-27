@@ -8,7 +8,7 @@ public class CorrectiveCallsSet {
     public int index;
     public String name;
     public String description;
-    public List<HttpRequestResponse> correctiveCalls = new ArrayList<>();
+    public List<HttpRequestResponse> callSequence = new ArrayList<>();
 
     CorrectiveCallsSet() {
         description = "";
@@ -32,7 +32,7 @@ public class CorrectiveCallsSet {
         List<String> strings = new ArrayList<>();
         int count = 1;
 
-        for (HttpRequestResponse call : correctiveCalls) {
+        for (HttpRequestResponse call : callSequence) {
             HttpRequest req = call.request();
             strings.add("Call number: " + count++);
             strings.add(req.httpService().host());
