@@ -2,6 +2,7 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
@@ -28,8 +29,24 @@ public class CorrectiveCallsPanel extends JPanel {
     public JTable correctiveCallsSetsTable;
     public JScrollPane saveCallSequenceScrollPane;
 
-    public JButton addBotton;
-    public JButton removeButton;
+    public JButton addSetBotton;
+    public JButton removeSetBotton;
+
+    public ExtractionTableModel extractionTableModel;
+    public ReplacementTableModel replacementTableModel;
+
+    public JTable extractionTable;
+    public JTable replacementTable;
+
+    public JTextField[] extractInputFields;
+    public JTextField[] replaceInputFields;
+
+    public JButton extractFromSelect;
+    public JButton replaceFromSelect;
+
+    public JButton extractAddButton;
+    public JButton replaceAddButton;
+
 
     public CorrectiveCallsPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -85,7 +102,7 @@ public class CorrectiveCallsPanel extends JPanel {
         callSequenceTableModel = new CallSequenceTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
 
-        callSequenceTable.getColumnModel().getColumn(0).setMinWidth(75);
+        callSequenceTable.getColumnModel().getColumn(0).setMinWidth(90);
         callSequenceTable.getTableHeader().setReorderingAllowed(false);
 
         callSequenceScrollPane = new JScrollPane(callSequenceTable);
@@ -155,13 +172,13 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        addBotton = new JButton("Add");
-        panel.add(addBotton, gbc);
+        addSetBotton = new JButton("Add");
+        panel.add(addSetBotton, gbc);
 
         gbc.gridx = 1;
 
-        removeButton = new JButton("Remove");
-        panel.add(removeButton, gbc);
+        removeSetBotton = new JButton("Remove");
+        panel.add(removeSetBotton, gbc);
 
         return panel;
     }
@@ -191,36 +208,51 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        String[] replaceFieldsLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Reqest:", "Pick from Extraction"};
-        JPanel replaceFields = createInputFields("Replacement", replaceFieldsLabels);
+        String[] replaceFieldsLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
+                                        "Pick from Extraction"};
+        String[] replaceDropDownOptions = {"Should", "load", "extract", "list"};
+        replaceInputFields = new JTextField[replaceFieldsLabels.length - 1];
+        replaceFromSelect = new JButton();
+        replaceAddButton = new JButton();
+
+        JPanel replaceFields = createInputTextFields("Replacement", replaceFieldsLabels, replaceDropDownOptions,
+                replaceInputFields, replaceFromSelect, replaceAddButton);
+
         bottomPanel.add(replaceFields, gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        String[] columns = {"Name", "Id"};
-
-        JPanel replaceTable = createSmallTable("Replace List", columns);
+        JPanel replaceTable = createSmallTable("Replace List", extractionTableModel);
         bottomPanel.add(replaceTable, gbc);
 
         gbc.gridx = 2; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        String[] extractFieldsLabels  = {"Name:", "Start string:", "Stop string:", "Selected Text from Response:", "URL encode/decode"};
-        JPanel extractFields = createInputFields("Extraction", extractFieldsLabels);
+        String[] extractFieldsLabels  = {"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
+                                         "URL encode/decode"};
+        String[] extractDropDownOptions = {"N/A", "Encode", "Decode"};
+        extractInputFields = new JTextField[replaceFieldsLabels.length - 1];
+        extractFromSelect = new JButton();
+        extractAddButton = new JButton();
+
+        JPanel extractFields = createInputTextFields("Extraction", extractFieldsLabels, extractDropDownOptions,
+                extractInputFields, extractFromSelect, extractAddButton);
+
         bottomPanel.add(extractFields, gbc);
 
         gbc.gridx = 3; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel extractTable = createSmallTable("Extract List", columns);
+        replacementTableModel = new ReplacementTableModel();
+
+        JPanel extractTable = createSmallTable("Extract List", replacementTableModel);
         bottomPanel.add(extractTable, gbc);
 
         add(bottomPanel);
     }
 
-
-    public JPanel createSmallTable(String header, String[] columns){
+    public JPanel createSmallTable(String header, AbstractTableModel tableModel){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -230,27 +262,27 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 0;
 
-        panel.add(new JLabel(header), gbc);
+        JLabel headerLabel = new JLabel(header);
+        headerLabel.setFont(subHeaderFont);
+        panel.add(headerLabel, gbc);
 
-        TableModel tableModel = new DefaultTableModel(columns, 0){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        // TODO Loading this table model crashes everything. Try catch block does not log exception.
+        try {
+            JTable table = new JTable(tableModel);
+            JScrollPane scrollPane = new JScrollPane(table);
+            gbc.gridx = 0; gbc.gridy = 1;
+            gbc.weightx = 1; gbc.weighty = 1;
+            panel.add(scrollPane, gbc);
+        } catch (Exception e) {
+            Controller.montoyaApi.logging().logToOutput(e.getMessage());
+        }
 
-        JTable table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        panel.add(scrollPane, gbc);
         return panel;
     }
 
 
-    public JPanel createInputFields(String header, String[] fieldNames){
+    public JPanel createInputTextFields(String header, String[] fieldNames, String[] dropDownOptions,
+                                        JTextField[] jTextFields, JButton fromSelect, JButton addButton){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -259,32 +291,42 @@ public class CorrectiveCallsPanel extends JPanel {
 
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 0; gbc.weighty = 0;
-        gbc.gridwidth=2;
+        gbc.gridwidth = 2;
 
-        panel.add(new JLabel(header), gbc);
+        JLabel headerLabel = new JLabel(header);
+        headerLabel.setFont(subHeaderFont);
+        panel.add(headerLabel, gbc);
 
         gbc.weighty = 1;
-        gbc.gridwidth=1;
+        gbc.gridwidth = 1;
+
+        for (int i = 0; i < jTextFields.length; i++) {
+            jTextFields[i] = new JTextField();
+        }
 
         for (int i = 0; i < fieldNames.length; i++) {
             gbc.gridx = 0; gbc.gridy = i + 1;
             gbc.weightx = 1;
             panel.add(new JLabel(fieldNames[i]), gbc);
 
-            gbc.weightx = 1;
-            gbc.gridx = 1;
-            JTextField jtextField = new JTextField("placeholder text");
-            panel.add(jtextField, gbc);
+            if (i < fieldNames.length - 1) {
+                gbc.gridx = 1;
+                panel.add(jTextFields[i], gbc);
+            }
         }
+
+        gbc.gridx = 1; gbc.gridy = fieldNames.length;
+        JComboBox<String> dropdown = new JComboBox<>(dropDownOptions);
+        panel.add(dropdown, gbc);
 
         gbc.gridx = 0; gbc.gridy = fieldNames.length + 1;
         gbc.weightx = 0; gbc.weighty = 1;
-        JButton fromSelectionButton = new JButton("From Selection");
-        panel.add(fromSelectionButton, gbc);
+        fromSelect.setText("From Selection");
+        panel.add(fromSelect, gbc);
 
         gbc.gridx = 1; gbc.gridy = fieldNames.length + 1;
         gbc.weightx = 0;
-        JButton addButton = new JButton("Add");
+        addButton.setText("Add");
         panel.add(addButton, gbc);
 
         return panel;

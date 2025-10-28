@@ -17,8 +17,8 @@ public class CorrectiveCallsController {
     private JRadioButton singleSetRadioButton;
     private JRadioButton multiSetRadioButton;
 
-    private JButton addBotton;
-    private JButton removeButton;
+    private JButton addSetBotton;
+    private JButton removeSetBotton;
     
 
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
@@ -31,17 +31,17 @@ public class CorrectiveCallsController {
         singleSetRadioButton = correctiveCallsPanel.singleSetRadionButton;
         multiSetRadioButton = correctiveCallsPanel.multiSetRadioButton;
 
-        addBotton = correctiveCallsPanel.addBotton;
-        removeButton = correctiveCallsPanel.removeButton;
+        addSetBotton = correctiveCallsPanel.addSetBotton;
+        removeSetBotton = correctiveCallsPanel.removeSetBotton;
 
         setRadioButtons();
         setCallSequenceTableContextMenu();
         setButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
-        loadSet0();
+        initCallSequenceTable();
     }
 
-    private void loadSet0() {
+    private void initCallSequenceTable() {
         List<HttpRequestResponse> set0 = correctiveCallsSetsTableModel.correctiveCallsSets.getFirst().callSequence;
         callSequenceTableModel.loadCallSequence(set0);
     }
@@ -57,15 +57,15 @@ public class CorrectiveCallsController {
     }
 
     private void singleSet() {
-        addBotton.setEnabled(false);
-        removeButton.setEnabled(false);
+        addSetBotton.setEnabled(false);
+        removeSetBotton.setEnabled(false);
         correctiveCallsSetsTable.setRowSelectionInterval(0, 0);
         correctiveCallsSetsTable.setEnabled(false);
     }
 
     private void multiSet() {
-        addBotton.setEnabled(true);
-        removeButton.setEnabled(true);
+        addSetBotton.setEnabled(true);
+        removeSetBotton.setEnabled(true);
         correctiveCallsSetsTable.setEnabled(true);
     }
 
@@ -115,15 +115,15 @@ public class CorrectiveCallsController {
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
         };
 
-        ActionListener removeButtonListener = e -> {
+        ActionListener removeBottonListener = e -> {
             int selectedRow = correctiveCallsSetsTable.getSelectedRow();
             correctiveCallsSetsTableModel.removeRow(selectedRow);
             callSequenceTableModel.fireTableDataChanged();
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
             correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
         };
-        addBotton.addActionListener(addButtonListener);
-        removeButton.addActionListener(removeButtonListener);
+        addSetBotton.addActionListener(addButtonListener);
+        removeSetBotton.addActionListener(removeBottonListener);
     }
 
     private void setSelectedCorrectiveCallsSetListener() {

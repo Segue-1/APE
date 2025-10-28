@@ -1,18 +1,14 @@
 import javax.swing.*;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 import java.awt.*;
 
 
 public class View {
     public JPanel mainPanel;
-
     public ErrorDetectionPanel errorDetectionPanel;
     public CorrectiveCallsPanel correctiveCallsPanel;
     public FollowUpPanel followUpPanel;
     public TestCallsPanel testCallsPanel;
     public SettingsPanel settingsPanel;
-
     public ContextMenus contextMenus;
 
 
