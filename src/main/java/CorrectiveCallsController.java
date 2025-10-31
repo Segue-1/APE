@@ -1,5 +1,6 @@
 import burp.api.montoya.http.message.HttpRequestResponse;
 
+import javax.naming.ldap.Control;
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -19,26 +20,30 @@ public class CorrectiveCallsController {
 
     private JButton addSetBotton;
     private JButton removeSetBotton;
-    
+
+    public JButton extractAddButton;
+    public JButton replaceAddButton;
+
+    public JButton extractFromSelect;
+    public JButton replaceFromSelect;
+
+    public JTextField[] extractInputFields;
+    public JTextField[] replaceInputFields;
+
+    public ExtractionTableModel extractionTableModel;
+    public ReplacementTableModel replacementTableModel;
+
+    public String[] extractDropDownOptions;;
 
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
-        correctiveCallsSetsTableModel = correctiveCallsPanel.correctiveCallsSetsTableModel;
-        correctiveCallsSetsTable = correctiveCallsPanel.correctiveCallsSetsTable;
-
-        callSequenceTableModel = correctiveCallsPanel.callSequenceTableModel;
-        callSequenceTable = correctiveCallsPanel.callSequenceTable;
-
-        singleSetRadioButton = correctiveCallsPanel.singleSetRadionButton;
-        multiSetRadioButton = correctiveCallsPanel.multiSetRadioButton;
-
-        addSetBotton = correctiveCallsPanel.addSetBotton;
-        removeSetBotton = correctiveCallsPanel.removeSetBotton;
+        setAttributes(correctiveCallsPanel);
 
         setRadioButtons();
         setCallSequenceTableContextMenu();
         setButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
         initCallSequenceTable();
+        setExtractAddButtonListener();
     }
 
     private void initCallSequenceTable() {
@@ -138,6 +143,48 @@ public class CorrectiveCallsController {
                 }
             }
         });
+    }
+
+    private void setExtractAddButtonListener() {
+        ActionListener extractAddButtonListener = e -> {
+            ExtractText extractText = new ExtractText();
+            extractText.name = extractInputFields[0].getText();
+            extractText.startString = extractInputFields[1].getText();
+            extractText.stopString = extractInputFields[2].getText();
+            extractText.selectedText = extractInputFields[3].getText();
+            // TODO get input from drop down menu
+            //extractText.urlEncodeDecode = extractDropDownOptions.get;
+            Controller.montoyaApi.logging().logToOutput(extractText.toString());
+        };
+        extractAddButton.addActionListener(extractAddButtonListener);
+    }
+
+    private void setAttributes(CorrectiveCallsPanel correctiveCallsPanel) {
+        correctiveCallsSetsTableModel = correctiveCallsPanel.correctiveCallsSetsTableModel;
+        correctiveCallsSetsTable = correctiveCallsPanel.correctiveCallsSetsTable;
+
+        callSequenceTableModel = correctiveCallsPanel.callSequenceTableModel;
+        callSequenceTable = correctiveCallsPanel.callSequenceTable;
+
+        singleSetRadioButton = correctiveCallsPanel.singleSetRadionButton;
+        multiSetRadioButton = correctiveCallsPanel.multiSetRadioButton;
+
+        addSetBotton = correctiveCallsPanel.addSetBotton;
+        removeSetBotton = correctiveCallsPanel.removeSetBotton;
+
+        extractAddButton = correctiveCallsPanel.extractAddButton;
+        replaceAddButton = correctiveCallsPanel.replaceAddButton;
+
+        extractFromSelect = correctiveCallsPanel.extractFromSelect;
+        replaceFromSelect = correctiveCallsPanel.replaceFromSelect;
+
+        extractInputFields = correctiveCallsPanel.extractInputFields;
+        replaceInputFields = correctiveCallsPanel.replaceInputFields;
+
+        extractionTableModel = correctiveCallsPanel.extractionTableModel;
+        replacementTableModel = correctiveCallsPanel.replacementTableModel;
+
+        extractDropDownOptions = correctiveCallsPanel.extractDropDownOptions;
     }
 }
 

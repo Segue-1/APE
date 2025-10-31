@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExtractionTableModel extends AbstractTableModel {
-    private List<ExtractText> extractTextList = new ArrayList<>();;
+    public List<ExtractText> extractTextList = new ArrayList<>();;
     private String[] columns = {"Name", "Id"};
 
     @Override

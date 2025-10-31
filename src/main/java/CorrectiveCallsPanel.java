@@ -47,6 +47,8 @@ public class CorrectiveCallsPanel extends JPanel {
     public JButton extractAddButton;
     public JButton replaceAddButton;
 
+    public String[] extractDropDownOptions;
+
 
     public CorrectiveCallsPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -223,6 +225,8 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
+        extractionTableModel = new ExtractionTableModel();
+
         JPanel replaceTable = createSmallTable("Replace List", extractionTableModel);
         bottomPanel.add(replaceTable, gbc);
 
@@ -231,7 +235,7 @@ public class CorrectiveCallsPanel extends JPanel {
 
         String[] extractFieldsLabels  = {"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
                                          "URL encode/decode"};
-        String[] extractDropDownOptions = {"N/A", "Encode", "Decode"};
+        extractDropDownOptions = new String[]{"N/A", "Encode", "Decode"};
         extractInputFields = new JTextField[replaceFieldsLabels.length - 1];
         extractFromSelect = new JButton();
         extractAddButton = new JButton();
@@ -266,21 +270,17 @@ public class CorrectiveCallsPanel extends JPanel {
         headerLabel.setFont(subHeaderFont);
         panel.add(headerLabel, gbc);
 
-        // TODO Loading this table model crashes everything. Try catch block does not log exception.
-        try {
-            JTable table = new JTable(tableModel);
-            JScrollPane scrollPane = new JScrollPane(table);
-            gbc.gridx = 0; gbc.gridy = 1;
-            gbc.weightx = 1; gbc.weighty = 1;
-            panel.add(scrollPane, gbc);
-        } catch (Exception e) {
-            Controller.montoyaApi.logging().logToOutput(e.getMessage());
-        }
+        JTable table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
+        panel.add(scrollPane, gbc);
 
         return panel;
     }
 
 
+    // TODO needs to expose drop down menus and handle two different sets of logic
     public JPanel createInputTextFields(String header, String[] fieldNames, String[] dropDownOptions,
                                         JTextField[] jTextFields, JButton fromSelect, JButton addButton){
         JPanel panel = new JPanel(new GridBagLayout());

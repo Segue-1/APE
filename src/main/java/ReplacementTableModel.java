@@ -23,7 +23,25 @@ public class ReplacementTableModel extends AbstractTableModel {
     }
 
     @Override
-    public Object getValueAt(int i, int i1) {
-        return null;
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        ReplaceText replaceText = replaceTextList.get(rowIndex);
+
+        return switch (columnIndex) {
+            case 0 -> replaceText.name;
+            case 1 -> replaceText.id;
+            default -> null;
+        };
+    }
+
+    @Override
+    public void setValueAt(Object input, int rowIndex, int columnIndex) {
+        //TODO Should grab from input text field after hitting add button...
+        if (columnIndex == 1) {
+            replaceTextList.get(rowIndex).name = (String) input;
+        }
+        else
+            return;
+
+        fireTableCellUpdated(rowIndex, columnIndex);
     }
 }
