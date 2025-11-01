@@ -4,7 +4,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
-public class CallSequenceTableModel extends AbstractTableModel {
+public class CallSequenceTableModel extends AbstractTableModel implements DeletableTableModel {
     public List<HttpRequestResponse> callSequence;
     private String[] columns = {"Call Number", "Host", "URL", "Method", "Path"};
 
@@ -39,6 +39,7 @@ public class CallSequenceTableModel extends AbstractTableModel {
         }
     }
 
+    @Override
     public void removeRow(int rowIndex) {
         callSequence.remove(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
@@ -48,7 +49,6 @@ public class CallSequenceTableModel extends AbstractTableModel {
         this.callSequence = callSequence;
         fireTableDataChanged();
     }
-
 
     @Override
     public boolean isCellEditable(int row, int column) {

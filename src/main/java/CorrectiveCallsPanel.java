@@ -47,7 +47,10 @@ public class CorrectiveCallsPanel extends JPanel {
     public JButton extractAddButton;
     public JButton replaceAddButton;
 
-    public String[] extractDropDownOptions;
+    //public String[] extractDropDownOptions;
+
+    public JComboBox<String> extractDropDown;
+    public JComboBox<String> replaceDropDown;
 
 
     public CorrectiveCallsPanel() {
@@ -213,11 +216,12 @@ public class CorrectiveCallsPanel extends JPanel {
         String[] replaceFieldsLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
                                         "Pick from Extraction"};
         String[] replaceDropDownOptions = {"Should", "load", "extract", "list"};
+        replaceDropDown = new JComboBox<>(replaceDropDownOptions);
         replaceInputFields = new JTextField[replaceFieldsLabels.length - 1];
         replaceFromSelect = new JButton();
         replaceAddButton = new JButton();
 
-        JPanel replaceFields = createInputTextFields("Replacement", replaceFieldsLabels, replaceDropDownOptions,
+        JPanel replaceFields = createInputTextFields("Replacement", replaceFieldsLabels, replaceDropDown,
                 replaceInputFields, replaceFromSelect, replaceAddButton);
 
         bottomPanel.add(replaceFields, gbc);
@@ -226,21 +230,23 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 1;
 
         extractionTableModel = new ExtractionTableModel();
+        extractionTable = new JTable(extractionTableModel);
 
-        JPanel replaceTable = createSmallTable("Replace List", extractionTableModel);
-        bottomPanel.add(replaceTable, gbc);
+        JPanel replaceTablePanel = createSmallTable("Replace List", replacementTable);
+        bottomPanel.add(replaceTablePanel, gbc);
 
         gbc.gridx = 2; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
         String[] extractFieldsLabels  = {"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
                                          "URL encode/decode"};
-        extractDropDownOptions = new String[]{"N/A", "Encode", "Decode"};
+        String[] extractDropDownOptions = new String[]{"N/A", "Encode", "Decode"};
         extractInputFields = new JTextField[replaceFieldsLabels.length - 1];
         extractFromSelect = new JButton();
         extractAddButton = new JButton();
+        extractDropDown = new JComboBox<>(extractDropDownOptions);
 
-        JPanel extractFields = createInputTextFields("Extraction", extractFieldsLabels, extractDropDownOptions,
+        JPanel extractFields = createInputTextFields("Extraction", extractFieldsLabels, extractDropDown,
                 extractInputFields, extractFromSelect, extractAddButton);
 
         bottomPanel.add(extractFields, gbc);
@@ -249,14 +255,15 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 1;
 
         replacementTableModel = new ReplacementTableModel();
+        replacementTable = new JTable(replacementTableModel);
 
-        JPanel extractTable = createSmallTable("Extract List", replacementTableModel);
-        bottomPanel.add(extractTable, gbc);
+        JPanel extractTablePanel = createSmallTable("Extract List", extractionTable);
+        bottomPanel.add(extractTablePanel, gbc);
 
         add(bottomPanel);
     }
 
-    public JPanel createSmallTable(String header, AbstractTableModel tableModel){
+    public JPanel createSmallTable(String header, JTable table){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -270,7 +277,6 @@ public class CorrectiveCallsPanel extends JPanel {
         headerLabel.setFont(subHeaderFont);
         panel.add(headerLabel, gbc);
 
-        JTable table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
@@ -279,9 +285,7 @@ public class CorrectiveCallsPanel extends JPanel {
         return panel;
     }
 
-
-    // TODO needs to expose drop down menus and handle two different sets of logic
-    public JPanel createInputTextFields(String header, String[] fieldNames, String[] dropDownOptions,
+    public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox<String> dropDown,
                                         JTextField[] jTextFields, JButton fromSelect, JButton addButton){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -316,8 +320,7 @@ public class CorrectiveCallsPanel extends JPanel {
         }
 
         gbc.gridx = 1; gbc.gridy = fieldNames.length;
-        JComboBox<String> dropdown = new JComboBox<>(dropDownOptions);
-        panel.add(dropdown, gbc);
+        panel.add(dropDown, gbc);
 
         gbc.gridx = 0; gbc.gridy = fieldNames.length + 1;
         gbc.weightx = 0; gbc.weighty = 1;

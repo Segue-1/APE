@@ -1,4 +1,8 @@
 import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.responses.HttpResponse;
+import burp.api.montoya.ui.Selection;
+import burp.api.montoya.ui.editor.HttpRequestEditor;
+import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.naming.ldap.Control;
 import javax.swing.*;
@@ -6,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.Optional;
 
 
 public class CorrectiveCallsController {
@@ -31,19 +36,29 @@ public class CorrectiveCallsController {
     public JTextField[] replaceInputFields;
 
     public ExtractionTableModel extractionTableModel;
-    public ReplacementTableModel replacementTableModel;
+    public JTable extractionTable;
 
-    public String[] extractDropDownOptions;;
+    public ReplacementTableModel replacementTableModel;
+    public JTable replacementTable;
+
+    public JComboBox<String> extractDropDown;
+    public JComboBox<String> replaceDropDown;
+
+    public HttpRequestEditor requestEditor;
+    public HttpResponseEditor responseEditor;
 
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
         setAttributes(correctiveCallsPanel);
 
         setRadioButtons();
-        setCallSequenceTableContextMenu();
+        setTableDeleteContextMenu(callSequenceTable);
+        setTableDeleteContextMenu(extractionTable);
+        setTableDeleteContextMenu(replacementTable);
         setButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
         initCallSequenceTable();
         setExtractAddButtonListener();
+        setFromSelectionListener();
     }
 
     private void initCallSequenceTable() {
@@ -74,22 +89,23 @@ public class CorrectiveCallsController {
         correctiveCallsSetsTable.setEnabled(true);
     }
 
-    private void setCallSequenceTableContextMenu() {
+    private void setTableDeleteContextMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem deleteItem = new JMenuItem("Delete");
 
         // Deletes selected row when "Delete" is clicked.
         deleteItem.addActionListener(e -> {
-            int selectedRow = callSequenceTable.getSelectedRow();
+            int selectedRow = table.getSelectedRow();
             if (selectedRow != -1) {
-                callSequenceTableModel.removeRow(selectedRow);
+                DeletableTableModel model = (DeletableTableModel) table.getModel();
+                model.removeRow(selectedRow);
             }
         });
 
         popupMenu.add(deleteItem);
 
         // Displays popup menu and selects row.
-        callSequenceTable.addMouseListener(new MouseAdapter() {
+        table.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
@@ -105,9 +121,9 @@ public class CorrectiveCallsController {
             }
 
             private void showPopup(MouseEvent e) {
-                int row = callSequenceTable.rowAtPoint(e.getPoint());
+                int row = table.rowAtPoint(e.getPoint());
                 if (row >= 0) {
-                    callSequenceTable.setRowSelectionInterval(row, row);
+                    table.setRowSelectionInterval(row, row);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -148,16 +164,28 @@ public class CorrectiveCallsController {
     private void setExtractAddButtonListener() {
         ActionListener extractAddButtonListener = e -> {
             ExtractText extractText = new ExtractText();
+            for (int i = 0; i < extractInputFields.length - 1; i++) {
+                if (extractInputFields[i].getText().isEmpty())
+                    return;
+            }
             extractText.name = extractInputFields[0].getText();
             extractText.startString = extractInputFields[1].getText();
             extractText.stopString = extractInputFields[2].getText();
             extractText.selectedText = extractInputFields[3].getText();
-            // TODO get input from drop down menu
-            //extractText.urlEncodeDecode = extractDropDownOptions.get;
+            extractText.urlEncodeDecode = (String) extractDropDown.getSelectedItem();
+            extractionTableModel.addRow(extractText);
             Controller.montoyaApi.logging().logToOutput(extractText.toString());
         };
         extractAddButton.addActionListener(extractAddButtonListener);
     }
+
+    // TODO get text from editor which is selected and place into selectedText field
+    public void setFromSelectionListener() {
+        extractDropDown.addActionListener(e -> {
+            String selection = responseEditor.selection().get().contents().toString();
+        });
+    }
+
 
     private void setAttributes(CorrectiveCallsPanel correctiveCallsPanel) {
         correctiveCallsSetsTableModel = correctiveCallsPanel.correctiveCallsSetsTableModel;
@@ -184,7 +212,14 @@ public class CorrectiveCallsController {
         extractionTableModel = correctiveCallsPanel.extractionTableModel;
         replacementTableModel = correctiveCallsPanel.replacementTableModel;
 
-        extractDropDownOptions = correctiveCallsPanel.extractDropDownOptions;
+        extractDropDown = correctiveCallsPanel.extractDropDown;
+        replaceDropDown = correctiveCallsPanel.replaceDropDown;
+
+        extractionTable = correctiveCallsPanel.extractionTable;
+        replacementTable = correctiveCallsPanel.replacementTable;
+
+        requestEditor = correctiveCallsPanel.requestEditor;
+        responseEditor = correctiveCallsPanel.responseEditor;
     }
 }
 

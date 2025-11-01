@@ -2,8 +2,8 @@ import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExtractionTableModel extends AbstractTableModel {
-    public List<ExtractText> extractTextList = new ArrayList<>();;
+public class ExtractionTableModel extends AbstractTableModel implements DeletableTableModel {
+    public List<ExtractText> extractTextList = new ArrayList<>();
     private String[] columns = {"Name", "Id"};
 
     @Override
@@ -16,14 +16,39 @@ public class ExtractionTableModel extends AbstractTableModel {
         return columns.length;
     }
 
-
     @Override
     public String getColumnName(int columnIndex) {
         return columns[columnIndex];
     }
 
+    public void addRow(ExtractText extractText) {
+        extractText.index = extractTextList.size();
+        extractText.setId();
+        extractTextList.add(extractText);
+        fireTableRowsInserted(extractTextList.size() - 1, extractTextList.size() - 1);
+    }
+
     @Override
-    public Object getValueAt(int i, int i1) {
-        return null;
+    public void removeRow(int rowIndex) {
+        extractTextList.remove(rowIndex);
+        resetNames(rowIndex);
+        fireTableRowsDeleted(rowIndex, rowIndex);
+    }
+
+    private void resetNames(int start) {
+        for (int i = start; i < extractTextList.size(); i++) {
+            extractTextList.get(i).id = "Extraction-" + --extractTextList.get(i).index;
+        }
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        ExtractText extractText = extractTextList.get(rowIndex);
+
+        return switch (columnIndex) {
+            case 0 -> extractText.name;
+            case 1 -> extractText.id;
+            default -> null;
+        };
     }
 }

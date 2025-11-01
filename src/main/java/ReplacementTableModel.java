@@ -2,7 +2,7 @@ import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReplacementTableModel extends AbstractTableModel {
+public class ReplacementTableModel extends AbstractTableModel implements DeletableTableModel {
     private List<ReplaceText> replaceTextList = new ArrayList<>();
     private String[] columns = {"Name", "Id"};
 
@@ -15,7 +15,6 @@ public class ReplacementTableModel extends AbstractTableModel {
     public int getColumnCount() {
         return columns.length;
     }
-
 
     @Override
     public String getColumnName(int columnIndex) {
@@ -31,6 +30,24 @@ public class ReplacementTableModel extends AbstractTableModel {
             case 1 -> replaceText.id;
             default -> null;
         };
+    }
+
+    public void addRow(ReplaceText replaceText) {
+        replaceTextList.add(replaceText);
+        fireTableRowsInserted(replaceTextList.size() - 1, replaceTextList.size() - 1);
+    }
+
+    @Override
+    public void removeRow(int rowIndex) {
+        replaceTextList.remove(rowIndex);
+        resetNames(rowIndex);
+        fireTableRowsDeleted(rowIndex, rowIndex);
+    }
+
+    private void resetNames(int start) {
+        for (int i = start; i < replaceTextList.size(); i++) {
+            replaceTextList.get(i).id = "Extraction-" + --replaceTextList.get(i).index;
+        }
     }
 
     @Override

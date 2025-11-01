@@ -1,10 +1,16 @@
 public class ExtractText {
-    private int index;
+    public int index;
+    public String id;
     public String name;
     public String startString;
     public String stopString;
     public String selectedText;
     public String urlEncodeDecode;
+
+
+    public void setId () {
+        id = "Extraction-" + index;
+    }
 
     @Override
     public String toString() {
