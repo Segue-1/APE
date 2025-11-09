@@ -1,3 +1,4 @@
+import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.ui.Selection;
@@ -179,10 +180,54 @@ public class CorrectiveCallsController {
         extractAddButton.addActionListener(extractAddButtonListener);
     }
 
-    // TODO get text from editor which is selected and place into selectedText field
+    // TODO reliably get text from editor with selection
     public void setFromSelectionListener() {
-        extractDropDown.addActionListener(e -> {
-            String selection = responseEditor.selection().get().contents().toString();
+        extractFromSelect.addActionListener(e -> {
+            int position = responseEditor.caretPosition();
+            String selectedContents = responseEditor.selection().get().contents().toString();
+
+            extractInputFields[3].setText(selectedContents);
+
+            // Montoya has a bug where it prepends a non-existent space to selected text
+            if (selectedContents.startsWith(" "))
+                extractInputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
+            else
+                extractInputFields[3].setToolTipText(null);
+
+            String messageString = responseEditor.getResponse().toString();
+
+            StringBuilder stopString = new StringBuilder();
+            StringBuilder startString = new StringBuilder();
+
+
+            for (int i = 0; i < 8; i++){
+                if (position + i < messageString.length() && messageString.charAt(position + i) != '\r'
+                                                          && messageString.charAt(position + i) != '\n') {
+                    stopString.append(messageString.charAt(position + i));
+                    Controller.montoyaApi.logging().logToOutput("Appending to stopString: '" + messageString.charAt(position + i) + "'");
+
+                    if (messageString.charAt(position + i) == '\r' && messageString.charAt(position + i + 1) == '\n') {
+                        Controller.montoyaApi.logging().logToOutput("FOUND THE NEW LINE");
+                    }
+                }
+            }
+            extractInputFields[2].setText(stopString.toString());
+
+            int offset = selectedContents.length();
+            int startIndex = position - offset;
+
+            for (int i = 8; i > 0; i--) {
+                if (startIndex - i >= 0) {
+                    startString.append(messageString.charAt(startIndex - i));
+                }
+            }
+            extractInputFields[1].setText(startString.toString());
+
+
+
+            Controller.montoyaApi.logging().logToOutput("startString: '" + startString + "'");
+            Controller.montoyaApi.logging().logToOutput("stopString: '" + stopString + "'");
+            Controller.montoyaApi.logging().logToOutput("selectedContents: '" + selectedContents + "'");
         });
     }
 
