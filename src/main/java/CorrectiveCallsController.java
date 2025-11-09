@@ -7,6 +7,8 @@ import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.naming.ldap.Control;
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -43,7 +45,7 @@ public class CorrectiveCallsController {
     public JTable replacementTable;
 
     public JComboBox<String> extractDropDown;
-    public JComboBox<String> replaceDropDown;
+    public JComboBox<ExtractText> replaceDropDown;
 
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
@@ -59,7 +61,9 @@ public class CorrectiveCallsController {
         setSelectedCorrectiveCallsSetListener();
         initCallSequenceTable();
         setExtractAddButtonListener();
-        setFromSelectionListener();
+        setExtractFromSelectionListener();
+        setReplaceDropDownListener();
+        setReplaceAddButtonListener();
     }
 
     private void initCallSequenceTable() {
@@ -175,40 +179,29 @@ public class CorrectiveCallsController {
             extractText.selectedText = extractInputFields[3].getText();
             extractText.urlEncodeDecode = (String) extractDropDown.getSelectedItem();
             extractionTableModel.addRow(extractText);
-            Controller.montoyaApi.logging().logToOutput(extractText.toString());
         };
         extractAddButton.addActionListener(extractAddButtonListener);
     }
 
-    // TODO reliably get text from editor with selection
-    public void setFromSelectionListener() {
+    public void setExtractFromSelectionListener() {
         extractFromSelect.addActionListener(e -> {
             int position = responseEditor.caretPosition();
+            StringBuilder stopString = new StringBuilder();
+            StringBuilder startString = new StringBuilder();
+            String messageString = responseEditor.getResponse().toString();
             String selectedContents = responseEditor.selection().get().contents().toString();
-
             extractInputFields[3].setText(selectedContents);
 
-            // Montoya has a bug where it prepends a non-existent space to selected text
             if (selectedContents.startsWith(" "))
                 extractInputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
             else
                 extractInputFields[3].setToolTipText(null);
 
-            String messageString = responseEditor.getResponse().toString();
-
-            StringBuilder stopString = new StringBuilder();
-            StringBuilder startString = new StringBuilder();
-
-
+            // Get the 8 characters following the selected text.
             for (int i = 0; i < 8; i++){
                 if (position + i < messageString.length() && messageString.charAt(position + i) != '\r'
                                                           && messageString.charAt(position + i) != '\n') {
                     stopString.append(messageString.charAt(position + i));
-                    Controller.montoyaApi.logging().logToOutput("Appending to stopString: '" + messageString.charAt(position + i) + "'");
-
-                    if (messageString.charAt(position + i) == '\r' && messageString.charAt(position + i + 1) == '\n') {
-                        Controller.montoyaApi.logging().logToOutput("FOUND THE NEW LINE");
-                    }
                 }
             }
             extractInputFields[2].setText(stopString.toString());
@@ -216,19 +209,57 @@ public class CorrectiveCallsController {
             int offset = selectedContents.length();
             int startIndex = position - offset;
 
+            // Get the 8 character preceding the selected text.
             for (int i = 8; i > 0; i--) {
                 if (startIndex - i >= 0) {
                     startString.append(messageString.charAt(startIndex - i));
                 }
             }
             extractInputFields[1].setText(startString.toString());
-
-
-
-            Controller.montoyaApi.logging().logToOutput("startString: '" + startString + "'");
-            Controller.montoyaApi.logging().logToOutput("stopString: '" + stopString + "'");
-            Controller.montoyaApi.logging().logToOutput("selectedContents: '" + selectedContents + "'");
         });
+    }
+
+    public void setReplaceDropDownListener() {
+        replaceDropDown.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
+                replaceDropDown.removeAllItems();
+
+                for (int row = 0; row < extractionTableModel.getRowCount(); row++) {
+                    ExtractText extractText = extractionTableModel.getExtractText(row);
+                    replaceDropDown.addItem(extractText);
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
+
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {
+
+            }
+        });
+    }
+
+    private void setReplaceAddButtonListener() {
+        ActionListener replaceAddButtonListener = e -> {
+            ReplaceText replaceText = new ReplaceText();
+            for (int i = 0; i < replaceInputFields.length - 1; i++) {
+                if (replaceInputFields[i].getText().isEmpty())
+                    return;
+            }
+            replaceText.name = replaceInputFields[0].getText();
+            replaceText.startString = replaceInputFields[1].getText();
+            replaceText.stopString = replaceInputFields[2].getText();
+            replaceText.selectedText = replaceInputFields[3].getText();
+            replaceText.extractText = (ExtractText) replaceDropDown.getSelectedItem();
+            // TODO doesn't seem to addRow properly
+            replacementTableModel.addRow(replaceText);
+            //Controller.montoyaApi.logging().logToOutput(replaceText.toString());
+        };
+        replaceAddButton.addActionListener(replaceAddButtonListener);
     }
 
 

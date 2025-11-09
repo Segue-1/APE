@@ -14,13 +14,6 @@ public class ExtractText {
 
     @Override
     public String toString() {
-        return "ExtractText{" +
-                "index=" + index +
-                ", name='" + name + '\'' +
-                ", startString='" + startString + '\'' +
-                ", stopString='" + stopString + '\'' +
-                ", selectedText='" + selectedText + '\'' +
-                ", urlEncodeDecode='" + urlEncodeDecode + '\'' +
-                '}';
+        return name;
     }
 }

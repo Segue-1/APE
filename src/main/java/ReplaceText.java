@@ -2,13 +2,13 @@ public class ReplaceText {
     public int index;
     public String name;
     public String id;
-    private String startString;
-    private String stopString;
-    private String selectedText;
-    //private Extraction extraction;
+    public String startString;
+    public String stopString;
+    public String selectedText;
+    public ExtractText extractText;
 
     public void setId () {
-        name = "Extraction-" + index;
+        name = "Replacement-" + index;
     }
 
     @Override
@@ -19,6 +19,7 @@ public class ReplaceText {
                 ", startString='" + startString + '\'' +
                 ", stopString='" + stopString + '\'' +
                 ", selectedText='" + selectedText + '\'' +
+                ", extractText='" + extractText.toString() + '\'' +
                 '}';
     }
 }

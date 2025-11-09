@@ -51,4 +51,8 @@ public class ExtractionTableModel extends AbstractTableModel implements Deletabl
             default -> null;
         };
     }
+
+    public ExtractText getExtractText(int rowIndex) {
+        return extractTextList.get(rowIndex);
+    }
 }

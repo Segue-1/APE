@@ -2,9 +2,6 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import java.awt.*;
 
 public class CorrectiveCallsPanel extends JPanel {
@@ -50,7 +47,7 @@ public class CorrectiveCallsPanel extends JPanel {
     //public String[] extractDropDownOptions;
 
     public JComboBox<String> extractDropDown;
-    public JComboBox<String> replaceDropDown;
+    public JComboBox<ExtractText> replaceDropDown;
 
 
     public CorrectiveCallsPanel() {
@@ -215,8 +212,7 @@ public class CorrectiveCallsPanel extends JPanel {
 
         String[] replaceFieldsLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
                                         "Pick from Extraction"};
-        String[] replaceDropDownOptions = {"Should", "load", "extract", "list"};
-        replaceDropDown = new JComboBox<>(replaceDropDownOptions);
+        replaceDropDown = new JComboBox<>();
         replaceInputFields = new JTextField[replaceFieldsLabels.length - 1];
         replaceFromSelect = new JButton();
         replaceAddButton = new JButton();
@@ -285,7 +281,7 @@ public class CorrectiveCallsPanel extends JPanel {
         return panel;
     }
 
-    public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox<String> dropDown,
+    public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox dropDown,
                                         JTextField[] jTextFields, JButton fromSelect, JButton addButton){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
