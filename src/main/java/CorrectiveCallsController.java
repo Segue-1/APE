@@ -61,9 +61,12 @@ public class CorrectiveCallsController {
         setSelectedCorrectiveCallsSetListener();
         initCallSequenceTable();
         setExtractAddButtonListener();
-        setExtractFromSelectionListener();
+        //setExtractFromSelectionListener();
         setReplaceDropDownListener();
         setReplaceAddButtonListener();
+        setFromSelectionListener(extractFromSelect, extractInputFields, "response");
+        setFromSelectionListener(replaceFromSelect, replaceInputFields, "request");
+        //setReplaceFromSelectionListener();
     }
 
     private void initCallSequenceTable() {
@@ -183,32 +186,57 @@ public class CorrectiveCallsController {
         extractAddButton.addActionListener(extractAddButtonListener);
     }
 
-    public void setExtractFromSelectionListener() {
-        extractFromSelect.addActionListener(e -> {
-            int position = responseEditor.caretPosition();
-            String messageString = responseEditor.getResponse().toString();
-            String selectedContents = responseEditor.selection().get().contents().toString();
-            extractInputFields[3].setText(selectedContents);
+    private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields, String editor) {
+        fromSelect.addActionListener(e -> {
+            int position;
+            String messageString;
+            String selectedContents;
+
+            if (editor.equals("response")) {
+                position = responseEditor.caretPosition();
+                messageString = responseEditor.getResponse().toString();
+                selectedContents = responseEditor.selection().get().contents().toString();
+            }
+            else if (editor.equals("request")){
+                position = requestEditor.caretPosition();
+                messageString = requestEditor.getRequest().toString();
+                selectedContents = requestEditor.selection().get().contents().toString();
+            }
+            else
+                return;
+
+
+            inputFields[3].setText(selectedContents);
 
             if (selectedContents.startsWith(" "))
-                extractInputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
+                inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
             else
-                extractInputFields[3].setToolTipText(null);
+                inputFields[3].setToolTipText(null);
 
-            extractInputFields[2].setText(getStopString(position, messageString));
+
+            inputFields[2].setText(getStopString(position, messageString));
 
             int offset = selectedContents.length();
             int startIndex = position - offset;
 
-            extractInputFields[1].setText(getStartString(startIndex, messageString));
+            inputFields[1].setText(getStartString(startIndex, messageString));
+
+
         });
     }
 
     private String getStopString(int caretPosition, String messageString) {
         StringBuilder stopString = new StringBuilder();
-
         int index = 0;
         int count = 0;
+        String parsedMessageString = messageString.replace("\r", "").replace("\n","");
+
+        // TODO Fix me, caretPosition includes total length including new lines, however, checking full length did not work as well.
+        Controller.montoyaApi.logging().logToOutput("parsedMessageString.length(): " + parsedMessageString.length());
+        Controller.montoyaApi.logging().logToOutput("caretPosition: " + caretPosition);
+        if (caretPosition == parsedMessageString.length())
+            return "[End of Line]";
+
         while (count < 8 && caretPosition + index < messageString.length()) {
             char c = messageString.charAt(caretPosition + index);
             if (c != '\r' && c != '\n') {
@@ -222,12 +250,21 @@ public class CorrectiveCallsController {
 
     private String getStartString(int startIndex, String messageString){
         StringBuilder startString = new StringBuilder();
+        int count = 8;
 
-        // TODO convert to while loop
-        for (int i = 8; i > 0; i--) {
-            if (startIndex - i >= 0 && messageString.charAt(startIndex - i) != '\r'
-                                    && messageString.charAt(startIndex - i) != '\n') {
-                startString.append(messageString.charAt(startIndex - i));
+        if (startIndex == 0)
+            return "[Start of Line]";
+
+        while (count > 0){
+            if (startIndex - count >= 0) {
+                char c = messageString.charAt(startIndex - count);
+                if (c != '\r' && c != '\n') {
+                    startString.append(c);
+                    count--;
+                }
+            }
+            else {
+                count--;
             }
         }
         return startString.toString();
