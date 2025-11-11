@@ -8,7 +8,7 @@ public class ReplaceText {
     public ExtractText extractText;
 
     public void setId () {
-        name = "Replacement-" + index;
+        id = "Replacement-" + index;
     }
 
     @Override

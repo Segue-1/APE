@@ -25,10 +25,6 @@ public class ReplacementTableModel extends AbstractTableModel implements Deletab
         replaceText.index = replaceTextList.size();
         replaceText.setId();
         replaceTextList.add(replaceText);
-        Controller.montoyaApi.logging().logToOutput("Hellow from ReplacementTableModel.addRow");
-        Controller.montoyaApi.logging().logToOutput(replaceText.toString());
-        Controller.montoyaApi.logging().logToOutput(replaceTextList);
-
         fireTableRowsInserted(replaceTextList.size() - 1, replaceTextList.size() - 1);
     }
 
@@ -52,7 +48,7 @@ public class ReplacementTableModel extends AbstractTableModel implements Deletab
 
     private void resetNames(int start) {
         for (int i = start; i < replaceTextList.size(); i++) {
-            replaceTextList.get(i).id = "Extraction-" + --replaceTextList.get(i).index;
+            replaceTextList.get(i).id = "Replacement-" + --replaceTextList.get(i).index;
         }
     }
 

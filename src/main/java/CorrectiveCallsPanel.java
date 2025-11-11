@@ -225,8 +225,8 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        extractionTableModel = new ExtractionTableModel();
-        extractionTable = new JTable(extractionTableModel);
+        replacementTableModel = new ReplacementTableModel();
+        replacementTable = new JTable(replacementTableModel);
 
         JPanel replaceTablePanel = createSmallTable("Replace List", replacementTable);
         bottomPanel.add(replaceTablePanel, gbc);
@@ -250,8 +250,8 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 3; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        replacementTableModel = new ReplacementTableModel();
-        replacementTable = new JTable(replacementTableModel);
+        extractionTableModel = new ExtractionTableModel();
+        extractionTable = new JTable(extractionTableModel);
 
         JPanel extractTablePanel = createSmallTable("Extract List", extractionTable);
         bottomPanel.add(extractTablePanel, gbc);

@@ -186,8 +186,6 @@ public class CorrectiveCallsController {
     public void setExtractFromSelectionListener() {
         extractFromSelect.addActionListener(e -> {
             int position = responseEditor.caretPosition();
-            StringBuilder stopString = new StringBuilder();
-            StringBuilder startString = new StringBuilder();
             String messageString = responseEditor.getResponse().toString();
             String selectedContents = responseEditor.selection().get().contents().toString();
             extractInputFields[3].setText(selectedContents);
@@ -197,26 +195,42 @@ public class CorrectiveCallsController {
             else
                 extractInputFields[3].setToolTipText(null);
 
-            // Get the 8 characters following the selected text.
-            for (int i = 0; i < 8; i++){
-                if (position + i < messageString.length() && messageString.charAt(position + i) != '\r'
-                                                          && messageString.charAt(position + i) != '\n') {
-                    stopString.append(messageString.charAt(position + i));
-                }
-            }
-            extractInputFields[2].setText(stopString.toString());
+            extractInputFields[2].setText(getStopString(position, messageString));
 
             int offset = selectedContents.length();
             int startIndex = position - offset;
 
-            // Get the 8 character preceding the selected text.
-            for (int i = 8; i > 0; i--) {
-                if (startIndex - i >= 0) {
-                    startString.append(messageString.charAt(startIndex - i));
-                }
-            }
-            extractInputFields[1].setText(startString.toString());
+            extractInputFields[1].setText(getStartString(startIndex, messageString));
         });
+    }
+
+    private String getStopString(int caretPosition, String messageString) {
+        StringBuilder stopString = new StringBuilder();
+
+        int index = 0;
+        int count = 0;
+        while (count < 8 && caretPosition + index < messageString.length()) {
+            char c = messageString.charAt(caretPosition + index);
+            if (c != '\r' && c != '\n') {
+                stopString.append(c);
+                count++;
+            }
+            index++;
+        }
+        return stopString.toString();
+    }
+
+    private String getStartString(int startIndex, String messageString){
+        StringBuilder startString = new StringBuilder();
+
+        // TODO convert to while loop
+        for (int i = 8; i > 0; i--) {
+            if (startIndex - i >= 0 && messageString.charAt(startIndex - i) != '\r'
+                                    && messageString.charAt(startIndex - i) != '\n') {
+                startString.append(messageString.charAt(startIndex - i));
+            }
+        }
+        return startString.toString();
     }
 
     public void setReplaceDropDownListener() {
@@ -247,8 +261,10 @@ public class CorrectiveCallsController {
         ActionListener replaceAddButtonListener = e -> {
             ReplaceText replaceText = new ReplaceText();
             for (int i = 0; i < replaceInputFields.length - 1; i++) {
-                if (replaceInputFields[i].getText().isEmpty())
+                if (replaceInputFields[i].getText().isEmpty()) {
+                    Controller.montoyaApi.logging().logToOutput("Return hit");
                     return;
+                }
             }
             replaceText.name = replaceInputFields[0].getText();
             replaceText.startString = replaceInputFields[1].getText();
@@ -257,7 +273,6 @@ public class CorrectiveCallsController {
             replaceText.extractText = (ExtractText) replaceDropDown.getSelectedItem();
             // TODO doesn't seem to addRow properly
             replacementTableModel.addRow(replaceText);
-            //Controller.montoyaApi.logging().logToOutput(replaceText.toString());
         };
         replaceAddButton.addActionListener(replaceAddButtonListener);
     }
