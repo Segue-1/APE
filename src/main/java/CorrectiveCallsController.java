@@ -186,9 +186,11 @@ public class CorrectiveCallsController {
         extractAddButton.addActionListener(extractAddButtonListener);
     }
 
+    // TODO could use cleanup. 3rd arg probably not necessary. hasBody might be set in a cleaner way.
     private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields, String editor) {
         fromSelect.addActionListener(e -> {
             int position;
+            boolean hasBody;
             String messageString;
             String selectedContents;
 
@@ -196,11 +198,21 @@ public class CorrectiveCallsController {
                 position = responseEditor.caretPosition();
                 messageString = responseEditor.getResponse().toString();
                 selectedContents = responseEditor.selection().get().contents().toString();
+                if (responseEditor.getResponse().body().length() > 0){
+                    hasBody = true;
+                }
+                else
+                    hasBody = false;
             }
             else if (editor.equals("request")){
                 position = requestEditor.caretPosition();
                 messageString = requestEditor.getRequest().toString();
                 selectedContents = requestEditor.selection().get().contents().toString();
+                if (requestEditor.getRequest().body().length() > 0){
+                    hasBody = true;
+                }
+                else
+                    hasBody = false;
             }
             else
                 return;
@@ -214,7 +226,7 @@ public class CorrectiveCallsController {
                 inputFields[3].setToolTipText(null);
 
 
-            inputFields[2].setText(getStopString(position, messageString));
+            inputFields[2].setText(getStopString(position, messageString, hasBody));
 
             int offset = selectedContents.length();
             int startIndex = position - offset;
@@ -225,16 +237,16 @@ public class CorrectiveCallsController {
         });
     }
 
-    private String getStopString(int caretPosition, String messageString) {
+    private String getStopString(int caretPosition, String messageString, Boolean hasBody) {
         StringBuilder stopString = new StringBuilder();
         int index = 0;
         int count = 0;
-        String parsedMessageString = messageString.replace("\r", "").replace("\n","");
 
-        // TODO Fix me, caretPosition includes total length including new lines, however, checking full length did not work as well.
-        Controller.montoyaApi.logging().logToOutput("parsedMessageString.length(): " + parsedMessageString.length());
+        Controller.montoyaApi.logging().logToOutput("messageString.length(): " + messageString.length());
         Controller.montoyaApi.logging().logToOutput("caretPosition: " + caretPosition);
-        if (caretPosition == parsedMessageString.length())
+        if (hasBody && caretPosition == messageString.length())
+            return "[End of Line]";
+        else if (!hasBody && caretPosition == messageString.length() - 4)
             return "[End of Line]";
 
         while (count < 8 && caretPosition + index < messageString.length()) {
