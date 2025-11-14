@@ -17,6 +17,8 @@ public class Controller implements BurpExtension {
     // passes the monotoyaApi object.
     @Override
     public void initialize(MontoyaApi montoyaApi) {
+        DebugLog.init(montoyaApi);
+
         Controller.montoyaApi = montoyaApi;
 
         view = new View();
@@ -26,5 +28,10 @@ public class Controller implements BurpExtension {
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);
         correctiveCallsController = new CorrectiveCallsController(view.correctiveCallsPanel, model);
+
+        montoyaApi.extension().registerUnloadingHandler(() -> {
+            DebugLog.log("Extension is being unloaded or burp closed");
+            DebugLog.close();
+        });
     }
 }

@@ -32,8 +32,10 @@ public class SettingsController {
 
             if (source.isSelected()) {
                 enabledTools.add(toolType);
+                DebugLog.log("ToolType " + toolType.toString() + " enabled in settings menu.");
             } else {
                 enabledTools.remove(toolType);
+                DebugLog.log("ToolType " + toolType.toString() + " disabled in settings menu.");
             }
             model.updateEnabledTools(enabledTools);
         };

@@ -4,16 +4,12 @@ import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
+
 
 public class ErrorDetectionController {
     private ErrorDetectionPanel errorDetectionPanel;
-    public ArrayList<String[]> errorConditions;
     public HttpRequestResponse errorCall;
 
-    // TODO implement custom table model. no need to track numberOfConditions, just use index of data structure in custom table model
-    private int numberOfConditions = 0;
 
     ErrorDetectionController(ErrorDetectionPanel errorDetectionPanel, Model model){
         this.errorDetectionPanel = errorDetectionPanel;
@@ -33,6 +29,7 @@ public class ErrorDetectionController {
                 return;
             }
             errorDetectionPanel.errorConditionTableModel.addRow(new ErrorCondition(selectedItem, input));
+            DebugLog.log("Error condition added. Type: '" + selectedItem + "' input: '" + input + "'");
             Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
         };
         errorDetectionPanel.submitButton.addActionListener(submitButtonListener);
@@ -48,13 +45,9 @@ public class ErrorDetectionController {
         deleteItem.addActionListener(e -> {
             int selectedRow = errorDetectionPanel.errorConditionTable.getSelectedRow();
             if (selectedRow != -1){
+                DebugLog.log("User deleted error condition at row " + selectedRow);
                 errorDetectionPanel.errorConditionTableModel.removeRow(selectedRow);
                 Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
-
-                // If last row is deleted, reset numberOfConditions count.
-                if (selectedRow == 1){
-                    numberOfConditions = 0;
-                }
             }
         });
 
@@ -81,6 +74,7 @@ public class ErrorDetectionController {
                 if (row >= 0) {
                     errorDetectionPanel.errorConditionTable.setRowSelectionInterval(row, row);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    DebugLog.log("Error Condition Table: User right clicked row " + row + " and displayed context menu.");
                 }
             }
         });

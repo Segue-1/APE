@@ -1,11 +1,8 @@
-import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.HttpRequestResponse;
-import burp.api.montoya.http.message.responses.HttpResponse;
-import burp.api.montoya.ui.Selection;
+
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
-import javax.naming.ldap.Control;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
@@ -13,7 +10,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.Optional;
 
 
 public class CorrectiveCallsController {
@@ -61,12 +57,10 @@ public class CorrectiveCallsController {
         setSelectedCorrectiveCallsSetListener();
         initCallSequenceTable();
         setExtractAddButtonListener();
-        //setExtractFromSelectionListener();
         setReplaceDropDownListener();
         setReplaceAddButtonListener();
         setFromSelectionListener(extractFromSelect, extractInputFields, "response");
         setFromSelectionListener(replaceFromSelect, replaceInputFields, "request");
-        //setReplaceFromSelectionListener();
     }
 
     private void initCallSequenceTable() {
@@ -106,6 +100,7 @@ public class CorrectiveCallsController {
             int selectedRow = table.getSelectedRow();
             if (selectedRow != -1) {
                 DeletableTableModel model = (DeletableTableModel) table.getModel();
+                DebugLog.log(table.getName() + ": User deleted row " + selectedRow);
                 model.removeRow(selectedRow);
             }
         });

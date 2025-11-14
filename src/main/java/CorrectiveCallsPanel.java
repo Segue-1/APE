@@ -103,6 +103,7 @@ public class CorrectiveCallsPanel extends JPanel {
     private JScrollPane createCorrectiveCallsSetPanel() {
         callSequenceTableModel = new CallSequenceTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
+        callSequenceTable.setName("Call Sequence Table");
 
         callSequenceTable.getColumnModel().getColumn(0).setMinWidth(90);
         callSequenceTable.getTableHeader().setReorderingAllowed(false);
@@ -227,6 +228,7 @@ public class CorrectiveCallsPanel extends JPanel {
 
         replacementTableModel = new ReplacementTableModel();
         replacementTable = new JTable(replacementTableModel);
+        replacementTable.setName("Replacement Table");
 
         JPanel replaceTablePanel = createSmallTable("Replace List", replacementTable);
         bottomPanel.add(replaceTablePanel, gbc);
@@ -252,6 +254,7 @@ public class CorrectiveCallsPanel extends JPanel {
 
         extractionTableModel = new ExtractionTableModel();
         extractionTable = new JTable(extractionTableModel);
+        extractionTable.setName("Extraction Table");
 
         JPanel extractTablePanel = createSmallTable("Extract List", extractionTable);
         bottomPanel.add(extractTablePanel, gbc);

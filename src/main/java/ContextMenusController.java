@@ -50,6 +50,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
                 view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
                 controller.errorDetectionController.errorCall = reqResp;
+                DebugLog.log("Context menu 'Send to Error Detection' was clicked. Call sent to Error Detection panel.");
             }
         });
 
@@ -59,9 +60,11 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
 
+                // Stores call in currently selected corrective calls set.
                 correctiveCallsSetsTableModel.addRequestResponse(reqResp, correctiveCallsSetsTable.getSelectedRow());
-                Controller.montoyaApi.logging().logToOutput("\n------ FROM CONTEXT MENU -----");
-                Controller.montoyaApi.logging().logToOutput(correctiveCallsSetsTableModel.correctiveCallsSets.get(getSelectedRow()).toString());
+                DebugLog.log("Context menu 'Send to Corrective Calls' was clicked. " +
+                             "Call sent to Corrective Calls panel and stored in corrective call set: " +
+                              correctiveCallsSetsTableModel.correctiveCallsSets.get(getSelectedRow()).toString());
 
                 callSequenceTableModel.fireTableDataChanged();
                 Utils.resizeColumnsToFitContent(callSequenceTable);

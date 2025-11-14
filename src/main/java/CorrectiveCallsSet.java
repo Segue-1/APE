@@ -24,7 +24,7 @@ public class CorrectiveCallsSet {
                 "index=" + index +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", correctiveCalls=" + printCorrectiveCalls() +
+                ", callSequence=" + printCorrectiveCalls() +
                 '}';
     }
 
