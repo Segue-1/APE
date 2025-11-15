@@ -74,7 +74,7 @@ public class ErrorDetectionController {
                 if (row >= 0) {
                     errorDetectionPanel.errorConditionTable.setRowSelectionInterval(row, row);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                    DebugLog.log("Error Condition Table: User right clicked row " + row + " and displayed context menu.");
+                    DebugLog.log(errorDetectionPanel.errorConditionTable.getName() + ": User right clicked row " + row + " and displayed context menu.");
                 }
             }
         });

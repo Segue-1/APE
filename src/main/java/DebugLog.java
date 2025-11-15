@@ -41,7 +41,7 @@ public class DebugLog {
     public static void log (String message) {
         if (BuildConfig.DEBUG) {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
-            String logMessage = "[" + timestamp + "]" + message;
+            String logMessage = "[" + timestamp + "] " + message;
 
             api.logging().logToOutput(logMessage);
 

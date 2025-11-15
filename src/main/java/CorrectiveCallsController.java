@@ -53,7 +53,7 @@ public class CorrectiveCallsController {
         setTableDeleteContextMenu(callSequenceTable);
         setTableDeleteContextMenu(extractionTable);
         setTableDeleteContextMenu(replacementTable);
-        setButtonActionListeners();
+        setCallSetsButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
         initCallSequenceTable();
         setExtractAddButtonListener();
@@ -133,10 +133,11 @@ public class CorrectiveCallsController {
         });
     }
 
-    private void setButtonActionListeners() {
+    private void setCallSetsButtonActionListeners() {
         ActionListener addButtonListener = e -> {
             correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet());
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
+            DebugLog.log("Add button clicked on corrective call set table. New call set created");
         };
 
         ActionListener removeBottonListener = e -> {
@@ -145,6 +146,8 @@ public class CorrectiveCallsController {
             callSequenceTableModel.fireTableDataChanged();
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
             correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
+            DebugLog.log("Remove button clicked on corrective call set table. " +
+                         "Call set at row " + selectedRow + " removed");
         };
         addSetBotton.addActionListener(addButtonListener);
         removeSetBotton.addActionListener(removeBottonListener);
@@ -157,8 +160,8 @@ public class CorrectiveCallsController {
 
                 if (selectedRow != -1) {
                     callSequenceTableModel.loadCallSequence(correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).callSequence);
-                    Controller.montoyaApi.logging().logToOutput("\n------ FROM SELECTION -----");
-                    Controller.montoyaApi.logging().logToOutput(correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).toString());
+                    DebugLog.log("Corrective call selected. Loaded to call sequence table: " +
+                                  correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).toString());
                 }
             }
         });
@@ -177,6 +180,7 @@ public class CorrectiveCallsController {
             extractText.selectedText = extractInputFields[3].getText();
             extractText.urlEncodeDecode = (String) extractDropDown.getSelectedItem();
             extractionTableModel.addRow(extractText);
+            DebugLog.log("Extract Text added to table: " + extractText.debugString());
         };
         extractAddButton.addActionListener(extractAddButtonListener);
     }
@@ -221,14 +225,19 @@ public class CorrectiveCallsController {
                 inputFields[3].setToolTipText(null);
 
 
-            inputFields[2].setText(getStopString(position, messageString, hasBody));
+            String stopString = getStopString(position, messageString, hasBody);
+            inputFields[2].setText(stopString);
 
             int offset = selectedContents.length();
             int startIndex = position - offset;
 
-            inputFields[1].setText(getStartString(startIndex, messageString));
+            String startString = getStartString(startIndex, messageString);
+            inputFields[1].setText(startString);
 
-
+            DebugLog.log("'From Selection' button clicked. The following input fields were set.");
+            DebugLog.log("Selected Text: " + selectedContents);
+            DebugLog.log("Stop String: " + stopString);
+            DebugLog.log("Start String: " + startString);
         });
     }
 
@@ -237,11 +246,9 @@ public class CorrectiveCallsController {
         int index = 0;
         int count = 0;
 
-        Controller.montoyaApi.logging().logToOutput("messageString.length(): " + messageString.length());
-        Controller.montoyaApi.logging().logToOutput("caretPosition: " + caretPosition);
         if (hasBody && caretPosition == messageString.length())
             return "[End of Line]";
-        else if (!hasBody && caretPosition == messageString.length() - 4)
+        else if (!hasBody && caretPosition == messageString.length() - 4) // - 2x \r\n
             return "[End of Line]";
 
         while (count < 8 && caretPosition + index < messageString.length()) {
@@ -315,8 +322,8 @@ public class CorrectiveCallsController {
             replaceText.stopString = replaceInputFields[2].getText();
             replaceText.selectedText = replaceInputFields[3].getText();
             replaceText.extractText = (ExtractText) replaceDropDown.getSelectedItem();
-            // TODO doesn't seem to addRow properly
             replacementTableModel.addRow(replaceText);
+            DebugLog.log("Replace Text added to table: " + replaceText);
         };
         replaceAddButton.addActionListener(replaceAddButtonListener);
     }

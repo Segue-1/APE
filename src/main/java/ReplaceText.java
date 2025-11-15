@@ -16,10 +16,11 @@ public class ReplaceText {
         return "ReplaceText{" +
                 "index=" + index +
                 ", name='" + name + '\'' +
+                ", id='" + id + '\'' +
                 ", startString='" + startString + '\'' +
                 ", stopString='" + stopString + '\'' +
                 ", selectedText='" + selectedText + '\'' +
-                ", extractText='" + extractText.toString() + '\'' +
+                ", extractText='" + extractText.debugString() + '\'' +
                 '}';
     }
 }

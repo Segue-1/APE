@@ -107,6 +107,7 @@ public class ErrorDetectionPanel extends JPanel {
         errorConditionTableModel = new ErrorConditionTableModel();
 
         errorConditionTable = new JTable(errorConditionTableModel);
+        errorConditionTable.setName("Error Condition Table");
         errorConditionTable.getColumnModel().getColumn(0).setMinWidth(75);
         errorConditionTable.getColumnModel().getColumn(1).setMinWidth(75);
         errorConditionTable.getTableHeader().setReorderingAllowed(false);
