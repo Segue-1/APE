@@ -12,7 +12,6 @@ public class Model implements HttpHandler{
 
     public Model () {
         Controller.montoyaApi.extension().setName("APE");
-        Controller.montoyaApi.logging().logToOutput("Welcome to the API Processing Engine (APE)");
         Controller.montoyaApi.http().registerHttpHandler(this);
     }
 

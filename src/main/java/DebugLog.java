@@ -16,7 +16,6 @@ public class DebugLog {
     public static void init (MontoyaApi montoyaApi){
         api = montoyaApi;
 
-
         if (BuildConfig.DEBUG) {
             try {
                 String userHome = System.getProperty("user.home");
@@ -31,11 +30,18 @@ public class DebugLog {
                 logFilePath = logDir.resolve(filename);
 
                 logWriter = new FileWriter(logFilePath.toFile(), false);
+                Controller.montoyaApi.logging().logToOutput("Log saved to: " + logFilePath);
+                DebugLog.log("=== Logging session started ===");
             }
             catch (Exception e) {
                 api.logging().logToError("Failed to create log file: " + e.getMessage());
             }
         }
+
+        montoyaApi.extension().registerUnloadingHandler(() -> {
+            DebugLog.log("Extension is being unloaded or burp closed");
+            DebugLog.close();
+        });
     }
 
     public static void log (String message) {

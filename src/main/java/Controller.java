@@ -3,6 +3,7 @@ import burp.api.montoya.MontoyaApi;
 
 
 public class Controller implements BurpExtension {
+    // TODO don't need to pass around montoyaAPI since it is static
     public static MontoyaApi montoyaApi;
     private Model model;
     private View view;
@@ -17,9 +18,9 @@ public class Controller implements BurpExtension {
     // passes the monotoyaApi object.
     @Override
     public void initialize(MontoyaApi montoyaApi) {
-        DebugLog.init(montoyaApi);
-
         Controller.montoyaApi = montoyaApi;
+        Controller.montoyaApi.logging().logToOutput("Welcome to the API Processing Engine (APE)");
+        DebugLog.init(montoyaApi);
 
         view = new View();
         model = new Model();
@@ -28,10 +29,5 @@ public class Controller implements BurpExtension {
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);
         correctiveCallsController = new CorrectiveCallsController(view.correctiveCallsPanel, model);
-
-        montoyaApi.extension().registerUnloadingHandler(() -> {
-            DebugLog.log("Extension is being unloaded or burp closed");
-            DebugLog.close();
-        });
     }
 }

@@ -4,7 +4,7 @@ import java.util.List;
 
 public class ReplacementTableModel extends AbstractTableModel implements DeletableTableModel {
     private List<ReplaceText> replaceTextList = new ArrayList<>();
-    private String[] columns = {"Name", "Id"};
+    private String[] columns = {"Name", "Id", "Extracted Text"};
 
     @Override
     public int getRowCount() {
@@ -42,6 +42,7 @@ public class ReplacementTableModel extends AbstractTableModel implements Deletab
         return switch (columnIndex) {
             case 0 -> replaceText.name;
             case 1 -> replaceText.id;
+            case 2 -> replaceText.extractText.name;
             default -> null;
         };
     }

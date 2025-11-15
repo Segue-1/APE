@@ -30,3 +30,6 @@ Also should essentially permit parenthesis to group conditions and within the pa
 supported.
 
 condition 1 ^ (condition 2 \/ condition 3 \/ !condition4)
+
+Consider whether you should be able to extract text from requests and not just responses.
+Should extract text only be for responses, or both request and response?
