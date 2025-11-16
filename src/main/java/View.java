@@ -10,6 +10,7 @@ public class View {
     public TestCallsPanel testCallsPanel;
     public SettingsPanel settingsPanel;
     public ContextMenus contextMenus;
+    public TestPanel testPanel;
 
 
     public View(){
@@ -21,6 +22,7 @@ public class View {
         tabbedPane.addTab("Followup Call", followUpPanel = new FollowUpPanel());
         tabbedPane.addTab("Test Calls", testCallsPanel = new TestCallsPanel());
         tabbedPane.addTab("Settings", settingsPanel = new SettingsPanel());
+        tabbedPane.addTab("Test Panel", testPanel = new TestPanel());
 
         mainPanel.add(tabbedPane, BorderLayout.CENTER);
         contextMenus = new ContextMenus();

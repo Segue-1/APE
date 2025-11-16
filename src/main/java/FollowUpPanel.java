@@ -18,8 +18,11 @@ public class FollowUpPanel extends JPanel {
     public JButton addButton;
     public JComboBox<ExtractText> dropDown;
 
-    TableModel followUpReplaceTableModel;
-    JTable followUpReplaceTable;
+    public TableModel followUpReplaceTableModel;
+    public JTable followUpReplaceTable;
+
+    public JComboBox<ErrorCondition> errorConditionDropDown;
+    public JComboBox<CorrectiveCallsSet> correctiveCallSetDropDown;
 
     FollowUpPanel() {
         setLayout(new GridBagLayout());
@@ -30,20 +33,21 @@ public class FollowUpPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 0;
+        gbc.gridwidth = 2;
 
         add(createLabelPanel(), gbc);
 
-        //gbc.anchor = GridBagConstraints.CENTER;
-        //gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
-
-        add(createConditionBuilderPanel(), gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.gridwidth = 1;
 
         add(createRequestEditorPanel(), gbc);
+
+        gbc.gridx = 1; gbc.gridy = 1;
+        gbc.weightx = .5; gbc.weighty = 1;
+
+        add(createRightPanel(), gbc);
     }
 
 
@@ -57,7 +61,7 @@ public class FollowUpPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 0;
 
 
         label.setText("Followup Call");
@@ -67,7 +71,7 @@ public class FollowUpPanel extends JPanel {
 
         // Sub text
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 0;
 
         subText.setText("Resend the first call which returned an error response");
         subText.setFont(subTextFont);
@@ -77,59 +81,34 @@ public class FollowUpPanel extends JPanel {
         return panel;
     }
 
-    private JPanel createConditionBuilderPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel();
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        label.setText("Select a corrective call set: ");
-        panel.setBackground(new Color(129, 216, 112));
-        panel.add(label, gbc);
-
-        return panel;
-    }
-
     private JPanel createRequestEditorPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel();
         GridBagConstraints gbc = new GridBagConstraints();
 
-        //gbc.fill = GridBagConstraints.HORIZONTAL;
-        //gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
-        gbc.gridwidth = 2;
-
-        label.setText("Follow Up Call");
-        panel.setBackground(new Color(97, 222, 232));
-        panel.add(label, gbc);
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
-        gbc.gridwidth = 1; gbc.gridheight = 2;
 
         requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
 
         panel.add(requestEditor.uiComponent(), gbc);
 
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 1; gbc.gridy = 1;
+        return panel;
+    }
+
+    // TODO reorganize, put replace input fields and table underneath editor. Add response editor. Put condition builder table beneath everything.
+    private JPanel createRightPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
-        gbc.gridheight = 1;
 
-        followUpReplaceTableModel = new DefaultTableModel();
-        followUpReplaceTable = new JTable(followUpReplaceTableModel);
+        panel.add(createConditionBuilderPanel());
 
-        panel.add(createSmallTable("Replace", followUpReplaceTable), gbc);
-
-        gbc.gridx = 1; gbc.gridy = 2;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 0; gbc.weighty = 0;
 
         String[] fieldLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
                 "Pick from Extraction"};
@@ -143,6 +122,37 @@ public class FollowUpPanel extends JPanel {
 
         panel.add(replaceTextInput, gbc);
 
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+
+        followUpReplaceTableModel = new DefaultTableModel();
+        followUpReplaceTable = new JTable(followUpReplaceTableModel);
+
+        panel.add(createSmallTable("Replace", followUpReplaceTable), gbc);
+
+        return panel;
+    }
+
+    private JPanel createConditionBuilderPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel();
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0; gbc.weighty = 0;
+
+        label.setText("Select a corrective call set: ");
+        panel.setBackground(new Color(129, 216, 112));
+        panel.add(label, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 0; gbc.weighty = 0;
+
+        JComboBox<CorrectiveCallsSet> correctiveCallSetDropDown = new JComboBox<>();
+        panel.add(correctiveCallSetDropDown, gbc);
+
         return panel;
     }
 
@@ -151,7 +161,7 @@ public class FollowUpPanel extends JPanel {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.gridx = 0; gbc.gridy = 0;
@@ -162,6 +172,7 @@ public class FollowUpPanel extends JPanel {
         headerLabel.setFont(subHeaderFont);
         panel.add(headerLabel, gbc);
 
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1;
         gbc.gridwidth = 1;
 
@@ -171,7 +182,7 @@ public class FollowUpPanel extends JPanel {
 
         for (int i = 0; i < fieldNames.length; i++) {
             gbc.gridx = 0; gbc.gridy = i + 1;
-            gbc.weightx = 1;
+            gbc.weightx = .5;
             panel.add(new JLabel(fieldNames[i]), gbc);
 
             if (i < fieldNames.length - 1) {
@@ -183,13 +194,14 @@ public class FollowUpPanel extends JPanel {
         gbc.gridx = 1; gbc.gridy = fieldNames.length;
         panel.add(dropDown, gbc);
 
+        //gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0; gbc.gridy = fieldNames.length + 1;
-        gbc.weightx = 0; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
         fromSelect.setText("From Selection");
         panel.add(fromSelect, gbc);
 
         gbc.gridx = 1; gbc.gridy = fieldNames.length + 1;
-        gbc.weightx = 0;
+        gbc.weightx = 1;
         addButton.setText("Add");
         panel.add(addButton, gbc);
 
@@ -200,7 +212,7 @@ public class FollowUpPanel extends JPanel {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.gridx = 0; gbc.gridy = 0;
@@ -210,6 +222,7 @@ public class FollowUpPanel extends JPanel {
         headerLabel.setFont(subHeaderFont);
         panel.add(headerLabel, gbc);
 
+        gbc.fill = GridBagConstraints.BOTH;
         JScrollPane scrollPane = new JScrollPane(table);
         //scrollPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 300));
         gbc.gridx = 0; gbc.gridy = 1;
