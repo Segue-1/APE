@@ -1,4 +1,5 @@
 import burp.api.montoya.ui.editor.HttpRequestEditor;
+import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -12,6 +13,7 @@ public class FollowUpPanel extends JPanel {
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
 
     public HttpRequestEditor requestEditor;
+    public HttpResponseEditor responseEditor;
 
     public JTextField[] inputFields;
     public JButton fromSelect;
@@ -33,21 +35,21 @@ public class FollowUpPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 0;
-        gbc.gridwidth = 2;
+        //gbc.gridwidth = 1;
 
         add(createLabelPanel(), gbc);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
-        gbc.gridwidth = 1;
+        //gbc.gridwidth = 1;
 
         add(createRequestEditorPanel(), gbc);
 
-        gbc.gridx = 1; gbc.gridy = 1;
-        gbc.weightx = .5; gbc.weighty = 1;
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.weightx = 1; gbc.weighty = 0;
 
-        add(createRightPanel(), gbc);
+        add(createReplaceTextPanel(), gbc);
     }
 
 
@@ -82,33 +84,33 @@ public class FollowUpPanel extends JPanel {
     }
 
     private JPanel createRequestEditorPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
+        JPanel panel = new JPanel(new BorderLayout());
 
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
+        panel.setBackground(new Color(211, 173, 19));
         requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
+        responseEditor = Controller.montoyaApi.userInterface().createHttpResponseEditor();
 
-        panel.add(requestEditor.uiComponent(), gbc);
+        JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        editorPane.setLeftComponent(requestEditor.uiComponent());
+        editorPane.setRightComponent(responseEditor.uiComponent());
+        editorPane.setDividerLocation(0.5);
+        editorPane.setResizeWeight(0.5);
+        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 500));
 
+        panel.add(editorPane, BorderLayout.CENTER);
         return panel;
     }
 
     // TODO reorganize, put replace input fields and table underneath editor. Add response editor. Put condition builder table beneath everything.
-    private JPanel createRightPanel() {
+    private JPanel createReplaceTextPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
+        panel.setBackground(new Color(63, 225, 37));
+
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        panel.add(createConditionBuilderPanel());
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 0; gbc.weighty = 0;
+        gbc.weightx = 0.5; gbc.weighty = 1;
 
         String[] fieldLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
                 "Pick from Extraction"};
@@ -122,12 +124,15 @@ public class FollowUpPanel extends JPanel {
 
         panel.add(replaceTextInput, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
-        gbc.weightx = 1; gbc.weighty = 1;
-
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
 
         followUpReplaceTableModel = new DefaultTableModel();
         followUpReplaceTable = new JTable(followUpReplaceTableModel);
+
+        //followUpReplaceTable.setPreferredSize(new Dimension(300, 200));
+        //followUpReplaceTable.setMaximumSize(new Dimension(300, 200));
 
         panel.add(createSmallTable("Replace", followUpReplaceTable), gbc);
 
@@ -160,6 +165,8 @@ public class FollowUpPanel extends JPanel {
                                         JTextField[] jTextFields, JButton fromSelect, JButton addButton){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
+
+        panel.setBackground(new Color(253, 83, 83));
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(1, 1, 1, 1);
@@ -212,6 +219,8 @@ public class FollowUpPanel extends JPanel {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
+        panel.setBackground(new Color(138, 79, 243));
+
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(1, 1, 1, 1);
 
@@ -224,7 +233,8 @@ public class FollowUpPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         JScrollPane scrollPane = new JScrollPane(table);
-        //scrollPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 300));
+        //scrollPane.setPreferredSize(new Dimension(300, 300));
+        //scrollPane.setMaximumSize(new Dimension(300, 300));
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
         panel.add(scrollPane, gbc);
