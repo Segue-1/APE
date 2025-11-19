@@ -50,6 +50,10 @@ public class CallSequenceTableModel extends AbstractTableModel implements Deleta
         fireTableDataChanged();
     }
 
+    public HttpRequestResponse loadCall(int row) {
+        return callSequence.get(row);
+    }
+
     @Override
     public boolean isCellEditable(int row, int column) {
         return false;

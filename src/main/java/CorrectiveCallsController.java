@@ -55,6 +55,7 @@ public class CorrectiveCallsController {
         setTableDeleteContextMenu(replacementTable);
         setCallSetsButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
+        setSelectedCorrectiveCallCallListener();
         initCallSequenceTable();
         setExtractAddButtonListener();
         setReplaceDropDownListener();
@@ -160,8 +161,23 @@ public class CorrectiveCallsController {
 
                 if (selectedRow != -1) {
                     callSequenceTableModel.loadCallSequence(correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).callSequence);
-                    DebugLog.log("Corrective call selected. Loaded to call sequence table: " +
+                    DebugLog.log("Corrective call set selected. Loaded to call sequence table: " +
                                   correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).toString());
+                }
+            }
+        });
+    }
+
+    private void setSelectedCorrectiveCallCallListener() {
+        callSequenceTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = callSequenceTable.getSelectedRow();
+
+                if (selectedRow != -1) {
+                    HttpRequestResponse reqResp = callSequenceTableModel.loadCall(selectedRow);
+                    requestEditor.setRequest(reqResp.request());
+                    responseEditor.setResponse(reqResp.response());
+                    DebugLog.log("Corrective call selected. Loaded call at row " + selectedRow + " to http editors.");
                 }
             }
         });

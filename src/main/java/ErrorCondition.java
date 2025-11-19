@@ -12,7 +12,7 @@ public class ErrorCondition {
     }
 
     public void setName() {
-        name = "Condition " + index;
+        name = "Error Condition " + index;
     }
 
     public void setDescription(String input) {

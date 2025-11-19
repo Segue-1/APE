@@ -8,6 +8,7 @@ import java.awt.*;
 
 public class FollowUpPanel extends JPanel {
     static Color followUpCallTextColor = new Color(9, 30, 172);
+    static Color conditionBuilderTextColor = new Color(143, 0, 197);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
@@ -50,6 +51,11 @@ public class FollowUpPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 0;
 
         add(createReplaceTextPanel(), gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.weightx = 1; gbc.weighty = .4;
+
+        add(createBottomPanel(), gbc);
     }
 
 
@@ -139,25 +145,92 @@ public class FollowUpPanel extends JPanel {
         return panel;
     }
 
-    private JPanel createConditionBuilderPanel() {
+    private JPanel createBottomPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         JLabel label = new JLabel();
+        JScrollPane scrollPane = new JScrollPane();
         GridBagConstraints gbc = new GridBagConstraints();
+        /*
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(new JLabel("Error condition "));
+        panel.add(new JComboBox<>(new String[]{"Error Condition 0", "Error Condition 1", "These are just placeholders"}));
+        panel.add(new JLabel(" will trigger corrective call set "));
+        panel.add(new JComboBox<>(new String[]{"Set 0", "Set 1", "These are just placeholders"}));
+
+         */
+
+        panel.setBackground(new Color(0, 131, 11));
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 0; gbc.weighty = 0;
+        gbc.weightx = .66; gbc.weighty = 0;
 
-        label.setText("Select a corrective call set: ");
-        panel.setBackground(new Color(129, 216, 112));
-        panel.add(label, gbc);
+        panel.add(createConditionBuilderLabel(), gbc);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = .66; gbc.weighty = 1;
+
+        panel.add(createConditionBuilderPanel(), gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
-        gbc.weightx = 0; gbc.weighty = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.gridheight = 2;
 
-        JComboBox<CorrectiveCallsSet> correctiveCallSetDropDown = new JComboBox<>();
-        panel.add(correctiveCallSetDropDown, gbc);
+        TableModel conditionTableModel = new DefaultTableModel();
+        JTable conditionTable = new JTable(conditionTableModel);
 
+        panel.add(createSmallTable("Condition Table", conditionTable), gbc);
+
+
+        return panel;
+    }
+
+    private JPanel createConditionBuilderLabel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel();
+        JLabel subText = new JLabel();
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        // Label
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+
+        label.setText("Condition Builder");
+        label.setFont(headerFont);
+        label.setForeground(conditionBuilderTextColor);
+        panel.add(label, gbc);
+
+        // Sub text
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+        subText.setText("Build conditions which trigger a set of corrective calls. " +
+                        "Select and error condition, a conditional statement, and a corrective call set to trigger.");
+
+        subText.setFont(subTextFont);
+        subText.setForeground(Color.BLACK);
+        panel.add(subText, gbc);
+
+        panel.setBackground(new Color(151, 131, 21));
+        return panel;
+    }
+
+    private JPanel createConditionBuilderPanel(){
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(0, 255, 223));
+        return panel;
+    }
+
+
+    private JPanel createConditionTable() {
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(58, 158, 12));
         return panel;
     }
 
@@ -233,8 +306,7 @@ public class FollowUpPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         JScrollPane scrollPane = new JScrollPane(table);
-        //scrollPane.setPreferredSize(new Dimension(300, 300));
-        //scrollPane.setMaximumSize(new Dimension(300, 300));
+
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
         panel.add(scrollPane, gbc);
