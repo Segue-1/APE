@@ -7,7 +7,7 @@ public class View {
     public ErrorDetectionPanel errorDetectionPanel;
     public CorrectiveCallsPanel correctiveCallsPanel;
     public FollowUpPanel followUpPanel;
-    public TestCallsPanel testCallsPanel;
+    public ConditionBuilderPanel conditionBuilderPanel;
     public SettingsPanel settingsPanel;
     public ContextMenus contextMenus;
     public TestPanel testPanel;
@@ -20,7 +20,7 @@ public class View {
         tabbedPane.addTab("Error Detection", errorDetectionPanel = new ErrorDetectionPanel());
         tabbedPane.addTab("Corrective Calls", correctiveCallsPanel = new CorrectiveCallsPanel());
         tabbedPane.addTab("Followup Call", followUpPanel = new FollowUpPanel());
-        tabbedPane.addTab("Test Calls", testCallsPanel = new TestCallsPanel());
+        tabbedPane.addTab("Condition Builder", conditionBuilderPanel = new ConditionBuilderPanel());
         tabbedPane.addTab("Settings", settingsPanel = new SettingsPanel());
         tabbedPane.addTab("Test Panel", testPanel = new TestPanel());
 

@@ -55,7 +55,7 @@ public class FollowUpPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 3;
         gbc.weightx = 1; gbc.weighty = .4;
 
-        add(createBottomPanel(), gbc);
+        //add(createBottomPanel(), gbc);
     }
 
 
@@ -116,7 +116,7 @@ public class FollowUpPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 0.5; gbc.weighty = 1;
+        gbc.weightx = .66; gbc.weighty = 1;
 
         String[] fieldLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
                 "Pick from Extraction"};
@@ -137,9 +137,6 @@ public class FollowUpPanel extends JPanel {
         followUpReplaceTableModel = new DefaultTableModel();
         followUpReplaceTable = new JTable(followUpReplaceTableModel);
 
-        //followUpReplaceTable.setPreferredSize(new Dimension(300, 200));
-        //followUpReplaceTable.setMaximumSize(new Dimension(300, 200));
-
         panel.add(createSmallTable("Replace", followUpReplaceTable), gbc);
 
         return panel;
@@ -147,18 +144,7 @@ public class FollowUpPanel extends JPanel {
 
     private JPanel createBottomPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel();
-        JScrollPane scrollPane = new JScrollPane();
         GridBagConstraints gbc = new GridBagConstraints();
-        /*
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-        panel.add(new JLabel("Error condition "));
-        panel.add(new JComboBox<>(new String[]{"Error Condition 0", "Error Condition 1", "These are just placeholders"}));
-        panel.add(new JLabel(" will trigger corrective call set "));
-        panel.add(new JComboBox<>(new String[]{"Set 0", "Set 1", "These are just placeholders"}));
-
-         */
 
         panel.setBackground(new Color(0, 131, 11));
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -183,7 +169,6 @@ public class FollowUpPanel extends JPanel {
         JTable conditionTable = new JTable(conditionTableModel);
 
         panel.add(createSmallTable("Condition Table", conditionTable), gbc);
-
 
         return panel;
     }
@@ -227,12 +212,6 @@ public class FollowUpPanel extends JPanel {
         return panel;
     }
 
-
-    private JPanel createConditionTable() {
-        JPanel panel = new JPanel();
-        panel.setBackground(new Color(58, 158, 12));
-        return panel;
-    }
 
     public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox dropDown,
                                         JTextField[] jTextFields, JButton fromSelect, JButton addButton){
