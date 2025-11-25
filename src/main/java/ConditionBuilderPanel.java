@@ -103,7 +103,7 @@ public class ConditionBuilderPanel extends JPanel {
         return panel;
     }
 
-    // TODO This needs work
+    // TODO This needs work. Plus button needs to be moved to addErrorCondition() method or something. Its position is inconsistent after adding / removing conditions.
     private JPanel createInputPanel(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBackground(new Color(0, 255, 223));
@@ -212,21 +212,32 @@ public class ConditionBuilderPanel extends JPanel {
 
         Font buttonFont = new Font("Dialog", Font.PLAIN, 12);
 
-        JButton expandButton = new JButton("-");
-        expandButton.setFont(buttonFont);
-        expandButton.setPreferredSize(new Dimension(15, 15));
+        JButton collapseButton = new JButton("-");
+        collapseButton.setFont(buttonFont);
+        collapseButton.setPreferredSize(new Dimension(15, 15));
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
 
-        expandButton.addActionListener(actionEvent -> {
+        // Shift components.
+        int index = panel.getComponentCount() - 2;
+
+        Component tempComponent = panel.getComponent(index);
+        panel.remove(index);
+
+        JPanel negationPanel = collapsableCheckBox();
+        panel.add(negationPanel, index - 1);
+        panel.add(errorConditionDropDown, index);
+        panel.add(collapseButton, index + 1);
+        panel.add(tempComponent, index + 2);
+
+        panel.repaint();
+        panel.revalidate();
+
+        collapseButton.addActionListener(actionEvent -> {
             panel.remove(errorConditionDropDown);
-            panel.remove(expandButton);
+            panel.remove(collapseButton);
+            panel.remove(negationPanel);
             panel.repaint();
             panel.revalidate();
         });
-
-        panel.add(errorConditionDropDown);
-        panel.add(expandButton);
-
-
     }
 }
