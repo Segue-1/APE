@@ -103,10 +103,10 @@ public class ConditionBuilderPanel extends JPanel {
         return panel;
     }
 
-    // TODO This needs work. Plus button needs to be moved to addErrorCondition() method or something. Its position is inconsistent after adding / removing conditions.
+    // TODO Fix addErrorCondition method
     private JPanel createInputPanel(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBackground(new Color(0, 255, 223));
+        //panel.setBackground(new Color(0, 255, 223));
 
         panel.add(new JLabel("Call set "));
         JComboBox<String> callSetDropDown = new JComboBox(new String[]{"Set 0", "Set 1", "Set N"});
@@ -127,7 +127,9 @@ public class ConditionBuilderPanel extends JPanel {
         addErrorConditionButton.addActionListener(actionListener);
         panel.add(addErrorConditionButton);
 
-        panel.add(new JLabel(" is received in the response."));
+        JLabel text3 = new JLabel(" is received in the response.");
+        panel.add(text3);
+        //panel.add(new JLabel(" is received in the response."));
 
         JButton addConditionButton = new JButton("Add condition");
         panel.add(addConditionButton);
@@ -217,21 +219,28 @@ public class ConditionBuilderPanel extends JPanel {
         collapseButton.setPreferredSize(new Dimension(15, 15));
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
 
-        // Shift components.
-        int index = panel.getComponentCount() - 2;
+
+        // Remove last 3 components
+        int index = panel.getComponentCount() - (panel.getComponentCount() - 3);
 
         Component tempComponent = panel.getComponent(index);
-        panel.remove(index);
+        
+        for (int i = 0; i < index; i++) {
+            try {
+                panel.remove(panel.getComponentCount() - 1);
+                panel.repaint();
+                panel.revalidate();
+            }
+            catch (Exception e) {
+                DebugLog.log(e.getMessage());
+            }
+        }
 
-        JPanel negationPanel = collapsableCheckBox();
-        panel.add(negationPanel, index - 1);
-        panel.add(errorConditionDropDown, index);
-        panel.add(collapseButton, index + 1);
-        panel.add(tempComponent, index + 2);
+        panel.add(errorConditionDropDown);
+        panel.add(collapseButton);
 
-        panel.repaint();
-        panel.revalidate();
 
+        /*
         collapseButton.addActionListener(actionEvent -> {
             panel.remove(errorConditionDropDown);
             panel.remove(collapseButton);
@@ -239,5 +248,6 @@ public class ConditionBuilderPanel extends JPanel {
             panel.repaint();
             panel.revalidate();
         });
+         */
     }
 }
