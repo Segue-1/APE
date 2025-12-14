@@ -7,6 +7,7 @@ import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class ConditionBuilderPanel extends JPanel {
     static Color conditionBuilderTextColor = new Color(143, 0, 197);
@@ -112,7 +113,7 @@ public class ConditionBuilderPanel extends JPanel {
         JComboBox<String> callSetDropDown = new JComboBox(new String[]{"Set 0", "Set 1", "Set N"});
         panel.add(callSetDropDown);
         panel.add(new JLabel(" will be called if "));
-        panel.add(collapsableCheckBox());
+        panel.add(negationDropDownPanel());
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
         panel.add(errorConditionDropDown);
 
@@ -187,7 +188,7 @@ public class ConditionBuilderPanel extends JPanel {
         return panel;
     }
 
-    private JPanel collapsableCheckBox() {
+    private JPanel negationDropDownPanel() {
         JPanel panel = new JPanel();
 
         Font buttonFont = new Font("Dialog", Font.PLAIN, 6);
@@ -218,16 +219,20 @@ public class ConditionBuilderPanel extends JPanel {
         collapseButton.setFont(buttonFont);
         collapseButton.setPreferredSize(new Dimension(15, 15));
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
-
+        JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
 
         // Remove last 3 components
-        int index = panel.getComponentCount() - (panel.getComponentCount() - 3);
+        int stop = panel.getComponentCount() - 3;
+        int start = panel.getComponentCount() - 1;
 
-        Component tempComponent = panel.getComponent(index);
+        ArrayList<Component> componentList = new ArrayList<Component>();
         
-        for (int i = 0; i < index; i++) {
+        for (int i = start; i >= stop; i--) {
             try {
-                panel.remove(panel.getComponentCount() - 1);
+                componentList.add(0, panel.getComponent(i));
+                DebugLog.log("start: " + start);
+                DebugLog.log("stop: " + stop);
+                panel.remove(i);
                 panel.repaint();
                 panel.revalidate();
             }
@@ -236,18 +241,28 @@ public class ConditionBuilderPanel extends JPanel {
             }
         }
 
+
+        panel.add(logicalOperator);
+        JPanel negationDropDownPanel = negationDropDownPanel();
+        panel.add(negationDropDownPanel);
         panel.add(errorConditionDropDown);
         panel.add(collapseButton);
 
 
-        /*
+        for (Component component : componentList) {
+            panel.add(component);
+        }
+
         collapseButton.addActionListener(actionEvent -> {
+            panel.remove(logicalOperator);
+            panel.remove(negationDropDownPanel);
             panel.remove(errorConditionDropDown);
             panel.remove(collapseButton);
-            panel.remove(negationPanel);
+
             panel.repaint();
             panel.revalidate();
         });
-         */
+
+
     }
 }
