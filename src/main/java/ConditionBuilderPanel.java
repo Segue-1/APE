@@ -48,25 +48,35 @@ public class ConditionBuilderPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = .66; gbc.weighty = 0;
+        gbc.weightx = 0; gbc.weighty = 0;
 
         panel.add(createConditionBuilderLabel(), gbc);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = .66; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
 
-        panel.add(createInputPanel(), gbc);
+        JPanel inputPanel = createInputPanel();
 
+        //inputPanel.setMaximumSize(new Dimension(350, 200));
+        //inputPanel.setPreferredSize(new Dimension(350, 200));
+
+        panel.add(inputPanel, gbc);
+
+        //gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
         gbc.gridheight = 2;
 
         TableModel conditionTableModel = new DefaultTableModel();
         JTable conditionTable = new JTable(conditionTableModel);
+        JPanel conditionTablePanel = createSmallTable("Condition Table", conditionTable);
 
-        panel.add(createSmallTable("Condition Table", conditionTable), gbc);
+        //conditionTablePanel.setMinimumSize(new Dimension(100, 100));
+        //conditionTablePanel.setPreferredSize(new Dimension(100, 100));
+
+        panel.add(conditionTablePanel, gbc);
 
         return panel;
     }
@@ -104,7 +114,7 @@ public class ConditionBuilderPanel extends JPanel {
         return panel;
     }
 
-    // TODO Fix addErrorCondition method
+    // TODO Fix addErrorCondition method. Rename this shit. Even you have no clue what this is referring to.
     private JPanel createInputPanel(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         //panel.setBackground(new Color(0, 255, 223));
@@ -135,6 +145,9 @@ public class ConditionBuilderPanel extends JPanel {
         JButton addConditionButton = new JButton("Add condition");
         panel.add(addConditionButton);
 
+        panel.setMaximumSize(new Dimension(350, 200));
+        panel.setPreferredSize(new Dimension(350, 200));
+
         return panel;
     }
 
@@ -156,10 +169,14 @@ public class ConditionBuilderPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(350, 200));
+        scrollPane.setMinimumSize(new Dimension(350, 200));
 
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
         panel.add(scrollPane, gbc);
+        panel.setMinimumSize(new Dimension(100, 100));
+        panel.setPreferredSize(new Dimension(100, 100));
 
         return panel;
     }
@@ -221,13 +238,12 @@ public class ConditionBuilderPanel extends JPanel {
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
         JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
 
-        // Remove last 3 components
-        int stop = panel.getComponentCount() - 3;
+        // Store last 3 components, temporarily remove them.
+        int stop = panel.getComponentCount() - 4;
         int start = panel.getComponentCount() - 1;
+        ArrayList<Component> componentList = new ArrayList<>();
 
-        ArrayList<Component> componentList = new ArrayList<Component>();
-        
-        for (int i = start; i >= stop; i--) {
+        for (int i = start; i > stop; i--) {
             try {
                 componentList.add(0, panel.getComponent(i));
                 DebugLog.log("start: " + start);
@@ -262,7 +278,5 @@ public class ConditionBuilderPanel extends JPanel {
             panel.repaint();
             panel.revalidate();
         });
-
-
     }
 }
