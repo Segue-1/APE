@@ -35,3 +35,7 @@ Consider whether you should be able to extract text from requests and not just r
 Should extract text only be for responses, or both request and response?
 
 Test push from macbook
+
+TODO for 12/15
+Create a new class for TriggerCondition. Make the trigger condition panel save to a list of TriggerCondition defined in
+the condition table model.

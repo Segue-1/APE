@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class ConditionBuilderPanel extends JPanel {
+public class TriggerConditionPanel extends JPanel {
     static Color conditionBuilderTextColor = new Color(143, 0, 197);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
@@ -18,7 +18,7 @@ public class ConditionBuilderPanel extends JPanel {
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
 
-    ConditionBuilderPanel() {
+    TriggerConditionPanel() {
         setLayout(new GridBagLayout());
         setBackground(Color.PINK);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -127,23 +127,27 @@ public class ConditionBuilderPanel extends JPanel {
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
         panel.add(errorConditionDropDown);
 
-        JButton addErrorConditionButton = new JButton("+");
+        JButton addTriggerConditionButton = new JButton("+");
+        addTriggerConditionButton.setPreferredSize(new Dimension(15, 15));
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                addErrorCondition(panel);
+                addTriggerCondition(panel);
             }
         };
 
-        addErrorConditionButton.addActionListener(actionListener);
-        panel.add(addErrorConditionButton);
+        addTriggerConditionButton.addActionListener(actionListener);
+        panel.add(addTriggerConditionButton);
 
         JLabel text3 = new JLabel(" is received in the response.");
         panel.add(text3);
         //panel.add(new JLabel(" is received in the response."));
 
-        JButton addConditionButton = new JButton("Add condition");
+        JButton addConditionButton = new JButton("Add");
         panel.add(addConditionButton);
+
+        JButton removeButton = new JButton("Remove");
+        panel.add(removeButton);
 
         panel.setMaximumSize(new Dimension(350, 200));
         panel.setPreferredSize(new Dimension(350, 200));
@@ -228,7 +232,7 @@ public class ConditionBuilderPanel extends JPanel {
         return panel;
     }
 
-    private void addErrorCondition(JPanel panel) {
+    private void addTriggerCondition(JPanel panel) {
 
         Font buttonFont = new Font("Dialog", Font.PLAIN, 12);
 
@@ -238,8 +242,8 @@ public class ConditionBuilderPanel extends JPanel {
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
         JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
 
-        // Store last 3 components, temporarily remove them.
-        int stop = panel.getComponentCount() - 4;
+        // Store last 4 components, temporarily remove them.
+        int stop = panel.getComponentCount() - 5;
         int start = panel.getComponentCount() - 1;
         ArrayList<Component> componentList = new ArrayList<>();
 
