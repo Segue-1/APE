@@ -12,6 +12,7 @@ public class Controller implements BurpExtension {
     public ContextMenusController contextMenusController;
     public ErrorDetectionController errorDetectionController;
     public CorrectiveCallsController correctiveCallsController;
+    public TriggerConditionController triggerConditionController;
 
 
     // This class is automatically instantiated by burp suite. Burp calls initialize first and
@@ -29,5 +30,6 @@ public class Controller implements BurpExtension {
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);
         correctiveCallsController = new CorrectiveCallsController(view.correctiveCallsPanel, model);
+        triggerConditionController = new TriggerConditionController(view.triggerConditionPanel, model);
     }
 }

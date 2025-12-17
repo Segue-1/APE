@@ -18,6 +18,11 @@ public class TriggerConditionPanel extends JPanel {
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
 
+    public JButton addButton;
+    public JButton resetButton;
+
+    public JPanel inputPanel;
+
     TriggerConditionPanel() {
         setLayout(new GridBagLayout());
         setBackground(Color.PINK);
@@ -27,7 +32,7 @@ public class TriggerConditionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        add(createConditionBuilderPanel(), gbc);
+        add(createTriggerConditionPanel(), gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
@@ -40,7 +45,7 @@ public class TriggerConditionPanel extends JPanel {
         add(createEditorPanel(), gbc);
     }
 
-    private JPanel createConditionBuilderPanel() {
+    private JPanel createTriggerConditionPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -57,24 +62,17 @@ public class TriggerConditionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel inputPanel = createInputPanel();
-
-        //inputPanel.setMaximumSize(new Dimension(350, 200));
-        //inputPanel.setPreferredSize(new Dimension(350, 200));
+        inputPanel = createInputPanel();
 
         panel.add(inputPanel, gbc);
 
-        //gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
         gbc.gridheight = 2;
 
         TableModel conditionTableModel = new DefaultTableModel();
         JTable conditionTable = new JTable(conditionTableModel);
-        JPanel conditionTablePanel = createSmallTable("Condition Table", conditionTable);
-
-        //conditionTablePanel.setMinimumSize(new Dimension(100, 100));
-        //conditionTablePanel.setPreferredSize(new Dimension(100, 100));
+        JPanel conditionTablePanel = createSmallTable("Trigger Condition Table", conditionTable);
 
         panel.add(conditionTablePanel, gbc);
 
@@ -94,7 +92,7 @@ public class TriggerConditionPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 0;
 
 
-        label.setText("Condition Builder");
+        label.setText("Trigger Condition Builder");
         label.setFont(headerFont);
         label.setForeground(conditionBuilderTextColor);
         panel.add(label, gbc);
@@ -114,8 +112,8 @@ public class TriggerConditionPanel extends JPanel {
         return panel;
     }
 
-    // TODO Fix addErrorCondition method. Rename this shit. Even you have no clue what this is referring to.
-    private JPanel createInputPanel(){
+    // Rename this shit. Even you have no clue what this is referring to.
+    public JPanel createInputPanel(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         //panel.setBackground(new Color(0, 255, 223));
 
@@ -141,13 +139,12 @@ public class TriggerConditionPanel extends JPanel {
 
         JLabel text3 = new JLabel(" is received in the response.");
         panel.add(text3);
-        //panel.add(new JLabel(" is received in the response."));
 
-        JButton addConditionButton = new JButton("Add");
-        panel.add(addConditionButton);
+        addButton = new JButton("Add");
+        panel.add(addButton);
 
-        JButton removeButton = new JButton("Remove");
-        panel.add(removeButton);
+        resetButton = new JButton("Reset");
+        panel.add(resetButton);
 
         panel.setMaximumSize(new Dimension(350, 200));
         panel.setPreferredSize(new Dimension(350, 200));
@@ -250,8 +247,6 @@ public class TriggerConditionPanel extends JPanel {
         for (int i = start; i > stop; i--) {
             try {
                 componentList.add(0, panel.getComponent(i));
-                DebugLog.log("start: " + start);
-                DebugLog.log("stop: " + stop);
                 panel.remove(i);
                 panel.repaint();
                 panel.revalidate();
@@ -261,13 +256,11 @@ public class TriggerConditionPanel extends JPanel {
             }
         }
 
-
         panel.add(logicalOperator);
         JPanel negationDropDownPanel = negationDropDownPanel();
         panel.add(negationDropDownPanel);
         panel.add(errorConditionDropDown);
         panel.add(collapseButton);
-
 
         for (Component component : componentList) {
             panel.add(component);
