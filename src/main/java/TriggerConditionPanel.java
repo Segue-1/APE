@@ -138,11 +138,9 @@ public class TriggerConditionPanel extends JPanel {
         JLabel text3 = new JLabel(" is received in the response.");
         panel.add(text3);
 
-        addButton = new JButton("Add");
-        panel.add(addButton);
+        panel.add(new JButton("Add"));
 
-        resetButton = new JButton("Reset");
-        panel.add(resetButton);
+        panel.add(new JButton("Reset"));
 
         panel.setMaximumSize(new Dimension(350, 200));
         panel.setPreferredSize(new Dimension(350, 200));
