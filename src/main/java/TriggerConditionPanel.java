@@ -62,9 +62,7 @@ public class TriggerConditionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        inputPanel = createInputPanel();
-
-        panel.add(inputPanel, gbc);
+        panel.add(createInputPanel(), gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
@@ -115,7 +113,7 @@ public class TriggerConditionPanel extends JPanel {
     // Rename this shit. Even you have no clue what this is referring to.
     public JPanel createInputPanel(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        //panel.setBackground(new Color(0, 255, 223));
+        DebugLog.log("createInputPanel() called");
 
         panel.add(new JLabel("Call set "));
         JComboBox<String> callSetDropDown = new JComboBox(new String[]{"Set 0", "Set 1", "Set N"});
@@ -275,5 +273,13 @@ public class TriggerConditionPanel extends JPanel {
             panel.repaint();
             panel.revalidate();
         });
+    }
+
+    public void resetTriggerConditionPanel() {
+        JPanel rootPanel = (JPanel) this.getComponent(0);
+        rootPanel.remove(1);
+        //rootPanel.add(createInputPanel(), rootGBC);
+        rootPanel.revalidate();
+        rootPanel.repaint();
     }
 }
