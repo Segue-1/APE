@@ -1,18 +1,21 @@
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 
 public class TriggerConditionController {
     private TriggerConditionPanel triggerConditionPanel;
+    private CorrectiveCallsPanel ccPanel;
+
     private JButton addButton;
-    //private JButton resetButton;
 
-    //private JPanel inputPanel;
 
-    TriggerConditionController(TriggerConditionPanel triggerConditionPanel, Model model) {
-        setAttributes(triggerConditionPanel);
+    TriggerConditionController(View view, Model model) {
+        setAttributes(view);
 
         setAddButtonListener();
         setResetButtonListener();
+        setCcsDropDown();
     }
 
     public void setAddButtonListener() {
@@ -51,12 +54,36 @@ public class TriggerConditionController {
         });
     }
 
-    private void setAttributes(TriggerConditionPanel triggerConditionPanel) {
-        this.triggerConditionPanel = triggerConditionPanel;
+    // Sets action listener which loads corrective call sets from corrective call set table model
+    private void setCcsDropDown(){
+        triggerConditionPanel.ccsDropdown.addPopupMenuListener(new PopupMenuListener() {
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                triggerConditionPanel.ccsDropdown.removeAllItems();
+
+                for (int row = 0; row < ccPanel.correctiveCallsSetsTableModel.getRowCount(); row++) {
+                    CorrectiveCallsSet ccs = ccPanel.correctiveCallsSetsTableModel.getCorrectiveCallsSet(row);
+                    triggerConditionPanel.ccsDropdown.addItem(ccs);
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+
+            }
+        });
+    }
+
+    private void setAttributes(View view) {
+        this.triggerConditionPanel = view.triggerConditionPanel;
+        this.ccPanel = view.correctiveCallsPanel;
+
+
 
         this.addButton = triggerConditionPanel.addButton;
-        //this.resetButton = triggerConditionPanel.resetButton;
-
-        //this.inputPanel = triggerConditionPanel.inputPanel;
     }
 }

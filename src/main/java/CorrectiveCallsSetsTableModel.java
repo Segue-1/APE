@@ -94,6 +94,10 @@ public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
         fireTableRowsUpdated(rowIndex, rowIndex);
     }
 
+    public CorrectiveCallsSet getCorrectiveCallsSet(int rowIndex) {
+        return correctiveCallsSets.get(rowIndex);
+    }
+
     @Override
     public String toString() {
         return "CorrectiveCallsSetsTableModel{" +

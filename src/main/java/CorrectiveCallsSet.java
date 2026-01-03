@@ -20,6 +20,10 @@ public class CorrectiveCallsSet {
 
     @Override
     public String toString() {
+        return name;
+    }
+
+    public String debugString() {
         return "CorrectiveCallsSet{" +
                 "index=" + index +
                 ", name='" + name + '\'' +

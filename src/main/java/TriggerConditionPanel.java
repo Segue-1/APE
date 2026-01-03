@@ -21,7 +21,7 @@ public class TriggerConditionPanel extends JPanel {
     public JButton addButton;
     public JButton resetButton;
 
-    public JPanel inputPanel;
+    public JComboBox<CorrectiveCallsSet> ccsDropdown;
 
     TriggerConditionPanel() {
         setLayout(new GridBagLayout());
@@ -117,7 +117,8 @@ public class TriggerConditionPanel extends JPanel {
 
         panel.add(new JLabel("Call set "));
         JComboBox<String> callSetDropDown = new JComboBox(new String[]{"Set 0", "Set 1", "Set N"});
-        panel.add(callSetDropDown);
+        ccsDropdown = new JComboBox<>();
+        panel.add(ccsDropdown);
         panel.add(new JLabel(" will be called if "));
         panel.add(negationDropDownPanel());
         JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
