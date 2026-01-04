@@ -304,12 +304,28 @@ public class CorrectiveCallsController {
         replaceDropDown.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
+
+                ExtractText tempExtractText;
+
+                if (replaceDropDown.getSelectedIndex() != -1) {
+                    tempExtractText = replaceDropDown.getItemAt(replaceDropDown.getSelectedIndex());
+                }
+                else {
+                    tempExtractText = null;
+                }
+
                 replaceDropDown.removeAllItems();
 
                 for (int row = 0; row < extractionTableModel.getRowCount(); row++) {
                     ExtractText extractText = extractionTableModel.getExtractText(row);
                     replaceDropDown.addItem(extractText);
+
+                    if (extractText.equals(tempExtractText)) {
+                        replaceDropDown.setSelectedIndex(row);
+                    }
                 }
+
+
             }
 
             @Override

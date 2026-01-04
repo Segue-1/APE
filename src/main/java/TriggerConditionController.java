@@ -59,11 +59,28 @@ public class TriggerConditionController {
     private void setCcsDropDown(){
         triggerConditionPanel.ccsDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+
+                CorrectiveCallsSet tempCcs;
+
+                if (triggerConditionPanel.ccsDropdown.getSelectedIndex() != -1) {
+                    tempCcs = triggerConditionPanel.ccsDropdown.getItemAt(triggerConditionPanel.ccsDropdown.getSelectedIndex());
+                }
+                else {
+                    tempCcs = null;
+                }
+
                 triggerConditionPanel.ccsDropdown.removeAllItems();
 
                 for (int row = 0; row < ccPanel.correctiveCallsSetsTableModel.getRowCount(); row++) {
                     CorrectiveCallsSet ccs = ccPanel.correctiveCallsSetsTableModel.getCorrectiveCallsSet(row);
                     triggerConditionPanel.ccsDropdown.addItem(ccs);
+
+                    if (ccs.equals(tempCcs)){
+                        triggerConditionPanel.ccsDropdown.setSelectedIndex(row);
+                    }
+                    else{
+                        triggerConditionPanel.ccsDropdown.setSelectedIndex(0);
+                    }
                 }
             }
 
