@@ -2,10 +2,19 @@ import java.util.ArrayList;
 
 public class TriggerCondition {
 
+    public int index;
+    public String name;
+
     public CorrectiveCallsSet correctiveCallsSet;
     public ArrayList<Boolean> isNegated;
     public ArrayList<ErrorCondition> errorConditions;
     public ArrayList<String> logicalOperator;
+
+    public String conditionString;
+
+    private String negation = "!";
+    private String and = "&";
+    private String or = "|";
 
     // if multiple error conditions, need to store them and logical operator
 
@@ -26,4 +35,28 @@ public class TriggerCondition {
             this.logicalOperator = logicalOperator;
         }
     }
+
+    public void setName () {
+        name = "Set " + index;
+    }
+
+    public String buildConditionString() {
+        StringBuilder conditionString = new StringBuilder();
+
+
+
+        if (errorConditions.size() == 1) {
+            return errorConditions.get(0).name;
+        }
+        else {
+            String errorConditionsString = "";
+            for (ErrorCondition errorCondition : errorConditions) {
+                // barf
+            }
+        }
+        return conditionString.toString();
+    }
+
+    // TODO think about a name for a class which combines the lists isNegated, errorconditions, and logical ops
+    //private class
 }
