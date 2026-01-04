@@ -39,3 +39,14 @@ Test push from macbook
 TODO for 12/15
 Create a new class for TriggerCondition. Make the trigger condition panel save to a list of TriggerCondition defined in
 the condition table model.
+
+TODO bugs
+Extraction table resizing messed up.
+
+Example:
+Send delete instances to corrective calls. Highlight the UUID in the following message and add to extraction.
+
+{"message": "Instance 8798c781-c767-4413-acff-f55166a10efe has been deleted!"}
+
+Then select "been" and click "From Selection". Move the cursor. Fields resize in a weird way.
+

@@ -50,11 +50,12 @@ public class TriggerConditionController {
             parentPanel.revalidate();
             parentPanel.repaint();
 
-            setResetButtonListener();
+            reattachListeners();
         });
     }
 
     // Sets action listener which loads corrective call sets from corrective call set table model
+    // TODO update this where the current selection is saved in a temp / swap value and then use equals to see if objects have changed
     private void setCcsDropDown(){
         triggerConditionPanel.ccsDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
@@ -76,6 +77,11 @@ public class TriggerConditionController {
 
             }
         });
+    }
+
+    private void reattachListeners() {
+        setResetButtonListener();
+        setCcsDropDown();
     }
 
     private void setAttributes(View view) {
