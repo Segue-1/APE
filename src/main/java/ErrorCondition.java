@@ -23,4 +23,20 @@ public class ErrorCondition {
             default -> description = "How did you do that?";
         }
     }
+
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public String debugString() {
+        return "ErrorCondition{" +
+                "index=" + index +
+                ", name='" + name + '\'' +
+                ", category='" + category + '\'' +
+                ", value='" + value + '\'' +
+                ", description='" + description + '\'' +
+                '}';
+    }
 }

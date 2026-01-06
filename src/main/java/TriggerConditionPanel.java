@@ -22,6 +22,7 @@ public class TriggerConditionPanel extends JPanel {
     public JButton resetButton;
 
     public JComboBox<CorrectiveCallsSet> ccsDropdown;
+    public JComboBox<ErrorCondition> ecDropDown;
 
     TriggerConditionPanel() {
         setLayout(new GridBagLayout());
@@ -120,9 +121,9 @@ public class TriggerConditionPanel extends JPanel {
         ccsDropdown = new JComboBox<>();
         panel.add(ccsDropdown);
         panel.add(new JLabel(" will be called if "));
-        panel.add(negationDropDownPanel());
-        JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
-        panel.add(errorConditionDropDown);
+        panel.add(createNegationDropDownPanel());
+        ecDropDown = new JComboBox<>();
+        panel.add(ecDropDown);
 
         JButton addTriggerConditionButton = new JButton("+");
         addTriggerConditionButton.setPreferredSize(new Dimension(15, 15));
@@ -136,8 +137,7 @@ public class TriggerConditionPanel extends JPanel {
         addTriggerConditionButton.addActionListener(actionListener);
         panel.add(addTriggerConditionButton);
 
-        JLabel text3 = new JLabel(" is received in the response.");
-        panel.add(text3);
+        panel.add(new JLabel(" is received in the response."));
 
         panel.add(new JButton("Add"));
 
@@ -203,7 +203,7 @@ public class TriggerConditionPanel extends JPanel {
         return panel;
     }
 
-    private JPanel negationDropDownPanel() {
+    private JPanel createNegationDropDownPanel() {
         JPanel panel = new JPanel();
 
         Font buttonFont = new Font("Dialog", Font.PLAIN, 6);
@@ -233,7 +233,8 @@ public class TriggerConditionPanel extends JPanel {
         JButton collapseButton = new JButton("-");
         collapseButton.setFont(buttonFont);
         collapseButton.setPreferredSize(new Dimension(15, 15));
-        JComboBox<String> errorConditionDropDown = new JComboBox(new String[]{"Error Condition 0", "Error Condition 1", "Error Condition N"});
+        // Cannot set the following directly to ecDropDown. Get by grabbing components
+        JComboBox<ErrorCondition> errorConditionDropDown = new JComboBox<>();
         JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
 
         // Store last 4 components, temporarily remove them.
@@ -254,7 +255,7 @@ public class TriggerConditionPanel extends JPanel {
         }
 
         panel.add(logicalOperator);
-        JPanel negationDropDownPanel = negationDropDownPanel();
+        JPanel negationDropDownPanel = createNegationDropDownPanel();
         panel.add(negationDropDownPanel);
         panel.add(errorConditionDropDown);
         panel.add(collapseButton);
@@ -272,13 +273,5 @@ public class TriggerConditionPanel extends JPanel {
             panel.repaint();
             panel.revalidate();
         });
-    }
-
-    public void resetTriggerConditionPanel() {
-        JPanel rootPanel = (JPanel) this.getComponent(0);
-        rootPanel.remove(1);
-        //rootPanel.add(createInputPanel(), rootGBC);
-        rootPanel.revalidate();
-        rootPanel.repaint();
     }
 }

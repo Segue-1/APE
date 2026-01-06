@@ -13,8 +13,8 @@ public class TriggerCondition {
     public String conditionString;
 
     private String negation = "!";
-    private String and = "&";
-    private String or = "|";
+    private String and = "&&";
+    private String or = "||";
 
     // if multiple error conditions, need to store them and logical operator
 
@@ -56,7 +56,4 @@ public class TriggerCondition {
         }
         return conditionString.toString();
     }
-
-    // TODO think about a name for a class which combines the lists isNegated, errorconditions, and logical ops
-    //private class
 }

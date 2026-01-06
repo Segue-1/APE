@@ -55,6 +55,10 @@ public class ErrorConditionTableModel extends AbstractTableModel {
         }
     }
 
+    public ErrorCondition getErrorCondition(int row) {
+        return errorConditions.get(row);
+    }
+
     @Override
     public boolean isCellEditable(int row, int column) {
         return false;

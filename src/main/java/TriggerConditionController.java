@@ -6,6 +6,7 @@ import java.awt.*;
 public class TriggerConditionController {
     private TriggerConditionPanel triggerConditionPanel;
     private CorrectiveCallsPanel ccPanel;
+    private ErrorDetectionPanel edPanel;
 
     private JButton addButton;
 
@@ -16,6 +17,7 @@ public class TriggerConditionController {
         setAddButtonListener();
         setResetButtonListener();
         setCcsDropDown();
+        setEcDropDown();
     }
 
     public void setAddButtonListener() {
@@ -56,6 +58,7 @@ public class TriggerConditionController {
 
     // Sets action listener which loads corrective call sets from corrective call set table model
     // TODO update this where the current selection is saved in a temp / swap value and then use equals to see if objects have changed
+    // 1/5 only last item in list persists, all other selections reset to 0
     private void setCcsDropDown(){
         triggerConditionPanel.ccsDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
@@ -96,14 +99,56 @@ public class TriggerConditionController {
         });
     }
 
+    private void setEcDropDown(){
+        triggerConditionPanel.ecDropDown.addPopupMenuListener(new PopupMenuListener() {
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+
+                ErrorCondition tempEc;
+
+                if (triggerConditionPanel.ecDropDown.getSelectedIndex() != -1) {
+                    tempEc = triggerConditionPanel.ecDropDown.getItemAt(triggerConditionPanel.ecDropDown.getSelectedIndex());
+                }
+                else {
+                    tempEc = null;
+                }
+
+                triggerConditionPanel.ecDropDown.removeAllItems();
+
+                for (int row = 0; row < edPanel.errorConditionTableModel.getRowCount(); row++) {
+                    ErrorCondition ec = edPanel.errorConditionTableModel.getErrorCondition(row);
+                    triggerConditionPanel.ecDropDown.addItem(ec);
+
+                    if (ec.equals(tempEc)){
+                        triggerConditionPanel.ecDropDown.setSelectedIndex(row);
+                    }
+                    else{
+                        triggerConditionPanel.ecDropDown.setSelectedIndex(0);
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+
+            }
+        });
+    }
+
     private void reattachListeners() {
         setResetButtonListener();
         setCcsDropDown();
+        setEcDropDown();
     }
 
     private void setAttributes(View view) {
         this.triggerConditionPanel = view.triggerConditionPanel;
         this.ccPanel = view.correctiveCallsPanel;
+        this.edPanel = view.errorDetectionPanel;
 
 
 

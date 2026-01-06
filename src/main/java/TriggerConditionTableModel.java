@@ -31,8 +31,8 @@ public class TriggerConditionTableModel extends AbstractTableModel
         return switch (columnIndex) {
             case 0 -> triggerCondition.name;
             case 1 -> triggerCondition.correctiveCallsSet.name;
-            case 2 -> triggerCondition.errorCondition;
-            case 3 -> triggerCondition.logicalOp;
+            case 2 -> triggerCondition.errorConditions;
+            case 3 -> triggerCondition.logicalOperator;
             default -> null;
         };
     }
