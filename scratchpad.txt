@@ -34,7 +34,9 @@ condition 1 ^ (condition 2 \/ condition 3 \/ !condition4)
 Consider whether you should be able to extract text from requests and not just responses.
 Should extract text only be for responses, or both request and response?
 
-Test push from macbook
+Option which limits rate of requests by ensuring corrective calls complete before the next call can be made. It
+is possible for the rate of requests in intruder to be too fast and trigger errors. If an error condition is hit, enforce
+a wait period until corrective calls complete.
 
 TODO for 12/15
 Create a new class for TriggerCondition. Make the trigger condition panel save to a list of TriggerCondition defined in

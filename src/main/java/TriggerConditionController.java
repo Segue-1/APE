@@ -150,8 +150,6 @@ public class TriggerConditionController {
         this.ccPanel = view.correctiveCallsPanel;
         this.edPanel = view.errorDetectionPanel;
 
-
-
         this.addButton = triggerConditionPanel.addButton;
     }
 }

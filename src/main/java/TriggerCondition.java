@@ -34,26 +34,61 @@ public class TriggerCondition {
             this.errorConditions = errorConditions;
             this.logicalOperator = logicalOperator;
         }
+        buildConditionString();
     }
 
     public void setName () {
         name = "Set " + index;
     }
 
-    public String buildConditionString() {
-        StringBuilder conditionString = new StringBuilder();
+    public void buildConditionString() {
+        StringBuilder conditionStringBuilder = new StringBuilder();
 
-
+        if (errorConditions.size() != isNegated.size()) {
+            DebugLog.log("Trigger Condition Builder Error: Mismatching number of error conditions and negations");
+            DebugLog.log(debugString());
+        }
+        else if(errorConditions.size() > 1 && logicalOperator.size() != errorConditions.size() - 1) {
+            DebugLog.log("Trigger Condition Builder Error: Incorrect number of logical operators");
+            DebugLog.log(debugString());
+        }
 
         if (errorConditions.size() == 1) {
-            return errorConditions.get(0).name;
+            this.conditionString = (isNegated.getFirst() ? negation : "") + errorConditions.getFirst().name;
         }
         else {
-            String errorConditionsString = "";
-            for (ErrorCondition errorCondition : errorConditions) {
-                // barf
+            int length = errorConditions.size();
+
+            for (int i = 0; i < length; i++) {
+                conditionStringBuilder.append(isNegated.get(i) ? negation : "");
+                conditionStringBuilder.append(errorConditions.get(i).name + " ");
+                if (i < length - 1) {
+                    conditionStringBuilder.append(logicalOperator.get(i));
+                }
             }
+
         }
-        return conditionString.toString();
+        DebugLog.log("conditionString: " +  conditionString);
+        this.conditionString = conditionStringBuilder.toString();
+    }
+
+    public String debugString() {
+        return "TriggerCondition{" +
+                "index=" + index +
+                ", name='" + name + '\'' +
+                ", correctiveCallsSet=" + correctiveCallsSet +
+                ", isNegated=" + isNegated +
+                ", errorConditions=" + errorConditions +
+                ", logicalOperator=" + logicalOperator +
+                ", conditionString='" + conditionString + '\'' +
+                ", negation='" + negation + '\'' +
+                ", and='" + and + '\'' +
+                ", or='" + or + '\'' +
+                '}';
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

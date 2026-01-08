@@ -125,6 +125,9 @@ public class TriggerConditionPanel extends JPanel {
         ecDropDown = new JComboBox<>();
         panel.add(ecDropDown);
 
+        // TODO just move this action listener over to the controller. Manually grab this UI component with component.get on view.triggerConditionPanel
+        // Then dynamically add UI components within the controller. Better than adding action listener logic in view.
+        // Also will be easier to attach listners to dynamic UI components
         JButton addTriggerConditionButton = new JButton("+");
         addTriggerConditionButton.setPreferredSize(new Dimension(15, 15));
         ActionListener actionListener = new ActionListener() {
