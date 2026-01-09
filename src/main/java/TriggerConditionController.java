@@ -16,8 +16,9 @@ public class TriggerConditionController {
 
         setAddButtonListener();
         setResetButtonListener();
-        setCcsDropDown();
-        setEcDropDown();
+        setCcsDropDownListener();
+        setEcDropDownListener();
+        setPlusButtonListener();
     }
 
     public void setAddButtonListener() {
@@ -59,7 +60,7 @@ public class TriggerConditionController {
     // Sets action listener which loads corrective call sets from corrective call set table model
     // TODO update this where the current selection is saved in a temp / swap value and then use equals to see if objects have changed
     // 1/5 only last item in list persists, all other selections reset to 0
-    private void setCcsDropDown(){
+    private void setCcsDropDownListener(){
         triggerConditionPanel.ccsDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 
@@ -99,7 +100,7 @@ public class TriggerConditionController {
         });
     }
 
-    private void setEcDropDown(){
+    private void setEcDropDownListener(){
         triggerConditionPanel.ecDropDown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 
@@ -141,8 +142,12 @@ public class TriggerConditionController {
 
     private void reattachListeners() {
         setResetButtonListener();
-        setCcsDropDown();
-        setEcDropDown();
+        setCcsDropDownListener();
+        setEcDropDownListener();
+    }
+
+    private void setPlusButtonListener () {
+
     }
 
     private void setAttributes(View view) {
