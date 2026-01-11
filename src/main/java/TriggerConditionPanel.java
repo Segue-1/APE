@@ -116,36 +116,22 @@ public class TriggerConditionPanel extends JPanel {
 
         panel.add(new JLabel("Call set "));
         JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = new JComboBox<>();
+        correctiveCallsSetDropdown.setName("CorrectiveCallsSetDropdown");
         panel.add(correctiveCallsSetDropdown);
         panel.add(new JLabel(" will be called if "));
-        panel.add(createNegationDropDownPanel());
+        JPanel negationDropdownPanel = createNegationDropDownPanel();
+        negationDropdownPanel.setName("NegationDropdownPanel");
+        panel.add(negationDropdownPanel);
         JComboBox<ErrorCondition> errorConditionDropdown = new JComboBox<>();
         errorConditionDropdown.setName("ErrorConditionDropdown");
         panel.add(errorConditionDropdown);
 
-        // TODO just move this action listener over to the controller. Manually grab this UI component with component.get on view.triggerConditionPanel
-        // Then dynamically add UI components within the controller. Better than adding action listener logic in view.
-        // Also will be easier to attach listners to dynamic UI components
         JButton addTriggerConditionButton = new JButton("+");
         addTriggerConditionButton.setPreferredSize(new Dimension(15, 15));
-        /*
-        ActionListener actionListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                addTriggerCondition(panel);
-            }
-        };
 
-
-
-        addTriggerConditionButton.addActionListener(actionListener);
-         */
         panel.add(addTriggerConditionButton);
-
         panel.add(new JLabel(" is received in the response."));
-
         panel.add(new JButton("Add"));
-
         panel.add(new JButton("Reset"));
 
         panel.setMaximumSize(new Dimension(350, 200));
@@ -219,6 +205,7 @@ public class TriggerConditionPanel extends JPanel {
         JCheckBox notCheckbox = new JCheckBox("NOT");
         notCheckbox.setVisible(false);
 
+        // Should be moved to controller
         expandButton.addActionListener(actionEvent -> {
             boolean state = notCheckbox.isVisible();
             notCheckbox.setVisible(!state);

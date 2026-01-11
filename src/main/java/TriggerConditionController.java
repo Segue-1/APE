@@ -17,17 +17,24 @@ public class TriggerConditionController {
     TriggerConditionController(View view, Model model, Controller controller) {
         setAttributes(view, controller);
 
-        setAddButtonListener();
         setResetButtonListener();
         setCorrectiveCallsSetDropdownListener();
         errorConditionDropdownCount = 1;
         setErrorConditionDropdownListener();
         passTriggerConditionController();
         setPlusButtonListener();
+        setAddButtonListener();
     }
 
     public void setAddButtonListener() {
+        JPanel inputPanel = getInputPanel();
+        int index = inputPanel.getComponentCount() - 2;
+        JButton addButton = (JButton) inputPanel.getComponent(index);
 
+        addButton.addActionListener(e -> {
+            DebugLog.log("Add Button clicked");
+
+        });
     }
 
     public void setResetButtonListener() {
@@ -108,46 +115,12 @@ public class TriggerConditionController {
         });
     }
 
+    // remove
     private void setErrorConditionDropdownListener(){
         JComboBox<ErrorCondition> errorConditionDropdown = getErrorConditionDropdown();
         errorConditionDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                /*
 
-                ErrorCondition tempEc;
-
-
-                if (errorConditionDropdown.getSelectedIndex() != -1) {
-                    tempEc = errorConditionDropdown.getItemAt(errorConditionDropdown.getSelectedIndex());
-                }
-                else {
-                    tempEc = null;
-                }
-
-
-
-                DefaultComboBoxModel<ErrorCondition> model = new DefaultComboBoxModel<>();
-
-                for (int row = 0; row < edPanel.errorConditionTableModel.getRowCount(); row++) {
-                    ErrorCondition ec = edPanel.errorConditionTableModel.getErrorCondition(row);
-                    model.addElement(ec);
-                }
-                errorConditionDropdown.setModel(model);
-
-
-                if (tempEc != null){
-
-                    for (int row = 0; row < edPanel.errorConditionTableModel.getRowCount(); row++) {
-                        ErrorCondition ec = edPanel.errorConditionTableModel.getErrorCondition(row);
-
-                        if (ec.equals(tempEc)) {
-                            errorConditionDropdown.setSelectedIndex(row);
-                            break;
-                        }
-                    }
-                }
-
-                 */
             }
 
             @Override
@@ -204,6 +177,7 @@ public class TriggerConditionController {
         setCorrectiveCallsSetDropdownListener();
         setErrorConditionDropdownListener();
         setPlusButtonListener();
+        setAddButtonListener();
     }
 
     private JPanel getConditionBuilderPanel(){
@@ -252,11 +226,7 @@ public class TriggerConditionController {
 
         // index of the plusButton. Always 3rd to last.
         // + (-1) for going from count (starts at 1) to list (starts at 0)
-        DebugLog.log("inputPanel.getComponentCount(): " +  inputPanel.getComponentCount());
-        DebugLog.log("Setting index to: " + (inputPanel.getComponentCount() - 4));
         int index = inputPanel.getComponentCount() - 4;
-
-        DebugLog.log("Instantiating plusButton");
 
         return (JButton) inputPanel.getComponent(index);
     }
@@ -271,12 +241,11 @@ public class TriggerConditionController {
             JButton collapseButton = new JButton("-");
             collapseButton.setFont(buttonFont);
             collapseButton.setPreferredSize(new Dimension(15, 15));
-            // Cannot set the following directly to ecDropDown. Get by grabbing components
             JComboBox<ErrorCondition> errorConditionDropDown = new JComboBox<>();
             errorConditionDropDown.setName("ErrorConditionDropdown");
             errorConditionDropdownCount++;
-            DebugLog.log("errorConditionDropdownCount: " + errorConditionDropdownCount);
             JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
+            logicalOperator.setName("LogicalOperator");
 
             // Store last 4 components, temporarily remove them.
             int stop = inputPanel.getComponentCount() - 5;
