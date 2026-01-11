@@ -10,6 +10,8 @@ public class ErrorDetectionController {
     private ErrorDetectionPanel errorDetectionPanel;
     public HttpRequestResponse errorCall;
 
+    private TriggerConditionController triggerConditionController;
+
 
     ErrorDetectionController(ErrorDetectionPanel errorDetectionPanel, Model model){
         this.errorDetectionPanel = errorDetectionPanel;
@@ -31,6 +33,14 @@ public class ErrorDetectionController {
             errorDetectionPanel.errorConditionTableModel.addRow(new ErrorCondition(selectedItem, input));
             DebugLog.log("Error condition added. Type: '" + selectedItem + "' input: '" + input + "'");
             Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
+            try {
+                triggerConditionController.refreshErrorConditionDropdown();
+            }
+            catch (Exception ex) {
+                DebugLog.log("Failed to call triggerConditionController.refreshErrorConditionDropdown()");
+                DebugLog.log(ex.getMessage());
+            }
+
         };
         errorDetectionPanel.submitButton.addActionListener(submitButtonListener);
     }
@@ -48,6 +58,13 @@ public class ErrorDetectionController {
                 DebugLog.log("User deleted error condition at row " + selectedRow);
                 errorDetectionPanel.errorConditionTableModel.removeRow(selectedRow);
                 Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
+                try {
+                    triggerConditionController.refreshErrorConditionDropdown();
+                }
+                catch (Exception ex) {
+                    DebugLog.log("Failed to call triggerConditionController.refreshErrorConditionDropdown()");
+                    DebugLog.log(ex.getMessage());
+                }
             }
         });
 
@@ -78,5 +95,9 @@ public class ErrorDetectionController {
                 }
             }
         });
+    }
+
+    public void setTriggerConditionController(TriggerConditionController triggerConditionController){
+        this.triggerConditionController = triggerConditionController;
     }
 }

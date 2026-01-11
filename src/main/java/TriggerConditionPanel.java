@@ -21,8 +21,6 @@ public class TriggerConditionPanel extends JPanel {
     public JButton addButton;
     public JButton resetButton;
 
-    public JComboBox<CorrectiveCallsSet> ccsDropdown;
-    public JComboBox<ErrorCondition> ecDropDown;
 
     TriggerConditionPanel() {
         setLayout(new GridBagLayout());
@@ -33,7 +31,7 @@ public class TriggerConditionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        add(createTriggerConditionPanel(), gbc);
+        add(createConditionBuilderPanel(), gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
@@ -46,7 +44,7 @@ public class TriggerConditionPanel extends JPanel {
         add(createEditorPanel(), gbc);
     }
 
-    private JPanel createTriggerConditionPanel() {
+    private JPanel createConditionBuilderPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -117,19 +115,20 @@ public class TriggerConditionPanel extends JPanel {
         DebugLog.log("createInputPanel() called");
 
         panel.add(new JLabel("Call set "));
-        JComboBox<String> callSetDropDown = new JComboBox(new String[]{"Set 0", "Set 1", "Set N"});
-        ccsDropdown = new JComboBox<>();
-        panel.add(ccsDropdown);
+        JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = new JComboBox<>();
+        panel.add(correctiveCallsSetDropdown);
         panel.add(new JLabel(" will be called if "));
         panel.add(createNegationDropDownPanel());
-        ecDropDown = new JComboBox<>();
-        panel.add(ecDropDown);
+        JComboBox<ErrorCondition> errorConditionDropdown = new JComboBox<>();
+        errorConditionDropdown.setName("ErrorConditionDropdown");
+        panel.add(errorConditionDropdown);
 
         // TODO just move this action listener over to the controller. Manually grab this UI component with component.get on view.triggerConditionPanel
         // Then dynamically add UI components within the controller. Better than adding action listener logic in view.
         // Also will be easier to attach listners to dynamic UI components
         JButton addTriggerConditionButton = new JButton("+");
         addTriggerConditionButton.setPreferredSize(new Dimension(15, 15));
+        /*
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -137,7 +136,10 @@ public class TriggerConditionPanel extends JPanel {
             }
         };
 
+
+
         addTriggerConditionButton.addActionListener(actionListener);
+         */
         panel.add(addTriggerConditionButton);
 
         panel.add(new JLabel(" is received in the response."));
@@ -206,7 +208,7 @@ public class TriggerConditionPanel extends JPanel {
         return panel;
     }
 
-    private JPanel createNegationDropDownPanel() {
+    public JPanel createNegationDropDownPanel() {
         JPanel panel = new JPanel();
 
         Font buttonFont = new Font("Dialog", Font.PLAIN, 6);
@@ -227,54 +229,5 @@ public class TriggerConditionPanel extends JPanel {
         panel.add(notCheckbox);
 
         return panel;
-    }
-
-    private void addTriggerCondition(JPanel panel) {
-
-        Font buttonFont = new Font("Dialog", Font.PLAIN, 12);
-
-        JButton collapseButton = new JButton("-");
-        collapseButton.setFont(buttonFont);
-        collapseButton.setPreferredSize(new Dimension(15, 15));
-        // Cannot set the following directly to ecDropDown. Get by grabbing components
-        JComboBox<ErrorCondition> errorConditionDropDown = new JComboBox<>();
-        JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
-
-        // Store last 4 components, temporarily remove them.
-        int stop = panel.getComponentCount() - 5;
-        int start = panel.getComponentCount() - 1;
-        ArrayList<Component> componentList = new ArrayList<>();
-
-        for (int i = start; i > stop; i--) {
-            try {
-                componentList.add(0, panel.getComponent(i));
-                panel.remove(i);
-                panel.repaint();
-                panel.revalidate();
-            }
-            catch (Exception e) {
-                DebugLog.log(e.getMessage());
-            }
-        }
-
-        panel.add(logicalOperator);
-        JPanel negationDropDownPanel = createNegationDropDownPanel();
-        panel.add(negationDropDownPanel);
-        panel.add(errorConditionDropDown);
-        panel.add(collapseButton);
-
-        for (Component component : componentList) {
-            panel.add(component);
-        }
-
-        collapseButton.addActionListener(actionEvent -> {
-            panel.remove(logicalOperator);
-            panel.remove(negationDropDownPanel);
-            panel.remove(errorConditionDropDown);
-            panel.remove(collapseButton);
-
-            panel.repaint();
-            panel.revalidate();
-        });
     }
 }

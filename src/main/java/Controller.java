@@ -30,6 +30,6 @@ public class Controller implements BurpExtension {
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);
         correctiveCallsController = new CorrectiveCallsController(view.correctiveCallsPanel, model);
-        triggerConditionController = new TriggerConditionController(view, model);
+        triggerConditionController = new TriggerConditionController(view, model, this);
     }
 }

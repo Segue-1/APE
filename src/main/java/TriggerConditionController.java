@@ -2,22 +2,27 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class TriggerConditionController {
     private TriggerConditionPanel triggerConditionPanel;
     private CorrectiveCallsPanel ccPanel;
     private ErrorDetectionPanel edPanel;
 
-    private JButton addButton;
+    private ErrorDetectionController errorDetectionController;
+
+    private int errorConditionDropdownCount;
 
 
-    TriggerConditionController(View view, Model model) {
-        setAttributes(view);
+    TriggerConditionController(View view, Model model, Controller controller) {
+        setAttributes(view, controller);
 
         setAddButtonListener();
         setResetButtonListener();
-        setCcsDropDownListener();
-        setEcDropDownListener();
+        setCorrectiveCallsSetDropdownListener();
+        errorConditionDropdownCount = 1;
+        setErrorConditionDropdownListener();
+        passTriggerConditionController();
         setPlusButtonListener();
     }
 
@@ -53,6 +58,7 @@ public class TriggerConditionController {
             parentPanel.revalidate();
             parentPanel.repaint();
 
+            errorConditionDropdownCount = 1;
             reattachListeners();
         });
     }
@@ -60,30 +66,32 @@ public class TriggerConditionController {
     // Sets action listener which loads corrective call sets from corrective call set table model
     // TODO update this where the current selection is saved in a temp / swap value and then use equals to see if objects have changed
     // 1/5 only last item in list persists, all other selections reset to 0
-    private void setCcsDropDownListener(){
-        triggerConditionPanel.ccsDropdown.addPopupMenuListener(new PopupMenuListener() {
+    private void setCorrectiveCallsSetDropdownListener(){
+        JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = getCorrectiveCallsSetDropdown();
+
+        correctiveCallsSetDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 
                 CorrectiveCallsSet tempCcs;
 
-                if (triggerConditionPanel.ccsDropdown.getSelectedIndex() != -1) {
-                    tempCcs = triggerConditionPanel.ccsDropdown.getItemAt(triggerConditionPanel.ccsDropdown.getSelectedIndex());
+                if (correctiveCallsSetDropdown.getSelectedIndex() != -1) {
+                    tempCcs = correctiveCallsSetDropdown.getItemAt(correctiveCallsSetDropdown.getSelectedIndex());
                 }
                 else {
                     tempCcs = null;
                 }
 
-                triggerConditionPanel.ccsDropdown.removeAllItems();
+                correctiveCallsSetDropdown.removeAllItems();
 
                 for (int row = 0; row < ccPanel.correctiveCallsSetsTableModel.getRowCount(); row++) {
                     CorrectiveCallsSet ccs = ccPanel.correctiveCallsSetsTableModel.getCorrectiveCallsSet(row);
-                    triggerConditionPanel.ccsDropdown.addItem(ccs);
+                    correctiveCallsSetDropdown.addItem(ccs);
 
                     if (ccs.equals(tempCcs)){
-                        triggerConditionPanel.ccsDropdown.setSelectedIndex(row);
+                        correctiveCallsSetDropdown.setSelectedIndex(row);
                     }
                     else{
-                        triggerConditionPanel.ccsDropdown.setSelectedIndex(0);
+                        correctiveCallsSetDropdown.setSelectedIndex(0);
                     }
                 }
             }
@@ -100,32 +108,46 @@ public class TriggerConditionController {
         });
     }
 
-    private void setEcDropDownListener(){
-        triggerConditionPanel.ecDropDown.addPopupMenuListener(new PopupMenuListener() {
+    private void setErrorConditionDropdownListener(){
+        JComboBox<ErrorCondition> errorConditionDropdown = getErrorConditionDropdown();
+        errorConditionDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                /*
 
                 ErrorCondition tempEc;
 
-                if (triggerConditionPanel.ecDropDown.getSelectedIndex() != -1) {
-                    tempEc = triggerConditionPanel.ecDropDown.getItemAt(triggerConditionPanel.ecDropDown.getSelectedIndex());
+
+                if (errorConditionDropdown.getSelectedIndex() != -1) {
+                    tempEc = errorConditionDropdown.getItemAt(errorConditionDropdown.getSelectedIndex());
                 }
                 else {
                     tempEc = null;
                 }
 
-                triggerConditionPanel.ecDropDown.removeAllItems();
+
+
+                DefaultComboBoxModel<ErrorCondition> model = new DefaultComboBoxModel<>();
 
                 for (int row = 0; row < edPanel.errorConditionTableModel.getRowCount(); row++) {
                     ErrorCondition ec = edPanel.errorConditionTableModel.getErrorCondition(row);
-                    triggerConditionPanel.ecDropDown.addItem(ec);
+                    model.addElement(ec);
+                }
+                errorConditionDropdown.setModel(model);
 
-                    if (ec.equals(tempEc)){
-                        triggerConditionPanel.ecDropDown.setSelectedIndex(row);
-                    }
-                    else{
-                        triggerConditionPanel.ecDropDown.setSelectedIndex(0);
+
+                if (tempEc != null){
+
+                    for (int row = 0; row < edPanel.errorConditionTableModel.getRowCount(); row++) {
+                        ErrorCondition ec = edPanel.errorConditionTableModel.getErrorCondition(row);
+
+                        if (ec.equals(tempEc)) {
+                            errorConditionDropdown.setSelectedIndex(row);
+                            break;
+                        }
                     }
                 }
+
+                 */
             }
 
             @Override
@@ -140,21 +162,175 @@ public class TriggerConditionController {
         });
     }
 
+    private void loadErrorConditionDropdown() {
+        JComboBox<ErrorCondition> errorConditionDropdown = getErrorConditionDropdown();
+        DefaultComboBoxModel<ErrorCondition> model = new DefaultComboBoxModel<>();
+        ArrayList<ErrorCondition> errorConditions = new ArrayList<>(edPanel.errorConditionTableModel.errorConditions);
+
+        for (ErrorCondition errorCondition : errorConditions) {
+            model.addElement(errorCondition);
+        }
+
+        if (errorConditionDropdown != null)
+            errorConditionDropdown.setModel(model);
+    }
+
+    // Refreshes all error condition drop down menus
+    public void refreshErrorConditionDropdown() {
+        JPanel inputPanel = getInputPanel();
+
+        DebugLog.log("refreshErrorConditionDropdown iterating through inputPanel");
+        for (Component component : inputPanel.getComponents()) {
+            if (component instanceof JComboBox && "ErrorConditionDropdown".equals(((JComboBox) component).getName())) {
+                DebugLog.log("refreshErrorConditionDropdown found ErrorConditionDropdown");
+                JComboBox<ErrorCondition> errorConditionDropdown = (JComboBox<ErrorCondition>) component;
+                errorConditionDropdown.removeAllItems();
+
+                DefaultComboBoxModel<ErrorCondition> model = new DefaultComboBoxModel<>();
+                ArrayList<ErrorCondition> errorConditions = new ArrayList<>(edPanel.errorConditionTableModel.errorConditions);
+
+                DebugLog.log("refreshErrorConditionDropdown iterating through new list of errorConditions" );
+                for (ErrorCondition errorCondition : errorConditions) {
+                    DebugLog.log("refreshErrorConditionDropdown adding to model: " + errorCondition.toString());
+                    model.addElement(errorCondition);
+                }
+                errorConditionDropdown.setModel(model);
+            }
+        }
+    }
+
     private void reattachListeners() {
         setResetButtonListener();
-        setCcsDropDownListener();
-        setEcDropDownListener();
+        setCorrectiveCallsSetDropdownListener();
+        setErrorConditionDropdownListener();
+        setPlusButtonListener();
     }
 
-    private void setPlusButtonListener () {
-
+    private JPanel getConditionBuilderPanel(){
+        return (JPanel) triggerConditionPanel.getComponent(0);
     }
 
-    private void setAttributes(View view) {
+    private JPanel getInputPanel() {
+        JPanel conditionBuilderPanel = (JPanel) triggerConditionPanel.getComponent(0);
+        return (JPanel) conditionBuilderPanel.getComponent(1);
+    }
+
+    private JComboBox<CorrectiveCallsSet> getCorrectiveCallsSetDropdown() {
+        JPanel inputPanel = getInputPanel();
+        int index = 1;
+
+        @SuppressWarnings("unchecked") // Component only contains ErrorCondition objects
+        JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallsSet>) inputPanel.getComponent(index);
+        return correctiveCallsSetDropdown;
+    }
+
+    private JComboBox<ErrorCondition> getErrorConditionDropdown() {
+        JPanel inputPanel = getInputPanel();
+        int index;
+
+        if (errorConditionDropdownCount == 1) {
+            index = inputPanel.getComponentCount() - 5;
+        }
+        else {
+            index = inputPanel.getComponentCount() - 6; // Doesn't seem to work
+        }
+
+        if (index <= 0){
+            DebugLog.log("TriggerConditionController: getErrorConditionDropdown() failed to set index");
+            return null;
+        }
+        
+        DebugLog.log("errorConditionDropdownCount = " + errorConditionDropdownCount);
+
+        @SuppressWarnings("unchecked") // Component only contains ErrorCondition objects
+        JComboBox<ErrorCondition> errorConditionDropDown = (JComboBox<ErrorCondition>) inputPanel.getComponent(index);
+        return errorConditionDropDown;
+    }
+
+    private JButton getPlusButton() {
+        JPanel inputPanel = getInputPanel();
+
+        // index of the plusButton. Always 3rd to last.
+        // + (-1) for going from count (starts at 1) to list (starts at 0)
+        DebugLog.log("inputPanel.getComponentCount(): " +  inputPanel.getComponentCount());
+        DebugLog.log("Setting index to: " + (inputPanel.getComponentCount() - 4));
+        int index = inputPanel.getComponentCount() - 4;
+
+        DebugLog.log("Instantiating plusButton");
+
+        return (JButton) inputPanel.getComponent(index);
+    }
+
+    private void setPlusButtonListener() {
+        JPanel inputPanel = getInputPanel();
+        JButton plusButton = getPlusButton();
+
+        plusButton.addActionListener(e -> {
+            Font buttonFont = new Font("Dialog", Font.PLAIN, 12);
+
+            JButton collapseButton = new JButton("-");
+            collapseButton.setFont(buttonFont);
+            collapseButton.setPreferredSize(new Dimension(15, 15));
+            // Cannot set the following directly to ecDropDown. Get by grabbing components
+            JComboBox<ErrorCondition> errorConditionDropDown = new JComboBox<>();
+            errorConditionDropDown.setName("ErrorConditionDropdown");
+            errorConditionDropdownCount++;
+            DebugLog.log("errorConditionDropdownCount: " + errorConditionDropdownCount);
+            JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
+
+            // Store last 4 components, temporarily remove them.
+            int stop = inputPanel.getComponentCount() - 5;
+            int start = inputPanel.getComponentCount() - 1;
+            ArrayList<Component> componentList = new ArrayList<>();
+
+            for (int i = start; i > stop; i--) {
+                try {
+                    componentList.add(0, inputPanel.getComponent(i));
+                    inputPanel.remove(i);
+                    inputPanel.repaint();
+                    inputPanel.revalidate();
+                }
+                catch (Exception ex) {
+                    DebugLog.log(ex.getMessage());
+                }
+            }
+
+            inputPanel.add(logicalOperator);
+            JPanel negationDropDownPanel = triggerConditionPanel.createNegationDropDownPanel();
+            inputPanel.add(negationDropDownPanel);
+            inputPanel.add(errorConditionDropDown);
+            inputPanel.add(collapseButton);
+
+            for (Component component : componentList) {
+                inputPanel.add(component);
+            }
+
+            setErrorConditionDropdownListener();
+            loadErrorConditionDropdown();
+
+            collapseButton.addActionListener(actionEvent -> {
+                inputPanel.remove(logicalOperator);
+                inputPanel.remove(negationDropDownPanel);
+                inputPanel.remove(errorConditionDropDown);
+                errorConditionDropdownCount--;
+                DebugLog.log("errorConditionDropdownCount: " + errorConditionDropdownCount);
+                inputPanel.remove(collapseButton);
+
+                inputPanel.repaint();
+                inputPanel.revalidate();
+            });
+        });
+    }
+
+    private void passTriggerConditionController() {
+        errorDetectionController.setTriggerConditionController(this);
+    }
+
+    private void setAttributes(View view, Controller controller) {
         this.triggerConditionPanel = view.triggerConditionPanel;
         this.ccPanel = view.correctiveCallsPanel;
         this.edPanel = view.errorDetectionPanel;
 
-        this.addButton = triggerConditionPanel.addButton;
+        this.errorDetectionController = controller.errorDetectionController;
     }
 }
