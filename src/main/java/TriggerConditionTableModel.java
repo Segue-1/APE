@@ -1,6 +1,7 @@
 import burp.api.montoya.http.message.HttpRequestResponse;
 
 import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,6 +9,11 @@ public class TriggerConditionTableModel extends AbstractTableModel
 {
     public List<TriggerCondition> triggerConditions;
     private String[] columns = {"Name", "Call Set", "Error Condition", "Logical Op"};
+
+    TriggerConditionTableModel()
+    {
+        triggerConditions = new ArrayList<>();
+    }
 
     @Override
     public int getRowCount() {

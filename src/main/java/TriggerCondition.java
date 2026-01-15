@@ -34,11 +34,11 @@ public class TriggerCondition {
             this.errorConditions = errorConditions;
             this.logicalOperator = logicalOperator;
         }
-        buildConditionString();
+        //buildConditionString();
     }
 
     public void setName () {
-        name = "Set " + index;
+        name = "TriggerCondition " + index;
     }
 
     public void buildConditionString() {

@@ -32,8 +32,47 @@ public class TriggerConditionController {
         JButton addButton = (JButton) inputPanel.getComponent(index);
 
         addButton.addActionListener(e -> {
-            DebugLog.log("Add Button clicked");
+            DebugLog.log("Adding trigger condition");
 
+            JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallsSet>) inputPanel.getComponent(1);
+            CorrectiveCallsSet correctiveCallsSet = (CorrectiveCallsSet) correctiveCallsSetDropdown.getSelectedItem();
+
+            if (correctiveCallsSet == null) {
+                DebugLog.log("No corrective calls set selected");
+                return;
+            }
+
+            ArrayList<Boolean> isNegated = new ArrayList<>();
+            ArrayList<ErrorCondition> errorConditions = new ArrayList<>();
+            ArrayList<String> logicalOperators = new ArrayList<>();
+
+            DebugLog.log("Iterating through inputPanel");
+            for (Component component : inputPanel.getComponents()) {
+                if (component instanceof JCheckBox && ((JCheckBox) component).getName().equals("NegationCheckBox")) {
+                    JCheckBox negationCheckBox = (JCheckBox) component;
+                    isNegated.add(negationCheckBox.isSelected());
+                }
+                else if (component instanceof JComboBox && ((JComboBox) component).getName().equals("ErrorConditionDropdown")) {
+                    JComboBox errorConditionDropdown = (JComboBox) component;
+                    ErrorCondition errorCondition = (ErrorCondition) errorConditionDropdown.getSelectedItem();
+                    errorConditions.add(errorCondition);
+                }
+                else if (component instanceof JComboBox && ((JComboBox) component).getName().equals("LogicalOperatorDropdown")) {
+                    JComboBox logicalOperatorDropdown = (JComboBox) component;
+                    if (logicalOperatorDropdown.getSelectedIndex() == -1) {
+                        logicalOperators.add(logicalOperatorDropdown.getSelectedItem().toString());
+                    }
+                    else {
+                        DebugLog.log("Logical operator not selected, returning");
+                        return;
+                    }
+                }
+            }
+
+            DebugLog.log("Instantiating TriggerCondition");
+            TriggerCondition triggerCondition = new TriggerCondition(correctiveCallsSet, isNegated, errorConditions, logicalOperators);
+            DebugLog.log("Adding triggerCondition to table model");
+            triggerConditionPanel.triggerConditionTableModel.addRow(triggerCondition);
         });
     }
 
@@ -67,6 +106,7 @@ public class TriggerConditionController {
 
             errorConditionDropdownCount = 1;
             reattachListeners();
+            refreshErrorConditionDropdown();
         });
     }
 
@@ -245,7 +285,7 @@ public class TriggerConditionController {
             errorConditionDropDown.setName("ErrorConditionDropdown");
             errorConditionDropdownCount++;
             JComboBox<String> logicalOperator = new JComboBox<>(new String[]{"AND", "OR"});
-            logicalOperator.setName("LogicalOperator");
+            logicalOperator.setName("LogicalOperatorDropdown");
 
             // Store last 4 components, temporarily remove them.
             int stop = inputPanel.getComponentCount() - 5;

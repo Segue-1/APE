@@ -5,9 +5,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
+
 
 public class TriggerConditionPanel extends JPanel {
     static Color conditionBuilderTextColor = new Color(143, 0, 197);
@@ -20,6 +18,9 @@ public class TriggerConditionPanel extends JPanel {
 
     public JButton addButton;
     public JButton resetButton;
+
+    public TriggerConditionTableModel triggerConditionTableModel;
+    public JTable triggerConditionTable;
 
 
     TriggerConditionPanel() {
@@ -67,9 +68,9 @@ public class TriggerConditionPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 1;
         gbc.gridheight = 2;
 
-        TableModel conditionTableModel = new DefaultTableModel();
-        JTable conditionTable = new JTable(conditionTableModel);
-        JPanel conditionTablePanel = createSmallTable("Trigger Condition Table", conditionTable);
+        triggerConditionTableModel = new TriggerConditionTableModel();
+        triggerConditionTable = new JTable(triggerConditionTableModel);
+        JPanel conditionTablePanel = createSmallTable("Trigger Condition Table", triggerConditionTable);
 
         panel.add(conditionTablePanel, gbc);
 
@@ -203,6 +204,7 @@ public class TriggerConditionPanel extends JPanel {
         expandButton.setFont(buttonFont);
         expandButton.setPreferredSize(new Dimension(15, 15));
         JCheckBox notCheckbox = new JCheckBox("NOT");
+        notCheckbox.setName("NegationCheckBox");
         notCheckbox.setVisible(false);
 
         // Should be moved to controller
