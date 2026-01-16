@@ -48,9 +48,19 @@ public class TriggerConditionController {
 
             DebugLog.log("Iterating through inputPanel");
             for (Component component : inputPanel.getComponents()) {
-                if (component instanceof JCheckBox && ((JCheckBox) component).getName().equals("NegationCheckBox")) {
-                    JCheckBox negationCheckBox = (JCheckBox) component;
-                    isNegated.add(negationCheckBox.isSelected());
+                // TODO can't get into first condition
+                if (component instanceof JPanel && ((JPanel) component).getName().equals("NegationDropDownPanel")) {
+                    JPanel panel = (JPanel) component;
+                    JCheckBox negationCheckBox = (JCheckBox) panel.getComponent(0);
+                    DebugLog.log("Checking if negated");
+                    if (negationCheckBox.isSelected()) {
+                        DebugLog.log("Negated");
+                        isNegated.add(true);
+                    }
+                    else {
+                        DebugLog.log("Not negated");
+                        isNegated.add(false);
+                    }
                 }
                 else if (component instanceof JComboBox && ((JComboBox) component).getName().equals("ErrorConditionDropdown")) {
                     JComboBox errorConditionDropdown = (JComboBox) component;

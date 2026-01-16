@@ -2,8 +2,6 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import java.awt.*;
 
 
@@ -197,7 +195,7 @@ public class TriggerConditionPanel extends JPanel {
 
     public JPanel createNegationDropDownPanel() {
         JPanel panel = new JPanel();
-
+        panel.setName("NegationDropDownPanel");
         Font buttonFont = new Font("Dialog", Font.PLAIN, 6);
 
         JButton expandButton = new JButton("▶");
