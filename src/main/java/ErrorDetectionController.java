@@ -28,16 +28,21 @@ public class ErrorDetectionController {
             String input = errorDetectionPanel.conditionTextField.getText();
 
             if (selectedItem.equals("Status Code") && (input == null || !input.matches("\\d{3}"))){
+                DebugLog.log("User attempted to submit an invalid status code. " +
+                             "Status code cannot be null and must be 3 digits");
+                DebugLog.log("input: " + input);
                 return;
             }
             errorDetectionPanel.errorConditionTableModel.addRow(new ErrorCondition(selectedItem, input));
             DebugLog.log("Error condition added. Type: '" + selectedItem + "' input: '" + input + "'");
             Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
+
             try {
                 triggerConditionController.refreshErrorConditionDropdown();
+                DebugLog.log("Refreshed TriggerConditionPanel's error condition dropdown menus.");
             }
             catch (Exception ex) {
-                DebugLog.log("Failed to call triggerConditionController.refreshErrorConditionDropdown()");
+                DebugLog.log("Failed to refresh TriggerConditionPanel's error condition dropdown menus.");
                 DebugLog.log(ex.getMessage());
             }
 
@@ -60,9 +65,10 @@ public class ErrorDetectionController {
                 Utils.resizeColumnsToFitContent(errorDetectionPanel.errorConditionTable);
                 try {
                     triggerConditionController.refreshErrorConditionDropdown();
+                    DebugLog.log("Refreshed TriggerConditionPanel's error condition dropdown menus.");
                 }
                 catch (Exception ex) {
-                    DebugLog.log("Failed to call triggerConditionController.refreshErrorConditionDropdown()");
+                    DebugLog.log("Failed to refresh TriggerConditionPanel's error condition dropdown menus.");
                     DebugLog.log(ex.getMessage());
                 }
             }

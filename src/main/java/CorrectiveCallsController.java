@@ -138,7 +138,9 @@ public class CorrectiveCallsController {
         ActionListener addButtonListener = e -> {
             correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet());
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
-            DebugLog.log("Add button clicked on corrective call set table. New call set created");
+            DebugLog.log("Add button clicked on corrective call set table. Call set "
+                         + correctiveCallsSetsTableModel.correctiveCallsSets.getLast().name
+                         + " has been added");
         };
 
         ActionListener removeBottonListener = e -> {
@@ -146,9 +148,12 @@ public class CorrectiveCallsController {
             correctiveCallsSetsTableModel.removeRow(selectedRow);
             callSequenceTableModel.fireTableDataChanged();
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
+
             correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
-            DebugLog.log("Remove button clicked on corrective call set table. " +
-                         "Call set at row " + selectedRow + " removed");
+
+            DebugLog.log("Remove button clicked on corrective call set table. Call set "
+                         + correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).name
+                         + " has been deleted.");
         };
         addSetBotton.addActionListener(addButtonListener);
         removeSetBotton.addActionListener(removeBottonListener);

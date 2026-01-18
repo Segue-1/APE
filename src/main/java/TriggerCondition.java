@@ -12,11 +12,10 @@ public class TriggerCondition {
 
     public String conditionString;
 
-    private String negation = "!";
-    private String and = "&&";
-    private String or = "||";
+    private String negationString = "!";
+    private String andString = "&&";
+    private String orString = "||";
 
-    // if multiple error conditions, need to store them and logical operator
 
     TriggerCondition(CorrectiveCallsSet correctiveCallsSet, ArrayList<Boolean> isNegated,
                      ArrayList<ErrorCondition> errorConditions, ArrayList<String> logicalOperator) {
@@ -34,11 +33,7 @@ public class TriggerCondition {
             this.errorConditions = errorConditions;
             this.logicalOperator = logicalOperator;
         }
-        DebugLog.log("TriggerConditionPanel constructed");
-        DebugLog.log("correctiveCallsSet: " + correctiveCallsSet);
-        DebugLog.log("isNegated: " + isNegated);
-        DebugLog.log("errorConditions: " + errorConditions);
-        DebugLog.log("logicalOperator: " + logicalOperator);
+
         buildConditionString();
     }
 
@@ -50,44 +45,41 @@ public class TriggerCondition {
         StringBuilder conditionStringBuilder = new StringBuilder();
         conditionString = "";
 
-        if (errorConditions.size() == 1 && !isNegated.isEmpty()) {
-            DebugLog.log("Trigger Condition Builder Error: Mismatching number of error conditions and negations");
+        if(errorConditions.size() > 1 && logicalOperator.size() != (errorConditions.size() - 1)) {
+            DebugLog.log("---TriggerCondition Error: Incorrect number of logical operators---");
+            DebugLog.log("Number of logical operators should be 1 less than the total number of error conditions.");
             DebugLog.log("errorConditions.size(): " + errorConditions.size());
-            DebugLog.log("isNegated.size(): " + isNegated.size());
-            DebugLog.log(debugString());
-        }
-        else if(errorConditions.size() > 1 && logicalOperator.size() != (errorConditions.size() - 1)) {
-            DebugLog.log("Trigger Condition Builder Error: Incorrect number of logical operators");
-            DebugLog.log("errorConditions.size() not > 1: " + errorConditions.size());
-            DebugLog.log("logicalOperator.size() != (errorConditions.size() - 1)");
             DebugLog.log("logicalOperator.size(): " + logicalOperator.size());
-            DebugLog.log("errorConditions.size() - 1: " + (errorConditions.size() - 1));
             DebugLog.log(debugString());
         }
 
+        conditionStringBuilder.append(correctiveCallsSet.name + " will be called if ");
+
         try{
             if (errorConditions.size() == 1) {
-                DebugLog.log("errorConditions.size(): " + errorConditions.size());
                 try {
-                    conditionStringBuilder.append(isNegated.getFirst() ? negation : "").append(errorConditions.getFirst().name);
+                    conditionStringBuilder.append(isNegated.getFirst() ? negationString : "")
+                                          .append(errorConditions.getFirst().name)
+                                          .append(" is returned in the response");
                 }
                 catch (Exception e) {
                     DebugLog.log("string builder failed to append");
                     DebugLog.log(e.getMessage());
                 }
-
             }
             else {
                 int length = errorConditions.size();
 
                 for (int i = 0; i < length; i++) {
-                    conditionStringBuilder.append(isNegated.get(i) ? negation : "");
-                    conditionStringBuilder.append(errorConditions.get(i).name + " ");
+                    conditionStringBuilder.append(isNegated.get(i) ? negationString : "")
+                                          .append(errorConditions.get(i).name + " ");
                     if (i < length - 1) {
                         conditionStringBuilder.append(logicalOperator.get(i));
                     }
+                    else {
+                        conditionStringBuilder.append("are returned in the response");
+                    }
                 }
-
             }
         }
         catch (Exception e) {
@@ -95,8 +87,8 @@ public class TriggerCondition {
             DebugLog.log(e.getMessage());
         }
 
-        DebugLog.log("conditionString: " +  conditionString);
         this.conditionString = conditionStringBuilder.toString();
+        DebugLog.log("conditionString: " +  conditionString);
     }
 
     public String debugString() {
@@ -108,9 +100,9 @@ public class TriggerCondition {
                 ", errorConditions=" + errorConditions +
                 ", logicalOperator=" + logicalOperator +
                 ", conditionString='" + conditionString + '\'' +
-                ", negation='" + negation + '\'' +
-                ", and='" + and + '\'' +
-                ", or='" + or + '\'' +
+                ", negationString='" + negationString + '\'' +
+                ", andString='" + andString + '\'' +
+                ", orString='" + orString + '\'' +
                 '}';
     }
 

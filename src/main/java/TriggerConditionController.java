@@ -32,13 +32,12 @@ public class TriggerConditionController {
         JButton addButton = (JButton) inputPanel.getComponent(index);
 
         addButton.addActionListener(e -> {
-            DebugLog.log("Adding trigger condition");
-
             JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallsSet>) inputPanel.getComponent(1);
             CorrectiveCallsSet correctiveCallsSet = (CorrectiveCallsSet) correctiveCallsSetDropdown.getSelectedItem();
 
             if (correctiveCallsSet == null) {
-                DebugLog.log("No corrective calls set selected");
+                DebugLog.log("TriggerConditionBuilder: Add button clicked while no corrective calls set selected");
+                DebugLog.log("A corrective calls set must be selected when creating a trigger condition");
                 return;
             }
 
@@ -46,34 +45,41 @@ public class TriggerConditionController {
             ArrayList<ErrorCondition> errorConditions = new ArrayList<>();
             ArrayList<String> logicalOperators = new ArrayList<>();
 
-            DebugLog.log("Iterating through inputPanel");
+            DebugLog.log("TriggerConditionBuilder parsing input...");
             for (Component component : inputPanel.getComponents()) {
-                // TODO can't get into first condition
-                if (component instanceof JPanel && ((JPanel) component).getName().equals("NegationDropDownPanel")) {
+                if (component instanceof JPanel && ((JPanel) component).getName().equals("NegationDropdownPanel")) {
                     JPanel panel = (JPanel) component;
-                    JCheckBox negationCheckBox = (JCheckBox) panel.getComponent(0);
-                    DebugLog.log("Checking if negated");
+                    JCheckBox negationCheckBox = (JCheckBox) panel.getComponent(1);
                     if (negationCheckBox.isSelected()) {
-                        DebugLog.log("Negated");
                         isNegated.add(true);
+                        DebugLog.log("Error condition is negated");
                     }
                     else {
-                        DebugLog.log("Not negated");
                         isNegated.add(false);
+                        DebugLog.log("Error condition is not negated");
                     }
                 }
                 else if (component instanceof JComboBox && ((JComboBox) component).getName().equals("ErrorConditionDropdown")) {
                     JComboBox errorConditionDropdown = (JComboBox) component;
-                    ErrorCondition errorCondition = (ErrorCondition) errorConditionDropdown.getSelectedItem();
-                    errorConditions.add(errorCondition);
+
+                    if (errorConditionDropdown.getSelectedItem() != null) {
+                        ErrorCondition errorCondition = (ErrorCondition) errorConditionDropdown.getSelectedItem();
+                        errorConditions.add(errorCondition);
+                    }
+                    else {
+                        DebugLog.log("[Error] Add button clicked while error condition drop down has no selection");
+                        DebugLog.log("Each error condition drop down must have an error condition selected when creating a trigger condition");
+                    }
                 }
+                // TODO Something wrong happening here, remaining null even when a dropdown is selected and hitting the return in else statement
                 else if (component instanceof JComboBox && ((JComboBox) component).getName().equals("LogicalOperatorDropdown")) {
                     JComboBox logicalOperatorDropdown = (JComboBox) component;
                     if (logicalOperatorDropdown.getSelectedIndex() == -1) {
                         logicalOperators.add(logicalOperatorDropdown.getSelectedItem().toString());
                     }
                     else {
-                        DebugLog.log("Logical operator not selected, returning");
+                        DebugLog.log("[Error] Logical operator dropdown has no selection");
+                        DebugLog.log("Each logical operator dropdown must have a selection");
                         return;
                     }
                 }
@@ -81,7 +87,7 @@ public class TriggerConditionController {
 
             DebugLog.log("Instantiating TriggerCondition");
             TriggerCondition triggerCondition = new TriggerCondition(correctiveCallsSet, isNegated, errorConditions, logicalOperators);
-            DebugLog.log("Adding triggerCondition to table model");
+            DebugLog.log(triggerCondition.debugString());
             triggerConditionPanel.triggerConditionTableModel.addRow(triggerCondition);
         });
     }
@@ -202,19 +208,15 @@ public class TriggerConditionController {
     public void refreshErrorConditionDropdown() {
         JPanel inputPanel = getInputPanel();
 
-        DebugLog.log("refreshErrorConditionDropdown iterating through inputPanel");
         for (Component component : inputPanel.getComponents()) {
             if (component instanceof JComboBox && "ErrorConditionDropdown".equals(((JComboBox) component).getName())) {
-                DebugLog.log("refreshErrorConditionDropdown found ErrorConditionDropdown");
                 JComboBox<ErrorCondition> errorConditionDropdown = (JComboBox<ErrorCondition>) component;
                 errorConditionDropdown.removeAllItems();
 
                 DefaultComboBoxModel<ErrorCondition> model = new DefaultComboBoxModel<>();
                 ArrayList<ErrorCondition> errorConditions = new ArrayList<>(edPanel.errorConditionTableModel.errorConditions);
 
-                DebugLog.log("refreshErrorConditionDropdown iterating through new list of errorConditions" );
                 for (ErrorCondition errorCondition : errorConditions) {
-                    DebugLog.log("refreshErrorConditionDropdown adding to model: " + errorCondition.toString());
                     model.addElement(errorCondition);
                 }
                 errorConditionDropdown.setModel(model);
@@ -256,15 +258,13 @@ public class TriggerConditionController {
             index = inputPanel.getComponentCount() - 5;
         }
         else {
-            index = inputPanel.getComponentCount() - 6; // Doesn't seem to work
+            index = inputPanel.getComponentCount() - 6;
         }
 
         if (index <= 0){
             DebugLog.log("TriggerConditionController: getErrorConditionDropdown() failed to set index");
             return null;
         }
-        
-        DebugLog.log("errorConditionDropdownCount = " + errorConditionDropdownCount);
 
         @SuppressWarnings("unchecked") // Component only contains ErrorCondition objects
         JComboBox<ErrorCondition> errorConditionDropDown = (JComboBox<ErrorCondition>) inputPanel.getComponent(index);

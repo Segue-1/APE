@@ -111,7 +111,6 @@ public class TriggerConditionPanel extends JPanel {
     // Rename this shit. Even you have no clue what this is referring to.
     public JPanel createInputPanel(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        DebugLog.log("createInputPanel() called");
 
         panel.add(new JLabel("Call set "));
         JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = new JComboBox<>();
@@ -195,7 +194,6 @@ public class TriggerConditionPanel extends JPanel {
 
     public JPanel createNegationDropDownPanel() {
         JPanel panel = new JPanel();
-        panel.setName("NegationDropDownPanel");
         Font buttonFont = new Font("Dialog", Font.PLAIN, 6);
 
         JButton expandButton = new JButton("▶");
