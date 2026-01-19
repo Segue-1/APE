@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TriggerConditionTableModel extends AbstractTableModel
+public class TriggerConditionTableModel extends AbstractTableModel implements DeletableTableModel
 {
     public List<TriggerCondition> triggerConditions;
-    private String[] columns = {"Name", "Call Set", "Error Condition", "Logical Op"};
+    private String[] columns = {"Name", "Condition"};
 
     TriggerConditionTableModel()
     {
@@ -36,18 +36,12 @@ public class TriggerConditionTableModel extends AbstractTableModel
 
         return switch (columnIndex) {
             case 0 -> triggerCondition.name;
-            case 1 -> triggerCondition.correctiveCallsSet.name;
-            case 2 -> triggerCondition.errorConditions;
-            case 3 -> triggerCondition.logicalOperator;
+            case 1 -> triggerCondition.conditionString;
             default -> null;
         };
     }
 
     public void removeRow(int rowIndex) {
-        if (rowIndex == 0){
-            return;
-        }
-
         triggerConditions.remove(rowIndex);
         resetNames(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
@@ -62,16 +56,12 @@ public class TriggerConditionTableModel extends AbstractTableModel
 
     private void resetNames(int start) {
         for (int i = start; i < triggerConditions.size(); i++) {
-            triggerConditions.get(i).name = "Set " + --triggerConditions.get(i).index;
+            triggerConditions.get(i).name = "Trigger Condition " + --triggerConditions.get(i).index;
         }
     }
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        if (columnIndex == 1) {
-            return true;
-        }
-        else
             return false;
     }
 

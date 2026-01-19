@@ -4,7 +4,7 @@ import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.util.ArrayList;
 
-public class TriggerConditionController {
+public class TriggerConditionController extends Controller {
     private TriggerConditionPanel triggerConditionPanel;
     private CorrectiveCallsPanel ccPanel;
     private ErrorDetectionPanel edPanel;
@@ -24,6 +24,7 @@ public class TriggerConditionController {
         passTriggerConditionController();
         setPlusButtonListener();
         setAddButtonListener();
+        setTableDeleteContextMenu(triggerConditionPanel.triggerConditionTable);
     }
 
     public void setAddButtonListener() {
@@ -52,30 +53,42 @@ public class TriggerConditionController {
                     JCheckBox negationCheckBox = (JCheckBox) panel.getComponent(1);
                     if (negationCheckBox.isSelected()) {
                         isNegated.add(true);
-                        DebugLog.log("Error condition is negated");
+                        DebugLog.log("Added negation");
                     }
                     else {
                         isNegated.add(false);
-                        DebugLog.log("Error condition is not negated");
+                        DebugLog.log("Added non-negation");
                     }
                 }
                 else if (component instanceof JComboBox && ((JComboBox) component).getName().equals("ErrorConditionDropdown")) {
                     JComboBox errorConditionDropdown = (JComboBox) component;
 
                     if (errorConditionDropdown.getSelectedItem() != null) {
-                        ErrorCondition errorCondition = (ErrorCondition) errorConditionDropdown.getSelectedItem();
-                        errorConditions.add(errorCondition);
+                        try{
+                            ErrorCondition errorCondition = (ErrorCondition) errorConditionDropdown.getSelectedItem();
+                            errorConditions.add(errorCondition);
+                        }
+                        catch (Exception ex){
+                            DebugLog.log("Failed to add error condition!");
+                        }
+
                     }
                     else {
                         DebugLog.log("[Error] Add button clicked while error condition drop down has no selection");
                         DebugLog.log("Each error condition drop down must have an error condition selected when creating a trigger condition");
+                        return;
                     }
                 }
-                // TODO Something wrong happening here, remaining null even when a dropdown is selected and hitting the return in else statement
                 else if (component instanceof JComboBox && ((JComboBox) component).getName().equals("LogicalOperatorDropdown")) {
                     JComboBox logicalOperatorDropdown = (JComboBox) component;
-                    if (logicalOperatorDropdown.getSelectedIndex() == -1) {
-                        logicalOperators.add(logicalOperatorDropdown.getSelectedItem().toString());
+                    if (logicalOperatorDropdown.getSelectedItem() != null) {
+                        try {
+                            logicalOperators.add(logicalOperatorDropdown.getSelectedItem().toString());
+                        }
+                        catch (Exception ex) {
+                            DebugLog.log("Failed to add selected logical operator!");
+                            DebugLog.log(ex.getMessage());
+                        }
                     }
                     else {
                         DebugLog.log("[Error] Logical operator dropdown has no selection");

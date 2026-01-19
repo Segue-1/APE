@@ -38,7 +38,7 @@ public class TriggerCondition {
     }
 
     public void setName () {
-        name = "TriggerCondition " + index;
+        name = "Trigger Condition " + index;
     }
 
     public void buildConditionString() {
@@ -74,7 +74,7 @@ public class TriggerCondition {
                     conditionStringBuilder.append(isNegated.get(i) ? negationString : "")
                                           .append(errorConditions.get(i).name + " ");
                     if (i < length - 1) {
-                        conditionStringBuilder.append(logicalOperator.get(i));
+                        conditionStringBuilder.append(logicalOperator.get(i) + " ");
                     }
                     else {
                         conditionStringBuilder.append("are returned in the response");

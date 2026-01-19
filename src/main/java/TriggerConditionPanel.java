@@ -55,10 +55,10 @@ public class TriggerConditionPanel extends JPanel {
 
         panel.add(createConditionBuilderLabel(), gbc);
 
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.weightx = 0; gbc.weighty = 1;
 
         panel.add(createInputPanel(), gbc);
 
@@ -118,7 +118,6 @@ public class TriggerConditionPanel extends JPanel {
         panel.add(correctiveCallsSetDropdown);
         panel.add(new JLabel(" will be called if "));
         JPanel negationDropdownPanel = createNegationDropDownPanel();
-        negationDropdownPanel.setName("NegationDropdownPanel");
         panel.add(negationDropdownPanel);
         JComboBox<ErrorCondition> errorConditionDropdown = new JComboBox<>();
         errorConditionDropdown.setName("ErrorConditionDropdown");
@@ -132,8 +131,8 @@ public class TriggerConditionPanel extends JPanel {
         panel.add(new JButton("Add"));
         panel.add(new JButton("Reset"));
 
-        panel.setMaximumSize(new Dimension(350, 200));
-        panel.setPreferredSize(new Dimension(350, 200));
+        panel.setMaximumSize(new Dimension(5, 100));
+        panel.setPreferredSize(new Dimension(5, 100));
 
         return panel;
     }
@@ -156,14 +155,16 @@ public class TriggerConditionPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setPreferredSize(new Dimension(350, 200));
-        scrollPane.setMinimumSize(new Dimension(350, 200));
+        scrollPane.setPreferredSize(new Dimension(700, 100));
+        scrollPane.setMinimumSize(new Dimension(700, 100));
 
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
         panel.add(scrollPane, gbc);
-        panel.setMinimumSize(new Dimension(100, 100));
-        panel.setPreferredSize(new Dimension(100, 100));
+        panel.setMinimumSize(new Dimension(700, 100));
+        panel.setPreferredSize(new Dimension(700, 100));
+
+        table.getColumnModel().getColumn(0).setMinWidth(125);
 
         return panel;
     }
@@ -171,6 +172,8 @@ public class TriggerConditionPanel extends JPanel {
     private JPanel createTestCallPanel(){
         JPanel panel = new JPanel();
         panel.setBackground(new Color(153, 41, 250));
+        panel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 100));
+        panel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 100));
         return panel;
     }
 
@@ -212,6 +215,7 @@ public class TriggerConditionPanel extends JPanel {
 
         panel.add(expandButton);
         panel.add(notCheckbox);
+        panel.setName("NegationDropdownPanel");
 
         return panel;
     }
