@@ -19,6 +19,11 @@ public class TriggerCondition {
 
     TriggerCondition(CorrectiveCallsSet correctiveCallsSet, ArrayList<Boolean> isNegated,
                      ArrayList<ErrorCondition> errorConditions, ArrayList<String> logicalOperator) {
+
+        if (!validateInput()){
+            return;
+        }
+
         // logicalOperators are used to join multiple error conditions. If there's only 1 errorCondition, then there
         // are no logicalOperators.
         if (errorConditions.size() == 1) {
@@ -34,7 +39,36 @@ public class TriggerCondition {
             this.logicalOperator = logicalOperator;
         }
 
+
         buildConditionString();
+    }
+
+    private boolean validateInput() {
+        // Check for valid number of logical operators
+        if (correctiveCallsSet == null) {
+            DebugLog.log("---TriggerCondition Error: null corrective call set passed to TriggerCondition---");
+            DebugLog.log(debugString());
+            return false;
+        }
+        else if (isNegated == null) {
+            DebugLog.log("---TriggerCondition Error: null list of negations passed to TriggerCondition---");
+            DebugLog.log(debugString());
+            return false;
+        }
+        else if (errorConditions.isEmpty()) {
+            DebugLog.log("---TriggerCondition Error: empty list of error conditions passed to TriggerCondition---");
+            DebugLog.log(debugString());
+            return false;
+        }
+        else if (errorConditions.size() > 1 && logicalOperator.size() != (errorConditions.size() - 1)) {
+            DebugLog.log("---TriggerCondition Error: Incorrect number of logical operators---");
+            DebugLog.log("Number of logical operators should be 1 less than the total number of error conditions.");
+            DebugLog.log("errorConditions.size(): " + errorConditions.size());
+            DebugLog.log("logicalOperator.size(): " + logicalOperator.size());
+            DebugLog.log(debugString());
+            return false;
+        }
+        return true;
     }
 
     public void setName () {
@@ -45,13 +79,8 @@ public class TriggerCondition {
         StringBuilder conditionStringBuilder = new StringBuilder();
         conditionString = "";
 
-        if(errorConditions.size() > 1 && logicalOperator.size() != (errorConditions.size() - 1)) {
-            DebugLog.log("---TriggerCondition Error: Incorrect number of logical operators---");
-            DebugLog.log("Number of logical operators should be 1 less than the total number of error conditions.");
-            DebugLog.log("errorConditions.size(): " + errorConditions.size());
-            DebugLog.log("logicalOperator.size(): " + logicalOperator.size());
-            DebugLog.log(debugString());
-        }
+        // How about a validation method instead of putting this here?
+
 
         conditionStringBuilder.append(correctiveCallsSet.name + " will be called if ");
 
@@ -89,6 +118,13 @@ public class TriggerCondition {
 
         this.conditionString = conditionStringBuilder.toString();
         DebugLog.log("conditionString: " +  conditionString);
+    }
+
+    // TODO need to write Java to run based off conditionString
+    private void buildJavaConditionalStatement() {
+        StringBuilder conditionStringBuilder = new StringBuilder();
+        conditionStringBuilder.append("if (");
+
     }
 
     public String debugString() {

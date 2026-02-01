@@ -102,12 +102,13 @@ public class TriggerConditionController extends Controller {
             TriggerCondition triggerCondition = new TriggerCondition(correctiveCallsSet, isNegated, errorConditions, logicalOperators);
             DebugLog.log(triggerCondition.debugString());
             triggerConditionPanel.triggerConditionTableModel.addRow(triggerCondition);
+            Utils.resizeColumnsToFitContent(triggerConditionPanel.triggerConditionTable);
         });
     }
 
     public void setResetButtonListener() {
-        JPanel parentPanel = (JPanel) triggerConditionPanel.getComponent(0);
-        JPanel childPanel = (JPanel) parentPanel.getComponent(1);
+        JPanel parentPanel = getConditionBuilderPanel();
+        JPanel childPanel = getInputPanel();
         JButton resetButton = (JButton) childPanel.getComponent(childPanel.getComponentCount() - 1);
 
         resetButton.addActionListener(e -> {
@@ -144,7 +145,6 @@ public class TriggerConditionController extends Controller {
     // 1/5 only last item in list persists, all other selections reset to 0
     private void setCorrectiveCallsSetDropdownListener(){
         JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = getCorrectiveCallsSetDropdown();
-
         correctiveCallsSetDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 
@@ -250,8 +250,15 @@ public class TriggerConditionController extends Controller {
     }
 
     private JPanel getInputPanel() {
-        JPanel conditionBuilderPanel = (JPanel) triggerConditionPanel.getComponent(0);
-        return (JPanel) conditionBuilderPanel.getComponent(1);
+        JPanel conditionBuilderPanel = getConditionBuilderPanel();
+        JScrollPane inputPanelScrollPane = (JScrollPane) conditionBuilderPanel.getComponent(1);
+        JViewport inputPanelViewport = (JViewport) inputPanelScrollPane.getComponent(0);
+        return (JPanel) inputPanelViewport.getComponent(0);
+    }
+
+    private JScrollPane getInputPanelScrollPane() {
+        JPanel conditionBuilderPanel = getConditionBuilderPanel();
+        return (JScrollPane) conditionBuilderPanel.getComponent(1);
     }
 
     private JComboBox<CorrectiveCallsSet> getCorrectiveCallsSetDropdown() {
@@ -294,9 +301,12 @@ public class TriggerConditionController extends Controller {
         return (JButton) inputPanel.getComponent(index);
     }
 
+    // You could add custom logic that sets inputPanel's preferred size manually after x amount of dynamically added
+    // UI elements to add more space.
     private void setPlusButtonListener() {
         JPanel inputPanel = getInputPanel();
         JButton plusButton = getPlusButton();
+        JScrollPane inputPanelScrollPane = getInputPanelScrollPane();
 
         plusButton.addActionListener(e -> {
             Font buttonFont = new Font("Dialog", Font.PLAIN, 12);
@@ -333,12 +343,14 @@ public class TriggerConditionController extends Controller {
             inputPanel.add(errorConditionDropDown);
             inputPanel.add(collapseButton);
 
+
             for (Component component : componentList) {
                 inputPanel.add(component);
             }
 
             setErrorConditionDropdownListener();
             loadErrorConditionDropdown();
+
 
             collapseButton.addActionListener(actionEvent -> {
                 inputPanel.remove(logicalOperator);
@@ -351,7 +363,26 @@ public class TriggerConditionController extends Controller {
                 inputPanel.repaint();
                 inputPanel.revalidate();
             });
+
+
+
+            DebugLog.log("inputPanel preferred size: " + inputPanel.getPreferredSize());
+            DebugLog.log("scrollePane preffered size: " + inputPanelScrollPane.getPreferredSize());
+            DebugLog.log("viewport preferred size: " + inputPanelScrollPane.getViewport().getPreferredSize());
+
+            inputPanel.repaint();
+            inputPanel.revalidate();
+
+            inputPanelScrollPane.repaint();
+            inputPanelScrollPane.revalidate();
+
+            DebugLog.log("inputPanel preferred size (after repaint/validate): " + inputPanel.getPreferredSize());
+            DebugLog.log("scrollePane preffered size (after repaint/validate): " + inputPanelScrollPane.getPreferredSize());
+            DebugLog.log("viewport preferred size (after repaint/validate): " + inputPanelScrollPane.getViewport().getPreferredSize());
+
         });
+
+
     }
 
     private void passTriggerConditionController() {

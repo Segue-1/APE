@@ -2,6 +2,7 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 
@@ -55,10 +56,10 @@ public class TriggerConditionPanel extends JPanel {
 
         panel.add(createConditionBuilderLabel(), gbc);
 
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 0; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
 
         panel.add(createInputPanel(), gbc);
 
@@ -68,7 +69,7 @@ public class TriggerConditionPanel extends JPanel {
 
         triggerConditionTableModel = new TriggerConditionTableModel();
         triggerConditionTable = new JTable(triggerConditionTableModel);
-        JPanel conditionTablePanel = createSmallTable("Trigger Condition Table", triggerConditionTable);
+        JPanel conditionTablePanel = createTriggerConditionTable("Trigger Condition Table", triggerConditionTable);
 
         panel.add(conditionTablePanel, gbc);
 
@@ -109,8 +110,15 @@ public class TriggerConditionPanel extends JPanel {
     }
 
     // Rename this shit. Even you have no clue what this is referring to.
-    public JPanel createInputPanel(){
+    public JScrollPane createInputPanel(){
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        panel.setBackground(new Color(244, 154, 154));
+        scrollPane.setBackground(new Color(154, 234, 244));
 
         panel.add(new JLabel("Call set "));
         JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = new JComboBox<>();
@@ -130,14 +138,15 @@ public class TriggerConditionPanel extends JPanel {
         panel.add(new JLabel(" is received in the response."));
         panel.add(new JButton("Add"));
         panel.add(new JButton("Reset"));
+        panel.setName("InputPanel");
 
-        panel.setMaximumSize(new Dimension(5, 100));
-        panel.setPreferredSize(new Dimension(5, 100));
+        //panel.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
+        panel.setPreferredSize(new Dimension(700, 600));
 
-        return panel;
+        return scrollPane;
     }
 
-    public JPanel createSmallTable(String header, JTable table){
+    public JPanel createTriggerConditionTable(String header, JTable table){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -165,6 +174,10 @@ public class TriggerConditionPanel extends JPanel {
         panel.setPreferredSize(new Dimension(700, 100));
 
         table.getColumnModel().getColumn(0).setMinWidth(125);
+        table.getColumnModel().getColumn(1).setMinWidth(420);
+
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
         return panel;
     }
