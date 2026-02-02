@@ -21,11 +21,9 @@ public class FollowUpPanel extends JPanel {
     public JButton addButton;
     public JComboBox<ExtractText> dropDown;
 
-    public TableModel followUpReplaceTableModel;
+    public ReplacementTableModel followUpReplaceTableModel;
     public JTable followUpReplaceTable;
-
-    public JComboBox<ErrorCondition> errorConditionDropDown;
-    public JComboBox<CorrectiveCallsSet> correctiveCallSetDropDown;
+    
 
     FollowUpPanel() {
         setLayout(new GridBagLayout());
@@ -51,11 +49,7 @@ public class FollowUpPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 0;
 
         add(createReplaceTextPanel(), gbc);
-
-        gbc.gridx = 0; gbc.gridy = 3;
-        gbc.weightx = 1; gbc.weighty = .4;
-
-        //add(createBottomPanel(), gbc);
+        
     }
 
 
@@ -104,10 +98,11 @@ public class FollowUpPanel extends JPanel {
         editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 500));
 
         panel.add(editorPane, BorderLayout.CENTER);
+        panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+
         return panel;
     }
 
-    // TODO reorganize, put replace input fields and table underneath editor. Add response editor. Put condition builder table beneath everything.
     private JPanel createReplaceTextPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -116,7 +111,7 @@ public class FollowUpPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = .66; gbc.weighty = 1;
+        gbc.weightx = .75; gbc.weighty = 1;
 
         String[] fieldLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
                 "Pick from Extraction"};
@@ -134,91 +129,20 @@ public class FollowUpPanel extends JPanel {
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 0;
 
-        followUpReplaceTableModel = new DefaultTableModel();
+        followUpReplaceTableModel = new ReplacementTableModel();
         followUpReplaceTable = new JTable(followUpReplaceTableModel);
 
-        panel.add(createSmallTable("Replace", followUpReplaceTable), gbc);
+        panel.add(createReplaceTable("Followup Replaced Text", followUpReplaceTable), gbc);
+
+        panel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 200));
 
         return panel;
     }
-
-    private JPanel createBottomPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        panel.setBackground(new Color(0, 131, 11));
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = .66; gbc.weighty = 0;
-
-        panel.add(createConditionBuilderLabel(), gbc);
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = .66; gbc.weighty = 1;
-
-        panel.add(createConditionBuilderPanel(), gbc);
-
-        gbc.gridx = 1; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-        gbc.gridheight = 2;
-
-        TableModel conditionTableModel = new DefaultTableModel();
-        JTable conditionTable = new JTable(conditionTableModel);
-
-        panel.add(createSmallTable("Condition Table", conditionTable), gbc);
-
-        return panel;
-    }
-
-    private JPanel createConditionBuilderLabel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel();
-        JLabel subText = new JLabel();
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        // Label
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 0;
-
-
-        label.setText("Condition Builder");
-        label.setFont(headerFont);
-        label.setForeground(conditionBuilderTextColor);
-        panel.add(label, gbc);
-
-        // Sub text
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 0;
-
-        subText.setText("Build conditions which trigger a set of corrective calls. " +
-                        "Select and error condition, a conditional statement, and a corrective call set to trigger.");
-
-        subText.setFont(subTextFont);
-        subText.setForeground(Color.BLACK);
-        panel.add(subText, gbc);
-
-        panel.setBackground(new Color(151, 131, 21));
-        return panel;
-    }
-
-    private JPanel createConditionBuilderPanel(){
-        JPanel panel = new JPanel();
-        panel.setBackground(new Color(0, 255, 223));
-        return panel;
-    }
-
 
     public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox dropDown,
                                         JTextField[] jTextFields, JButton fromSelect, JButton addButton){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-
-        panel.setBackground(new Color(253, 83, 83));
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(1, 1, 1, 1);
@@ -267,11 +191,9 @@ public class FollowUpPanel extends JPanel {
         return panel;
     }
 
-    public JPanel createSmallTable(String header, JTable table){
+    public JPanel createReplaceTable(String header, JTable table){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-
-        panel.setBackground(new Color(138, 79, 243));
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(1, 1, 1, 1);

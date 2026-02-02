@@ -1,5 +1,7 @@
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.repeater.HttpEditor;
+import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -16,6 +18,7 @@ public class Controller implements BurpExtension {
     public ContextMenusController contextMenusController;
     public ErrorDetectionController errorDetectionController;
     public CorrectiveCallsController correctiveCallsController;
+    public FollowUpController followUpController;
     public TriggerConditionController triggerConditionController;
 
 
@@ -34,9 +37,11 @@ public class Controller implements BurpExtension {
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);
         correctiveCallsController = new CorrectiveCallsController(view.correctiveCallsPanel, model);
+        followUpController = new FollowUpController(view, model, this);
         triggerConditionController = new TriggerConditionController(view, model, this);
     }
 
+    // TODO need to go through all controllers and update them to use this method
     public void setTableDeleteContextMenu(JTable table) {
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem deleteItem = new JMenuItem("Delete");

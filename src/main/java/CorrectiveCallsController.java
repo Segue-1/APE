@@ -1,5 +1,6 @@
 import burp.api.montoya.http.message.HttpRequestResponse;
 
+import burp.api.montoya.repeater.HttpEditor;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
@@ -42,6 +43,8 @@ public class CorrectiveCallsController {
 
     public JComboBox<String> extractDropDown;
     public JComboBox<ExtractText> replaceDropDown;
+
+    public HttpEditor httpEditor;
 
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
@@ -255,7 +258,7 @@ public class CorrectiveCallsController {
             String startString = getStartString(startIndex, messageString);
             inputFields[1].setText(startString);
 
-            DebugLog.log("'From Selection' button clicked. The following input fields were set.");
+            DebugLog.log("'From Selection' button clicked in corrective calls panel. The following input fields were set.");
             DebugLog.log("Selected Text: " + selectedContents);
             DebugLog.log("Stop String: " + stopString);
             DebugLog.log("Start String: " + startString);

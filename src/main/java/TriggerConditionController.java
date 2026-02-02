@@ -67,6 +67,7 @@ public class TriggerConditionController extends Controller {
                         try{
                             ErrorCondition errorCondition = (ErrorCondition) errorConditionDropdown.getSelectedItem();
                             errorConditions.add(errorCondition);
+                            DebugLog.log("Added error condition" + errorCondition.debugString());
                         }
                         catch (Exception ex){
                             DebugLog.log("Failed to add error condition!");
@@ -365,20 +366,12 @@ public class TriggerConditionController extends Controller {
             });
 
 
-
-            DebugLog.log("inputPanel preferred size: " + inputPanel.getPreferredSize());
-            DebugLog.log("scrollePane preffered size: " + inputPanelScrollPane.getPreferredSize());
-            DebugLog.log("viewport preferred size: " + inputPanelScrollPane.getViewport().getPreferredSize());
-
             inputPanel.repaint();
             inputPanel.revalidate();
 
             inputPanelScrollPane.repaint();
             inputPanelScrollPane.revalidate();
 
-            DebugLog.log("inputPanel preferred size (after repaint/validate): " + inputPanel.getPreferredSize());
-            DebugLog.log("scrollePane preffered size (after repaint/validate): " + inputPanelScrollPane.getPreferredSize());
-            DebugLog.log("viewport preferred size (after repaint/validate): " + inputPanelScrollPane.getViewport().getPreferredSize());
 
         });
 

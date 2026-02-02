@@ -95,15 +95,16 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        topPanel.add(createCorrectiveCallsSetPanel(), gbc);
+        topPanel.add(createCallSequenceScrollPane(), gbc);
 
         add(topPanel);
     }
 
-    private JScrollPane createCorrectiveCallsSetPanel() {
+    // TODO rename, too similar to the following method
+    private JScrollPane createCallSequenceScrollPane() {
         callSequenceTableModel = new CallSequenceTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
-        callSequenceTable.setName("Call Sequence Table");
+        callSequenceTable.setName("Call Sequence Table"); // Not used
 
         callSequenceTable.getColumnModel().getColumn(0).setMinWidth(90);
         callSequenceTable.getTableHeader().setReorderingAllowed(false);
@@ -114,6 +115,7 @@ public class CorrectiveCallsPanel extends JPanel {
         return callSequenceScrollPane;
     }
 
+    // TODO rename
     private JPanel createCorrectiveCallsSetsPanel() {
         saveCallSequencePanel = new JPanel(new GridBagLayout());
         saveCallSequencePanel.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));

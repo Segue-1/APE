@@ -47,9 +47,16 @@ public class ContextMenusController implements ContextMenuItemsProvider {
         view.contextMenus.sendToErrorDetection.addActionListener(e -> {
             if (contextMenuEvent.messageEditorRequestResponse().isPresent()){
                 HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
+
+                // Pass call to error detection panel
                 view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
                 view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
                 controller.errorDetectionController.errorCall = reqResp;
+
+                // Pass call to follow up call panel
+                view.followUpPanel.requestEditor.setRequest(reqResp.request());
+               // view.followUpPanel.responseEditor.setResponse(reqResp.response());
+
                 DebugLog.log("Context menu 'Send to Error Detection' was clicked. Call sent to Error Detection panel.");
             }
         });

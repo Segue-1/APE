@@ -48,7 +48,7 @@ public class TriggerConditionPanel extends JPanel {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
-        panel.setBackground(new Color(0, 131, 11));
+        //panel.setBackground(new Color(0, 131, 11));
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.gridx = 0; gbc.gridy = 0;
@@ -72,6 +72,7 @@ public class TriggerConditionPanel extends JPanel {
         JPanel conditionTablePanel = createTriggerConditionTable("Trigger Condition Table", triggerConditionTable);
 
         panel.add(conditionTablePanel, gbc);
+        panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 
         return panel;
     }
@@ -96,16 +97,16 @@ public class TriggerConditionPanel extends JPanel {
 
         // Sub text
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 0;
-
-        subText.setText("Build conditions which trigger a set of corrective calls. " +
-                "Select and error condition, a conditional statement, and a corrective call set to trigger.");
+        gbc.weightx = 1; gbc.weighty = 1;
 
         subText.setFont(subTextFont);
         subText.setForeground(Color.BLACK);
+
+        subText.setText("Build a conditional statement which will trigger a set of corrective calls.");
+
         panel.add(subText, gbc);
 
-        panel.setBackground(new Color(151, 131, 21));
+        //panel.setBackground(new Color(151, 131, 21));
         return panel;
     }
 
@@ -115,10 +116,10 @@ public class TriggerConditionPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-        panel.setBackground(new Color(244, 154, 154));
-        scrollPane.setBackground(new Color(154, 234, 244));
+        //panel.setBackground(new Color(244, 154, 154));
+        //scrollPane.setBackground(new Color(154, 234, 244));
 
         panel.add(new JLabel("Call set "));
         JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = new JComboBox<>();
@@ -164,14 +165,14 @@ public class TriggerConditionPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setPreferredSize(new Dimension(700, 100));
-        scrollPane.setMinimumSize(new Dimension(700, 100));
+        scrollPane.setPreferredSize(new Dimension(500, 100));
+        scrollPane.setMinimumSize(new Dimension(500, 100));
 
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
         panel.add(scrollPane, gbc);
-        panel.setMinimumSize(new Dimension(700, 100));
-        panel.setPreferredSize(new Dimension(700, 100));
+        panel.setMinimumSize(new Dimension(400, 100));
+        panel.setPreferredSize(new Dimension(400, 100));
 
         table.getColumnModel().getColumn(0).setMinWidth(125);
         table.getColumnModel().getColumn(1).setMinWidth(420);

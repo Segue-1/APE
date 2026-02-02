@@ -8,7 +8,7 @@ import java.awt.event.MouseEvent;
 
 public class ErrorDetectionController {
     private ErrorDetectionPanel errorDetectionPanel;
-    public HttpRequestResponse errorCall;
+    public HttpRequestResponse errorCall; // not used
 
     private TriggerConditionController triggerConditionController;
 

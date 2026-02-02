@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import javax.script.*;
 
 public class TriggerCondition {
 
@@ -20,10 +21,6 @@ public class TriggerCondition {
     TriggerCondition(CorrectiveCallsSet correctiveCallsSet, ArrayList<Boolean> isNegated,
                      ArrayList<ErrorCondition> errorConditions, ArrayList<String> logicalOperator) {
 
-        if (!validateInput()){
-            return;
-        }
-
         // logicalOperators are used to join multiple error conditions. If there's only 1 errorCondition, then there
         // are no logicalOperators.
         if (errorConditions.size() == 1) {
@@ -39,6 +36,9 @@ public class TriggerCondition {
             this.logicalOperator = logicalOperator;
         }
 
+        if (!validateInput()){
+            return;
+        }
 
         buildConditionString();
     }
@@ -47,17 +47,17 @@ public class TriggerCondition {
         // Check for valid number of logical operators
         if (correctiveCallsSet == null) {
             DebugLog.log("---TriggerCondition Error: null corrective call set passed to TriggerCondition---");
-            DebugLog.log(debugString());
+            DebugLog.log(correctiveCallsSet.debugString());
             return false;
         }
         else if (isNegated == null) {
             DebugLog.log("---TriggerCondition Error: null list of negations passed to TriggerCondition---");
-            DebugLog.log(debugString());
+            DebugLog.log(isNegated.toString());
             return false;
         }
         else if (errorConditions.isEmpty()) {
             DebugLog.log("---TriggerCondition Error: empty list of error conditions passed to TriggerCondition---");
-            DebugLog.log(debugString());
+            DebugLog.log(errorConditions.toString());
             return false;
         }
         else if (errorConditions.size() > 1 && logicalOperator.size() != (errorConditions.size() - 1)) {
@@ -123,7 +123,15 @@ public class TriggerCondition {
     // TODO need to write Java to run based off conditionString
     private void buildJavaConditionalStatement() {
         StringBuilder conditionStringBuilder = new StringBuilder();
-        conditionStringBuilder.append("if (");
+
+        boolean isTrue = true;
+
+        conditionStringBuilder.append("if (isTrue) { DebugLog.log(\"TEST SUCCESSFUL!!!\")");
+
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("Java");
+
+
 
     }
 
