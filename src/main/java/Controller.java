@@ -33,6 +33,7 @@ public class Controller implements BurpExtension {
         view = new View();
         model = new Model();
 
+        // TODO reorganize parameters, all should consistent, model, view, controller
         settingsController = new SettingsController(view.settingsPanel, model);
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);

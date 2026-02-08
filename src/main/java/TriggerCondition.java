@@ -36,39 +36,7 @@ public class TriggerCondition {
             this.logicalOperator = logicalOperator;
         }
 
-        if (!validateInput()){
-            return;
-        }
-
         buildConditionString();
-    }
-
-    private boolean validateInput() {
-        // Check for valid number of logical operators
-        if (correctiveCallsSet == null) {
-            DebugLog.log("---TriggerCondition Error: null corrective call set passed to TriggerCondition---");
-            DebugLog.log(correctiveCallsSet.debugString());
-            return false;
-        }
-        else if (isNegated == null) {
-            DebugLog.log("---TriggerCondition Error: null list of negations passed to TriggerCondition---");
-            DebugLog.log(isNegated.toString());
-            return false;
-        }
-        else if (errorConditions.isEmpty()) {
-            DebugLog.log("---TriggerCondition Error: empty list of error conditions passed to TriggerCondition---");
-            DebugLog.log(errorConditions.toString());
-            return false;
-        }
-        else if (errorConditions.size() > 1 && logicalOperator.size() != (errorConditions.size() - 1)) {
-            DebugLog.log("---TriggerCondition Error: Incorrect number of logical operators---");
-            DebugLog.log("Number of logical operators should be 1 less than the total number of error conditions.");
-            DebugLog.log("errorConditions.size(): " + errorConditions.size());
-            DebugLog.log("logicalOperator.size(): " + logicalOperator.size());
-            DebugLog.log(debugString());
-            return false;
-        }
-        return true;
     }
 
     public void setName () {

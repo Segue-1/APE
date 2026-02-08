@@ -8,11 +8,13 @@ import java.util.List;
 public class TriggerConditionTableModel extends AbstractTableModel implements DeletableTableModel
 {
     public List<TriggerCondition> triggerConditions;
+    public Boolean triggerConditionIsSet = false;
     private String[] columns = {"Name", "Condition"};
 
     TriggerConditionTableModel()
     {
         triggerConditions = new ArrayList<>();
+        DebugLog.log("TriggerConditionTableModel: triggerConditionIsSet " + triggerConditionIsSet);
     }
 
     @Override
@@ -45,6 +47,11 @@ public class TriggerConditionTableModel extends AbstractTableModel implements De
         triggerConditions.remove(rowIndex);
         resetNames(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
+
+        if (triggerConditions.isEmpty()) {
+            triggerConditionIsSet = false;
+            DebugLog.log("TriggerConditionTableModel: triggerConditionIsSet " + triggerConditionIsSet);
+        }
     }
 
     public void addRow(TriggerCondition triggerCondition) {
@@ -52,6 +59,11 @@ public class TriggerConditionTableModel extends AbstractTableModel implements De
         triggerCondition.setName();
         triggerConditions.add(triggerCondition);
         fireTableRowsInserted(triggerConditions.size() - 1, triggerConditions.size() - 1);
+
+        if (triggerConditions.size() == 1) {
+            triggerConditionIsSet = true;
+            DebugLog.log("TriggerConditionTableModel: triggerConditionIsSet " + triggerConditionIsSet);
+        }
     }
 
     private void resetNames(int start) {

@@ -9,8 +9,10 @@ import java.util.EnumSet;
 public class Model implements HttpHandler{
 
     public EnumSet<ToolType> enabledTools;
+    public Boolean triggerConditionIsSet;
 
     public Model () {
+        // TODO Maybe just move this to controller
         Controller.montoyaApi.extension().setName("APE");
         Controller.montoyaApi.http().registerHttpHandler(this);
     }
@@ -22,7 +24,11 @@ public class Model implements HttpHandler{
         // This determines which tool (Repeater, Intruder, etc.) a request came from.
         ToolType toolType = requestToBeSent.toolSource().toolType();
 
-        if (!enabledTools.contains(toolType)) {
+        if (!enabledTools.contains(toolType) || !triggerConditionIsSet) {
+            DebugLog.log("Model: request check triggered");
+            DebugLog.log("Request comes from an enabled tool: " + enabledTools.contains(toolType));
+            DebugLog.log("Trigger Condition is set: " + triggerConditionIsSet);
+            //return RequestToBeSentAction.continueWith(requestToBeSent);
             return null;
         }
 
@@ -39,5 +45,13 @@ public class Model implements HttpHandler{
     // Allows controller to update model's enabledTools
     public void updateEnabledTools(EnumSet<ToolType> enabledTools) {
         this.enabledTools = EnumSet.copyOf(enabledTools);
+    }
+
+    private HttpRequest processRequest(HttpRequest httpRequest) {
+        HttpRequest followupRequest = null;
+
+
+
+        return followupRequest;
     }
 }

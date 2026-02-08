@@ -13,9 +13,11 @@ public class TriggerConditionController extends Controller {
 
     private int errorConditionDropdownCount;
 
+    private Model model;
+
 
     TriggerConditionController(View view, Model model, Controller controller) {
-        setAttributes(view, controller);
+        setAttributes(model, view, controller);
 
         setResetButtonListener();
         setCorrectiveCallsSetDropdownListener();
@@ -39,6 +41,11 @@ public class TriggerConditionController extends Controller {
             if (correctiveCallsSet == null) {
                 DebugLog.log("TriggerConditionBuilder: Add button clicked while no corrective calls set selected");
                 DebugLog.log("A corrective calls set must be selected when creating a trigger condition");
+                return;
+            }
+            else if (correctiveCallsSet.callSequence.size() == 0) {
+                DebugLog.log("Empty call sequence in currently selected corrective calls set");
+                warningPopup("No corrective calls populated in call set! Send 1 or more calls to the call set.");
                 return;
             }
 
@@ -103,6 +110,7 @@ public class TriggerConditionController extends Controller {
             TriggerCondition triggerCondition = new TriggerCondition(correctiveCallsSet, isNegated, errorConditions, logicalOperators);
             DebugLog.log(triggerCondition.debugString());
             triggerConditionPanel.triggerConditionTableModel.addRow(triggerCondition);
+            setModelIsTriggerConditionSet();
             Utils.resizeColumnsToFitContent(triggerConditionPanel.triggerConditionTable);
         });
     }
@@ -374,19 +382,40 @@ public class TriggerConditionController extends Controller {
 
 
         });
-
-
     }
 
     private void passTriggerConditionController() {
         errorDetectionController.setTriggerConditionController(this);
     }
 
-    private void setAttributes(View view, Controller controller) {
+    private void warningPopup(String message) {
+        JFrame warningFrame = new JFrame("Warning");
+        warningFrame.setSize(500, 150);
+        warningFrame.setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        panel.add(new JLabel(message, JLabel.CENTER), BorderLayout.CENTER);
+
+        JButton closeButton = new JButton("Close");
+        closeButton.addActionListener(e -> warningFrame.dispose());
+        panel.add(closeButton, BorderLayout.SOUTH);
+
+        warningFrame.add(panel);
+        warningFrame.setVisible(true);
+    }
+
+    private void setAttributes(Model model, View view, Controller controller) {
         this.triggerConditionPanel = view.triggerConditionPanel;
         this.ccPanel = view.correctiveCallsPanel;
         this.edPanel = view.errorDetectionPanel;
-
         this.errorDetectionController = controller.errorDetectionController;
+
+        this.model = model;
+    }
+
+    private void setModelIsTriggerConditionSet() {
+        model.triggerConditionIsSet = triggerConditionPanel.triggerConditionTableModel.triggerConditionIsSet;
     }
 }

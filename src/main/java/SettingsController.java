@@ -17,16 +17,16 @@ public class SettingsController {
         this.checkBoxes = settingsPanel.checkBoxGrid;
         this.model = model;
 
-        getScopeCheckBoxStates();
+        setEnabledToolsListener();
     }
 
     // Tracks the state of the checkboxes in the settings menu for scope
-    private void getScopeCheckBoxStates () {
+    private void setEnabledToolsListener () {
         // Stores state of checkboxes
         enabledTools = EnumSet.noneOf(ToolType.class);
 
         // Set up a listener which will track checkbox state in enabledTools
-        ItemListener scopeCheckBoxListener = e -> {
+        ItemListener checkBoxListener = e -> {
             JCheckBox source = (JCheckBox) e.getSource();
             ToolType toolType = (ToolType) source.getClientProperty("ToolType");
 
@@ -43,7 +43,7 @@ public class SettingsController {
         // Attach the listener to each checkbox and store initial state of checkboxes
         for (Component component : checkBoxes.getComponents()) {
             JCheckBox checkBox = (JCheckBox) component;
-            checkBox.addItemListener(scopeCheckBoxListener);
+            checkBox.addItemListener(checkBoxListener);
 
             if (checkBox.isSelected()) {
                 ToolType toolType = (ToolType) checkBox.getClientProperty("ToolType");

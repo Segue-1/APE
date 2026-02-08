@@ -100,7 +100,6 @@ public class CorrectiveCallsPanel extends JPanel {
         add(topPanel);
     }
 
-    // TODO rename, too similar to the following method
     private JScrollPane createCallSequenceScrollPane() {
         callSequenceTableModel = new CallSequenceTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
@@ -115,7 +114,6 @@ public class CorrectiveCallsPanel extends JPanel {
         return callSequenceScrollPane;
     }
 
-    // TODO rename
     private JPanel createCorrectiveCallsSetsPanel() {
         saveCallSequencePanel = new JPanel(new GridBagLayout());
         saveCallSequencePanel.setBorder(BorderFactory.createEmptyBorder(3,3,3,3));
