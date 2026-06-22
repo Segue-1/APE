@@ -25,13 +25,10 @@ public class Model implements HttpHandler{
         ToolType toolType = requestToBeSent.toolSource().toolType();
 
         if (!enabledTools.contains(toolType) || !triggerConditionIsSet) {
-            DebugLog.log("Model: request check triggered");
-            DebugLog.log("Request comes from an enabled tool: " + enabledTools.contains(toolType));
-            DebugLog.log("Trigger Condition is set: " + triggerConditionIsSet);
-            //return RequestToBeSentAction.continueWith(requestToBeSent);
             return null;
         }
 
+        //HttpRequest request = processRequest(requestToBeSent);
         HttpRequest request = requestToBeSent.withAddedHeader("lol", "lmao");
 
         return RequestToBeSentAction.continueWith(request);

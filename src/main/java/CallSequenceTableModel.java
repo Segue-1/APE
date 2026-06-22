@@ -5,13 +5,13 @@ import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
 public class CallSequenceTableModel extends AbstractTableModel implements DeletableTableModel {
-    public List<HttpRequestResponse> callSequence;
+    public List<CorrectiveCall> correctiveCallList ;
     private String[] columns = {"Call Number", "Host", "URL", "Method", "Path"};
 
 
     @Override
     public int getRowCount() {
-        return callSequence.size();
+        return correctiveCallList.size();
     }
 
     @Override
@@ -26,7 +26,8 @@ public class CallSequenceTableModel extends AbstractTableModel implements Deleta
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        HttpRequestResponse reqResp = callSequence.get(rowIndex);
+        CorrectiveCall correctiveCall = correctiveCallList.get(rowIndex);
+        HttpRequestResponse reqResp = correctiveCall.getRequestResponse();
         HttpRequest request = reqResp.request();
 
         switch (columnIndex) {
@@ -41,17 +42,18 @@ public class CallSequenceTableModel extends AbstractTableModel implements Deleta
 
     @Override
     public void removeRow(int rowIndex) {
-        callSequence.remove(rowIndex);
+        correctiveCallList.remove(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
     }
 
-    public void loadCallSequence(List<HttpRequestResponse> callSequence) {
-        this.callSequence = callSequence;
+    public void loadCallSequence(List<CorrectiveCall> correctiveCallList) {
+        this.correctiveCallList = correctiveCallList;
         fireTableDataChanged();
     }
 
-    public HttpRequestResponse loadCall(int row) {
-        return callSequence.get(row);
+    public HttpRequestResponse getReqRes(int row) {
+        CorrectiveCall correctiveCall = correctiveCallList.get(row);
+        return correctiveCall.requestResponse;
     }
 
     @Override

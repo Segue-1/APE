@@ -50,7 +50,7 @@ public class TriggerConditionTableModel extends AbstractTableModel implements De
 
         if (triggerConditions.isEmpty()) {
             triggerConditionIsSet = false;
-            DebugLog.log("TriggerConditionTableModel: triggerConditionIsSet " + triggerConditionIsSet);
+            DebugLog.log("TriggerConditionTableModel: No trigger condition set. " + triggerConditionIsSet);
         }
     }
 

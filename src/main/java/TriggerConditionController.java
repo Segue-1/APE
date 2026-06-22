@@ -2,6 +2,8 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 public class TriggerConditionController extends Controller {
@@ -35,15 +37,15 @@ public class TriggerConditionController extends Controller {
         JButton addButton = (JButton) inputPanel.getComponent(index);
 
         addButton.addActionListener(e -> {
-            JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallsSet>) inputPanel.getComponent(1);
-            CorrectiveCallsSet correctiveCallsSet = (CorrectiveCallsSet) correctiveCallsSetDropdown.getSelectedItem();
+            JComboBox<CorrectiveCallSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallSet>) inputPanel.getComponent(1);
+            CorrectiveCallSet correctiveCallSet = (CorrectiveCallSet) correctiveCallsSetDropdown.getSelectedItem();
 
-            if (correctiveCallsSet == null) {
+            if (correctiveCallSet == null) {
                 DebugLog.log("TriggerConditionBuilder: Add button clicked while no corrective calls set selected");
                 DebugLog.log("A corrective calls set must be selected when creating a trigger condition");
                 return;
             }
-            else if (correctiveCallsSet.callSequence.size() == 0) {
+            else if (correctiveCallSet.correctiveCallList.size() == 0) {
                 DebugLog.log("Empty call sequence in currently selected corrective calls set");
                 warningPopup("No corrective calls populated in call set! Send 1 or more calls to the call set.");
                 return;
@@ -107,10 +109,10 @@ public class TriggerConditionController extends Controller {
             }
 
             DebugLog.log("Instantiating TriggerCondition");
-            TriggerCondition triggerCondition = new TriggerCondition(correctiveCallsSet, isNegated, errorConditions, logicalOperators);
+            TriggerCondition triggerCondition = new TriggerCondition(correctiveCallSet, isNegated, errorConditions, logicalOperators);
             DebugLog.log(triggerCondition.debugString());
             triggerConditionPanel.triggerConditionTableModel.addRow(triggerCondition);
-            setModelIsTriggerConditionSet();
+            UpdateIsTriggerConditionSet();
             Utils.resizeColumnsToFitContent(triggerConditionPanel.triggerConditionTable);
         });
     }
@@ -153,11 +155,11 @@ public class TriggerConditionController extends Controller {
     // TODO update this where the current selection is saved in a temp / swap value and then use equals to see if objects have changed
     // 1/5 only last item in list persists, all other selections reset to 0
     private void setCorrectiveCallsSetDropdownListener(){
-        JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = getCorrectiveCallsSetDropdown();
+        JComboBox<CorrectiveCallSet> correctiveCallsSetDropdown = getCorrectiveCallsSetDropdown();
         correctiveCallsSetDropdown.addPopupMenuListener(new PopupMenuListener() {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
 
-                CorrectiveCallsSet tempCcs;
+                CorrectiveCallSet tempCcs;
 
                 if (correctiveCallsSetDropdown.getSelectedIndex() != -1) {
                     tempCcs = correctiveCallsSetDropdown.getItemAt(correctiveCallsSetDropdown.getSelectedIndex());
@@ -168,8 +170,8 @@ public class TriggerConditionController extends Controller {
 
                 correctiveCallsSetDropdown.removeAllItems();
 
-                for (int row = 0; row < ccPanel.correctiveCallsSetsTableModel.getRowCount(); row++) {
-                    CorrectiveCallsSet ccs = ccPanel.correctiveCallsSetsTableModel.getCorrectiveCallsSet(row);
+                for (int row = 0; row < ccPanel.correctiveCallSetTableModel.getRowCount(); row++) {
+                    CorrectiveCallSet ccs = ccPanel.correctiveCallSetTableModel.getCorrectiveCallsSet(row);
                     correctiveCallsSetDropdown.addItem(ccs);
 
                     if (ccs.equals(tempCcs)){
@@ -270,12 +272,12 @@ public class TriggerConditionController extends Controller {
         return (JScrollPane) conditionBuilderPanel.getComponent(1);
     }
 
-    private JComboBox<CorrectiveCallsSet> getCorrectiveCallsSetDropdown() {
+    private JComboBox<CorrectiveCallSet> getCorrectiveCallsSetDropdown() {
         JPanel inputPanel = getInputPanel();
         int index = 1;
 
         @SuppressWarnings("unchecked") // Component only contains ErrorCondition objects
-        JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallsSet>) inputPanel.getComponent(index);
+        JComboBox<CorrectiveCallSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallSet>) inputPanel.getComponent(index);
         return correctiveCallsSetDropdown;
     }
 
@@ -415,7 +417,51 @@ public class TriggerConditionController extends Controller {
         this.model = model;
     }
 
-    private void setModelIsTriggerConditionSet() {
+    private void UpdateIsTriggerConditionSet() {
         model.triggerConditionIsSet = triggerConditionPanel.triggerConditionTableModel.triggerConditionIsSet;
+    }
+    
+    public void setTableDeleteContextMenu(JTable table) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem deleteItem = new JMenuItem("Delete");
+
+        // Deletes selected row when "Delete" is clicked.
+        deleteItem.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                DeletableTableModel model = (DeletableTableModel) table.getModel();
+                DebugLog.log(table.getName() + ": User deleted row " + selectedRow);
+                model.removeRow(selectedRow);
+                UpdateIsTriggerConditionSet();
+                Utils.resizeColumnsToFitContent(table);
+            }
+        });
+
+        popupMenu.add(deleteItem);
+
+        // Displays popup menu and selects row.
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            private void showPopup(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row >= 0) {
+                    table.setRowSelectionInterval(row, row);
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
     }
 }

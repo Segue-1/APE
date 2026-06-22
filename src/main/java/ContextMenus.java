@@ -2,10 +2,10 @@ import javax.swing.*;
 
 public class ContextMenus extends JPanel {
     public JMenuItem sendToErrorDetection;
-    public JMenuItem sendTocorrectiveCalls;
+    public JMenuItem sendCorrectiveCalls; // wtf is this
 
     ContextMenus() {
         sendToErrorDetection = new JMenuItem("Send to Error Detection");
-        sendTocorrectiveCalls = new JMenuItem("Send to Corrective Calls");
+        sendCorrectiveCalls = new JMenuItem("Send to Corrective Calls");
     }
 }

@@ -2,7 +2,6 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 
@@ -69,9 +68,10 @@ public class TriggerConditionPanel extends JPanel {
 
         triggerConditionTableModel = new TriggerConditionTableModel();
         triggerConditionTable = new JTable(triggerConditionTableModel);
-        JPanel conditionTablePanel = createTriggerConditionTable("Trigger Condition Table", triggerConditionTable);
+        triggerConditionTable.setName("TriggerConditionTable");
+        JPanel triggerConditionTablePanel = createTriggerConditionTable("Trigger Condition Table", triggerConditionTable);
 
-        panel.add(conditionTablePanel, gbc);
+        panel.add(triggerConditionTablePanel, gbc);
         panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 
         return panel;
@@ -122,7 +122,7 @@ public class TriggerConditionPanel extends JPanel {
         //scrollPane.setBackground(new Color(154, 234, 244));
 
         panel.add(new JLabel("Call set "));
-        JComboBox<CorrectiveCallsSet> correctiveCallsSetDropdown = new JComboBox<>();
+        JComboBox<CorrectiveCallSet> correctiveCallsSetDropdown = new JComboBox<>();
         correctiveCallsSetDropdown.setName("CorrectiveCallsSetDropdown");
         panel.add(correctiveCallsSetDropdown);
         panel.add(new JLabel(" will be called if "));

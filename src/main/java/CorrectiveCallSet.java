@@ -4,13 +4,14 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CorrectiveCallsSet {
+public class CorrectiveCallSet {
     public int index;
     public String name;
     public String description;
-    public List<HttpRequestResponse> callSequence = new ArrayList<>();
+    public List<CorrectiveCall> correctiveCallList = new ArrayList<>();
+    //public List<HttpRequestResponse> callSequence = new ArrayList<>();
 
-    CorrectiveCallsSet() {
+    CorrectiveCallSet() {
         description = "";
     }
 
@@ -36,8 +37,8 @@ public class CorrectiveCallsSet {
         List<String> strings = new ArrayList<>();
         int count = 1;
 
-        for (HttpRequestResponse call : callSequence) {
-            HttpRequest req = call.request();
+        for (CorrectiveCall call : correctiveCallList) {
+            HttpRequest req = call.requestResponse.request();
             strings.add("Call number: " + count++);
             strings.add(req.httpService().host());
             strings.add(req.url());

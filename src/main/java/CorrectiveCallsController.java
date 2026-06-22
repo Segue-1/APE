@@ -14,7 +14,7 @@ import java.util.List;
 
 
 public class CorrectiveCallsController {
-    private CorrectiveCallsSetsTableModel correctiveCallsSetsTableModel;
+    private CorrectiveCallSetTableModel correctiveCallSetTableModel;
     private JTable correctiveCallsSetsTable;
 
     private CallSequenceTableModel callSequenceTableModel;
@@ -54,8 +54,9 @@ public class CorrectiveCallsController {
 
         setRadioButtons();
         setTableDeleteContextMenu(callSequenceTable);
-        setTableDeleteContextMenu(extractionTable);
-        setTableDeleteContextMenu(replacementTable);
+        //
+        //setTableDeleteContextMenu(extractionTable);
+        //setTableDeleteContextMenu(replacementTable);
         setCallSetsButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
         setSelectedCorrectiveCallCallListener();
@@ -63,13 +64,14 @@ public class CorrectiveCallsController {
         setExtractAddButtonListener();
         setReplaceDropDownListener();
         setReplaceAddButtonListener();
+        // Split these into two. setExtractFromSelectButton and setReplaceFromSelectButton
         setFromSelectionListener(extractFromSelect, extractInputFields, "response");
         setFromSelectionListener(replaceFromSelect, replaceInputFields, "request");
     }
 
     private void initCallSequenceTable() {
-        List<HttpRequestResponse> set0 = correctiveCallsSetsTableModel.correctiveCallsSets.getFirst().callSequence;
-        callSequenceTableModel.loadCallSequence(set0);
+        CorrectiveCallSet set0 = correctiveCallSetTableModel.correctiveCallSetList.getFirst();
+        callSequenceTableModel.loadCallSequence(set0.correctiveCallList);
     }
 
     private void setRadioButtons() {
@@ -139,23 +141,23 @@ public class CorrectiveCallsController {
 
     private void setCallSetsButtonActionListeners() {
         ActionListener addButtonListener = e -> {
-            correctiveCallsSetsTableModel.addRow(new CorrectiveCallsSet());
+            correctiveCallSetTableModel.addRow(new CorrectiveCallSet());
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
             DebugLog.log("Add button clicked on corrective call set table. Call set "
-                         + correctiveCallsSetsTableModel.correctiveCallsSets.getLast().name
+                         + correctiveCallSetTableModel.correctiveCallSetList.getLast().name
                          + " has been added");
         };
 
         ActionListener removeBottonListener = e -> {
             int selectedRow = correctiveCallsSetsTable.getSelectedRow();
-            correctiveCallsSetsTableModel.removeRow(selectedRow);
+            correctiveCallSetTableModel.removeRow(selectedRow);
             callSequenceTableModel.fireTableDataChanged();
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
 
             correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
 
             DebugLog.log("Remove button clicked on corrective call set table. Call set "
-                         + correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).name
+                         + correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).name
                          + " has been deleted.");
         };
         addSetBotton.addActionListener(addButtonListener);
@@ -168,9 +170,9 @@ public class CorrectiveCallsController {
                 int selectedRow = correctiveCallsSetsTable.getSelectedRow();
 
                 if (selectedRow != -1) {
-                    callSequenceTableModel.loadCallSequence(correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).callSequence);
+                    callSequenceTableModel.loadCallSequence(correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).correctiveCallList);
                     DebugLog.log("Corrective call set selected. Loaded to call sequence table: " +
-                                  correctiveCallsSetsTableModel.correctiveCallsSets.get(selectedRow).toString());
+                                  correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).toString());
                 }
             }
         });
@@ -182,7 +184,7 @@ public class CorrectiveCallsController {
                 int selectedRow = callSequenceTable.getSelectedRow();
 
                 if (selectedRow != -1) {
-                    HttpRequestResponse reqResp = callSequenceTableModel.loadCall(selectedRow);
+                    HttpRequestResponse reqResp = callSequenceTableModel.getReqRes(selectedRow);
                     requestEditor.setRequest(reqResp.request());
                     responseEditor.setResponse(reqResp.response());
                     DebugLog.log("Corrective call selected. Loaded call at row " + selectedRow + " to http editors.");
@@ -210,6 +212,45 @@ public class CorrectiveCallsController {
     }
 
     // TODO could use cleanup. 3rd arg probably not necessary. hasBody might be set in a cleaner way.
+
+    // Sets the action listener for the "From Selection" button for Extractions.
+    /*
+    private void setExtractFromSelListener(JButton fromSelect, JTextField[] inputFields) {
+        fromSelect.addActionListener(e -> {
+            int position;
+            boolean hasBody;
+            String messageString;
+            String selectedContents;
+
+            // Separate out into its own function
+            if (editor.equals("response")) {
+                position = responseEditor.caretPosition();
+                messageString = responseEditor.getResponse().toString();
+                selectedContents = responseEditor.selection().get().contents().toString();
+                if (responseEditor.getResponse().body().length() > 0){
+                    hasBody = true;
+                }
+                else
+                    hasBody = false;
+            }
+            else if (editor.equals("request")){
+                position = requestEditor.caretPosition();
+                messageString = requestEditor.getRequest().toString();
+                selectedContents = requestEditor.selection().get().contents().toString();
+                if (requestEditor.getRequest().body().length() > 0){
+                    hasBody = true;
+                }
+                else
+                    hasBody = false;
+            }
+            else
+                return;
+
+        });
+    }
+
+     */
+
     private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields, String editor) {
         fromSelect.addActionListener(e -> {
             int position;
@@ -217,6 +258,7 @@ public class CorrectiveCallsController {
             String messageString;
             String selectedContents;
 
+            // Separate out into its own function
             if (editor.equals("response")) {
                 position = responseEditor.caretPosition();
                 messageString = responseEditor.getResponse().toString();
@@ -308,6 +350,35 @@ public class CorrectiveCallsController {
         return startString.toString();
     }
 
+    private Boolean hasBody(String editor){
+        int position;
+        boolean hasBody;
+        String messageString;
+        String selectedContents;
+
+        if (editor.equals("response")) {
+            position = responseEditor.caretPosition();
+            messageString = responseEditor.getResponse().toString();
+            selectedContents = responseEditor.selection().get().contents().toString();
+            if (responseEditor.getResponse().body().length() > 0){
+                hasBody = true;
+            }
+            else
+                hasBody = false;
+        }
+        else if (editor.equals("request")){
+            position = requestEditor.caretPosition();
+            messageString = requestEditor.getRequest().toString();
+            selectedContents = requestEditor.selection().get().contents().toString();
+            if (requestEditor.getRequest().body().length() > 0){
+                hasBody = true;
+            }
+            else
+                hasBody = false;
+        }
+        return false;
+    }
+
     public void setReplaceDropDownListener() {
         replaceDropDown.addPopupMenuListener(new PopupMenuListener() {
             @Override
@@ -350,10 +421,12 @@ public class CorrectiveCallsController {
 
     private void setReplaceAddButtonListener() {
         ActionListener replaceAddButtonListener = e -> {
+
+            // Create ReplaceText object
             ReplaceText replaceText = new ReplaceText();
             for (int i = 0; i < replaceInputFields.length - 1; i++) {
                 if (replaceInputFields[i].getText().isEmpty()) {
-                    Controller.montoyaApi.logging().logToOutput("Return hit");
+                    DebugLog.log("Replacement 'Add' button clicked while input field empty.");
                     return;
                 }
             }
@@ -364,13 +437,17 @@ public class CorrectiveCallsController {
             replaceText.extractText = (ExtractText) replaceDropDown.getSelectedItem();
             replacementTableModel.addRow(replaceText);
             DebugLog.log("Replace Text added to table: " + replaceText);
+
+            // Associate ReplaceText object with currently selected corrective call.
+
+
         };
         replaceAddButton.addActionListener(replaceAddButtonListener);
     }
 
 
     private void setAttributes(CorrectiveCallsPanel correctiveCallsPanel) {
-        correctiveCallsSetsTableModel = correctiveCallsPanel.correctiveCallsSetsTableModel;
+        correctiveCallSetTableModel = correctiveCallsPanel.correctiveCallSetTableModel;
         correctiveCallsSetsTable = correctiveCallsPanel.correctiveCallsSetsTable;
 
         callSequenceTableModel = correctiveCallsPanel.callSequenceTableModel;

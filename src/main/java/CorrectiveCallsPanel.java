@@ -22,7 +22,7 @@ public class CorrectiveCallsPanel extends JPanel {
     public JTable callSequenceTable;
     public JScrollPane callSequenceScrollPane;
 
-    public CorrectiveCallsSetsTableModel correctiveCallsSetsTableModel;
+    public CorrectiveCallSetTableModel correctiveCallSetTableModel;
     public JTable correctiveCallsSetsTable;
     public JScrollPane saveCallSequenceScrollPane;
 
@@ -132,9 +132,9 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 1;
         
-        correctiveCallsSetsTableModel = new CorrectiveCallsSetsTableModel();
+        correctiveCallSetTableModel = new CorrectiveCallSetTableModel();
 
-        correctiveCallsSetsTable = new JTable(correctiveCallsSetsTableModel);
+        correctiveCallsSetsTable = new JTable(correctiveCallSetTableModel);
         correctiveCallsSetsTable.setRowSelectionInterval(0,0);
         correctiveCallsSetsTable.getColumnModel().getColumn(0).setMaxWidth(75);
         correctiveCallsSetsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -211,6 +211,23 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
+        JPanel extractionPanel = new ExtractionPanel();
+
+        bottomPanel.add(extractionPanel, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        JPanel replacementPanel = new ReplacementPanel();
+
+        bottomPanel.add(replacementPanel, gbc);
+
+        add(bottomPanel);
+        /*
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
         String[] replaceFieldsLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
                                         "Pick from Extraction"};
         replaceDropDown = new JComboBox<>();
@@ -260,6 +277,8 @@ public class CorrectiveCallsPanel extends JPanel {
         bottomPanel.add(extractTablePanel, gbc);
 
         add(bottomPanel);
+
+         */
     }
 
     public JPanel createSmallTable(String header, JTable table){

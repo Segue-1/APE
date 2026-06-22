@@ -5,6 +5,8 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class FollowUpController {
 
@@ -24,7 +26,7 @@ public class FollowUpController {
     FollowUpController (View view, Model model, Controller controller) {
         setAttributes(view);
         
-        controller.setTableDeleteContextMenu(followUpReplaceTable);
+        setTableDeleteContextMenu(followUpReplaceTable);
         setReplaceDropDownListener();
         setReplaceAddButtonListener();
         setFromSelectionListener(fromSelect, inputFields);
@@ -173,6 +175,50 @@ public class FollowUpController {
             }
         }
         return startString.toString();
+    }
+
+    // TODO need to go through all controllers and update them to use this method
+    public void setTableDeleteContextMenu(JTable table) {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem deleteItem = new JMenuItem("Delete");
+
+        // Deletes selected row when "Delete" is clicked.
+        deleteItem.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow != -1) {
+                DeletableTableModel model = (DeletableTableModel) table.getModel();
+                DebugLog.log(table.getName() + ": User deleted row " + selectedRow);
+                model.removeRow(selectedRow);
+                Utils.resizeColumnsToFitContent(table);
+            }
+        });
+
+        popupMenu.add(deleteItem);
+
+        // Displays popup menu and selects row.
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showPopup(e);
+                }
+            }
+
+            private void showPopup(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row >= 0) {
+                    table.setRowSelectionInterval(row, row);
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
     }
 
     private void setAttributes (View view) {

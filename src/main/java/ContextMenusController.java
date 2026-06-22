@@ -1,4 +1,3 @@
-import burp.api.montoya.http.*;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
@@ -14,7 +13,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
     private Controller controller;
     private ContextMenuEvent contextMenuEvent;
 
-    private CorrectiveCallsSetsTableModel correctiveCallsSetsTableModel;
+    private CorrectiveCallSetTableModel correctiveCallSetTableModel;
     private JTable correctiveCallsSetsTable;
 
     private CallSequenceTableModel callSequenceTableModel;
@@ -26,7 +25,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
         this.model = model;
         this.controller = controller;
 
-        correctiveCallsSetsTableModel = view.correctiveCallsPanel.correctiveCallsSetsTableModel;
+        correctiveCallSetTableModel = view.correctiveCallsPanel.correctiveCallSetTableModel;
         correctiveCallsSetsTable = view.correctiveCallsPanel.correctiveCallsSetsTable;
 
         callSequenceTableModel = view.correctiveCallsPanel.callSequenceTableModel;
@@ -40,7 +39,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
     @Override
     public List<Component> provideMenuItems(ContextMenuEvent event) {
         this.contextMenuEvent = event;
-        return List.of(view.contextMenus.sendToErrorDetection, view.contextMenus.sendTocorrectiveCalls);
+        return List.of(view.contextMenus.sendToErrorDetection, view.contextMenus.sendCorrectiveCalls);
     }
 
     private void attachListeners() {
@@ -61,17 +60,17 @@ public class ContextMenusController implements ContextMenuItemsProvider {
             }
         });
 
-        view.contextMenus.sendTocorrectiveCalls.addActionListener(e -> {
+        view.contextMenus.sendCorrectiveCalls.addActionListener(e -> {
             if (contextMenuEvent.messageEditorRequestResponse().isPresent()){
                 HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
 
                 // Stores call in currently selected corrective calls set.
-                correctiveCallsSetsTableModel.addRequestResponse(reqResp, correctiveCallsSetsTable.getSelectedRow());
+                correctiveCallSetTableModel.addRequestResponse(reqResp, correctiveCallsSetsTable.getSelectedRow());
                 DebugLog.log("Context menu 'Send to Corrective Calls' was clicked. " +
                              "Call sent to Corrective Calls panel and stored in corrective call set: " +
-                              correctiveCallsSetsTableModel.correctiveCallsSets.get(getSelectedRow()).toString());
+                              correctiveCallSetTableModel.correctiveCallSetList.get(getSelectedRow()).toString());
 
                 callSequenceTableModel.fireTableDataChanged();
                 Utils.resizeColumnsToFitContent(callSequenceTable);

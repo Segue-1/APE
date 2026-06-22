@@ -19,23 +19,49 @@ public class Utils {
         }
     }
 
-    public class Timer {
-        static long startTime;
-        static long endTime;
-        static long elapsedTime;
+    // Used to get "Start String" for text Replacements and Extractions when clicking "From Selection" button.
+    public static String getStartString(int startIndex, String messageString){
+        StringBuilder startString = new StringBuilder();
+        int count = 8;
 
+        if (startIndex == 0)
+            return "[Start of Line]";
 
-        public static void startTimer() {
-            startTime = System.currentTimeMillis();
+        while (count > 0){
+            if (startIndex - count >= 0) {
+                char c = messageString.charAt(startIndex - count);
+                if (c != '\r' && c != '\n') {
+                    startString.append(c);
+                    count--;
+                }
+            }
+            else {
+                count--;
+            }
         }
-
-        public static void stopTimer() {
-            endTime = System.currentTimeMillis();
-
-            elapsedTime = endTime - startTime;
-
-            Controller.montoyaApi.logging().logToOutput("\n------ ELAPSED TIME ------\n");
-            Controller.montoyaApi.logging().logToOutput(elapsedTime);
-        }
+        return startString.toString();
     }
+
+    // Used to get "Stop String" for text Replacements and Extractions when clicking "From Selection" button.
+    public static String getStopString(int caretPosition, String messageString, Boolean hasBody) {
+        StringBuilder stopString = new StringBuilder();
+        int index = 0;
+        int count = 0;
+
+        if (hasBody && caretPosition == messageString.length())
+            return "[End of Line]";
+        else if (!hasBody && caretPosition == messageString.length() - 4) // - 2x \r\n
+            return "[End of Line]";
+
+        while (count < 8 && caretPosition + index < messageString.length()) {
+            char c = messageString.charAt(caretPosition + index);
+            if (c != '\r' && c != '\n') {
+                stopString.append(c);
+                count++;
+            }
+            index++;
+        }
+        return stopString.toString();
+    }
+
 }

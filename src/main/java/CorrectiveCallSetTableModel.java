@@ -5,20 +5,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
-    public List<CorrectiveCallsSet> correctiveCallsSets = new ArrayList<>();
+public class CorrectiveCallSetTableModel extends AbstractTableModel {
+    public List<CorrectiveCallSet> correctiveCallSetList = new ArrayList<>();
     private String[] columns = {"Name", "Description"};
 
-    CorrectiveCallsSetsTableModel() {
-        CorrectiveCallsSet defaultCorrectiveCallsSet = new CorrectiveCallsSet();
-        defaultCorrectiveCallsSet.index = 0;
-        defaultCorrectiveCallsSet.setName();
-        this.addRow(defaultCorrectiveCallsSet);
+    CorrectiveCallSetTableModel() {
+        CorrectiveCallSet defaultCorrectiveCallSet = new CorrectiveCallSet();
+        defaultCorrectiveCallSet.index = 0;
+        defaultCorrectiveCallSet.setName();
+        this.addRow(defaultCorrectiveCallSet);
     }
 
     @Override
     public int getRowCount() {
-        return correctiveCallsSets.size();
+        return correctiveCallSetList.size();
     }
 
     @Override
@@ -33,11 +33,11 @@ public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        CorrectiveCallsSet correctiveCallsSet = correctiveCallsSets.get(rowIndex);
+        CorrectiveCallSet correctiveCallSet = correctiveCallSetList.get(rowIndex);
 
         return switch (columnIndex) {
-            case 0 -> correctiveCallsSet.name;
-            case 1 -> correctiveCallsSet.description;
+            case 0 -> correctiveCallSet.name;
+            case 1 -> correctiveCallSet.description;
             default -> null;
         };
     }
@@ -47,21 +47,21 @@ public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
             return;
         }
 
-        correctiveCallsSets.remove(rowIndex);
+        correctiveCallSetList.remove(rowIndex);
         resetNames(rowIndex);
         fireTableRowsDeleted(rowIndex, rowIndex);
     }
 
-    public void addRow(CorrectiveCallsSet correctiveCallSet) {
-        correctiveCallSet.index = correctiveCallsSets.size();
+    public void addRow(CorrectiveCallSet correctiveCallSet) {
+        correctiveCallSet.index = correctiveCallSetList.size();
         correctiveCallSet.setName();
-        correctiveCallsSets.add(correctiveCallSet);
-        fireTableRowsInserted(correctiveCallsSets.size() - 1, correctiveCallsSets.size() - 1);
+        correctiveCallSetList.add(correctiveCallSet);
+        fireTableRowsInserted(correctiveCallSetList.size() - 1, correctiveCallSetList.size() - 1);
     }
 
     private void resetNames(int start) {
-        for (int i = start; i < correctiveCallsSets.size(); i++) {
-            correctiveCallsSets.get(i).name = "Set " + --correctiveCallsSets.get(i).index;
+        for (int i = start; i < correctiveCallSetList.size(); i++) {
+            correctiveCallSetList.get(i).name = "Set " + --correctiveCallSetList.get(i).index;
         }
     }
 
@@ -77,7 +77,7 @@ public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
     @Override
     public void setValueAt(Object input, int rowIndex, int columnIndex) {
         if (columnIndex == 1) {
-            correctiveCallsSets.get(rowIndex).description = (String) input;
+            correctiveCallSetList.get(rowIndex).description = (String) input;
         }
         else
             return;
@@ -90,18 +90,22 @@ public class CorrectiveCallsSetsTableModel extends AbstractTableModel {
         if (rowIndex == -1) {
             rowIndex = 0;
         }
-        correctiveCallsSets.get(rowIndex).callSequence.add(reqResp);
+
+        //correctiveCallSetList.get(rowIndex).callSequence.add(reqResp);
+
+        CorrectiveCall correctiveCall = new CorrectiveCall(reqResp);
+        correctiveCallSetList.get(rowIndex).correctiveCallList.add(correctiveCall);
         fireTableRowsUpdated(rowIndex, rowIndex);
     }
 
-    public CorrectiveCallsSet getCorrectiveCallsSet(int rowIndex) {
-        return correctiveCallsSets.get(rowIndex);
+    public CorrectiveCallSet getCorrectiveCallsSet(int rowIndex) {
+        return correctiveCallSetList.get(rowIndex);
     }
 
     @Override
     public String toString() {
         return "CorrectiveCallsSetsTableModel{" +
-                "correctiveCallsSets=" + correctiveCallsSets +
+                "correctiveCallsSets=" + correctiveCallSetList +
                 ", columns=" + Arrays.toString(columns) +
                 '}';
     }
