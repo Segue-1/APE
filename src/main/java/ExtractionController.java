@@ -5,17 +5,35 @@ import javax.swing.*;
 import java.awt.event.ActionListener;
 
 public class ExtractionController {
+    
+    
+    public JTextField[] inputFields;
+    public JTable table;
+    public ExtractionTableModel tableModel;
+    public JButton fromSelectButton;
+    public JButton addButton;
+    public HttpRequestEditor requestEditor;
+    public JComboBox<String> dropDown;
 
+    ExtractionController(ExtractionPanel extractionPanel, HttpRequestEditor httpRequestEditor,
+                         HttpResponseEditor httpResponseEditor) {
 
-    private void setExtractionFromSelectionListener(JButton fromSelect, JTextField[] inputFields,
-                                                    HttpResponseEditor responseEditor, HttpRequestEditor requestEditor) {
+        this.dropDown = extractionPanel.dropDown;
+        this.inputFields = extractionPanel.inputFields;
+        this.table = extractionPanel.table;
+        this.tableModel = extractionPanel.tableModel;
+        this.fromSelectButton = extractionPanel.fromSelectButton;
+        this.addButton = extractionPanel.addButton;
+        this.requestEditor = httpRequestEditor;
 
+        setFromSelectionListener();
+        setAddButtonListener();
+        //setDropDownListener();
     }
 
 
-    private void setAddButtonListener(JTextField[] inputFields, JComboBox<String> dropDown, JButton addButton,
-                                      ExtractionTableModel tableModel) {
-        ActionListener extractAddButtonListener = e -> {
+    private void setAddButtonListener() {
+        ActionListener addButtonListener = e -> {
             ExtractText extractText = new ExtractText();
             for (int i = 0; i < inputFields.length - 1; i++) {
                 if (inputFields[i].getText().isEmpty())
@@ -29,6 +47,53 @@ public class ExtractionController {
             tableModel.addRow(extractText);
             DebugLog.log("Extract Text added to table: " + extractText.debugString());
         };
-        addButton.addActionListener(extractAddButtonListener);
+        addButton.addActionListener(addButtonListener);
     }
+    
+    private void setFromSelectionListener() {
+        fromSelectButton.addActionListener(e -> {
+            int position;
+            boolean hasBody;
+            String messageString;
+            String selectedContents;
+
+            position = requestEditor.caretPosition();
+            messageString = requestEditor.getRequest().toString();
+            selectedContents = requestEditor.selection().get().contents().toString();
+
+
+            if (requestEditor.getRequest().body().length() > 0) {
+                hasBody = true;
+            }
+            else
+                hasBody = false;
+
+
+            inputFields[3].setText(selectedContents);
+
+            if (selectedContents.startsWith(" "))
+                inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
+            else
+                inputFields[3].setToolTipText(null);
+
+
+            String stopString = Utils.getStopString(position, messageString, hasBody);
+            inputFields[2].setText(stopString);
+
+            int offset = selectedContents.length();
+            int startIndex = position - offset;
+
+            String startString = Utils.getStartString(startIndex, messageString);
+            inputFields[1].setText(startString);
+
+            DebugLog.log("'From Selection' button clicked in corrective calls panel's Replace text section. " +
+                    "The following input fields were set.");
+            DebugLog.log("Selected Text: " + selectedContents);
+            DebugLog.log("Stop String: " + stopString);
+            DebugLog.log("Start String: " + startString);
+        });
+    }
+
+
+
 }

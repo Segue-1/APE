@@ -3,15 +3,13 @@ import java.awt.*;
 
 public class ReplacementPanel extends JPanel {
 
+    public String[] labels;
     public JComboBox<ExtractText> dropDown;
     public JTextField[] inputFields;
     public JTable table;
     public ReplacementTableModel tableModel;
     public JButton fromSelectButton;
     public JButton addButton;
-    public String[] labels;
-
-
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
 
 

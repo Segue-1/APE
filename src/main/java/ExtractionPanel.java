@@ -2,51 +2,48 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ExtractionPanel extends JPanel {
-    public ExtractionTableModel extractionTableModel;
-    public JTable extractionTable;
-    public JTextField[] extractInputFields;
-    public JButton extractFromSelect;
-    public JButton extractAddButton;
-    public JComboBox<String> extractDropDown;
 
-    public String[] extractFieldsLabels;
-
+    public String[] labels;
+    public JComboBox<String> dropDown;
+    public JTextField[] inputFields;
+    public JTable table;
+    public ExtractionTableModel tableModel;
+    public JButton fromSelectButton;
+    public JButton addButton;
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
+
 
     ExtractionPanel(){
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
 
-        extractFieldsLabels  = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
+        labels = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
                 "URL encode/decode"};
 
-        extractDropDown = new JComboBox<>();
-        extractInputFields = new JTextField[extractFieldsLabels.length - 1];
-        extractFromSelect = new JButton();
-        extractAddButton = new JButton();
+        dropDown = new JComboBox<>();
+        inputFields = new JTextField[labels.length - 1];
+        fromSelectButton = new JButton();
+        addButton = new JButton();
 
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-
-        JPanel extractFields = createInputTextFields("Extract", extractFieldsLabels, extractDropDown,
-                extractInputFields, extractFromSelect, extractAddButton);
+        JPanel extractFields = createInputTextFields("Extract", labels, dropDown,
+                inputFields, fromSelectButton, addButton);
 
         add(extractFields, gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        extractionTableModel = new ExtractionTableModel();
-        extractionTable = new JTable(extractionTableModel);
-        extractionTable.setName("Extract Table");
+        tableModel = new ExtractionTableModel();
+        table = new JTable(tableModel);
+        table.setName("Extract Table");
 
-        JPanel tablePanel = createSmallTable("Extract List", extractionTable);
+        JPanel tablePanel = createSmallTable("Extract List", table);
 
         add(tablePanel, gbc);
-
-
     }
 
     public JPanel createSmallTable(String header, JTable table){

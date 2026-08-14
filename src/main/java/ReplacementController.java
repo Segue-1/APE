@@ -8,13 +8,33 @@ import java.awt.event.ActionListener;
 
 public class ReplacementController {
 
-    ReplacementController (){
+    public JComboBox<ExtractText> dropDown;
+    public JTextField[] inputFields;
+    public JTable table;
+    public ReplacementTableModel tableModel;
+    public ExtractionTableModel extractionTableModel;
+    public JButton fromSelectButton;
+    public JButton addButton;
+    public HttpRequestEditor requestEditor;
+    
+    ReplacementController (ReplacementPanel replacementPanel, HttpRequestEditor httpRequestEditor,
+                           ExtractionTableModel extractionTableModel) {
+        this.dropDown = replacementPanel.dropDown;
+        this.inputFields = replacementPanel.inputFields;
+        this.table = replacementPanel.table;
+        this.tableModel = replacementPanel.tableModel;
+        this.extractionTableModel = extractionTableModel;
+        this.fromSelectButton = replacementPanel.fromSelectButton;
+        this.addButton = replacementPanel.addButton;
+        this.requestEditor = httpRequestEditor;
 
+        setFromSelectionListener();
+        setAddButtonListener();
+        setDropDownListener();
     }
 
-    private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields,
-                                          HttpRequestEditor requestEditor) {
-        fromSelect.addActionListener(e -> {
+    private void setFromSelectionListener() {
+        fromSelectButton.addActionListener(e -> {
             int position;
             boolean hasBody;
             String messageString;
@@ -27,7 +47,8 @@ public class ReplacementController {
 
             if (requestEditor.getRequest().body().length() > 0) {
                 hasBody = true;
-            } else
+            }
+            else
                 hasBody = false;
 
 
@@ -48,19 +69,18 @@ public class ReplacementController {
             String startString = Utils.getStartString(startIndex, messageString);
             inputFields[1].setText(startString);
 
-            DebugLog.log("'From Selection' button clicked in corrective calls panel. The following input fields were set.");
+            DebugLog.log("'From Selection' button clicked in corrective calls panel's Replace text section. " +
+                    "The following input fields were set.");
             DebugLog.log("Selected Text: " + selectedContents);
             DebugLog.log("Stop String: " + stopString);
             DebugLog.log("Start String: " + startString);
-
         });
     }
 
-    private void setAddButtonListener(JTextField[] inputFields, JComboBox<String> dropDown, JButton addButton,
-                                      ReplacementTableModel tableModel) {
-        ActionListener replaceAddButtonListener = e -> {
+    // Creates ReplaceText object
+    private void setAddButtonListener() {
+        ActionListener addButtonListener = e -> {
 
-            // Create ReplaceText object
             ReplaceText replaceText = new ReplaceText();
             for (int i = 0; i < inputFields.length - 1; i++) {
                 if (inputFields[i].getText().isEmpty()) {
@@ -68,47 +88,44 @@ public class ReplacementController {
                     return;
                 }
             }
+
             replaceText.name = inputFields[0].getText();
             replaceText.startString = inputFields[1].getText();
             replaceText.stopString = inputFields[2].getText();
             replaceText.selectedText = inputFields[3].getText();
             replaceText.extractText = (ExtractText) dropDown.getSelectedItem();
             tableModel.addRow(replaceText);
-            DebugLog.log("Replace Text added to table: " + replaceText);
-
-            // Associate ReplaceText object with currently selected corrective call.
-
-
+            DebugLog.log("Replacement Add button clicked in Corrective Calls: " + replaceText);
         };
-        addButton.addActionListener(replaceAddButtonListener);
+        addButton.addActionListener(addButtonListener);
     }
 
-    public void setReplaceDropDownListener(JComboBox<ExtractText> replaceDropDown, ExtractionTableModel tableModel) {
-        replaceDropDown.addPopupMenuListener(new PopupMenuListener() {
+    // Sets the listener for the dropdown menu titled "Pick from Extraction"
+    // Retrieves a list of text extractions.
+    public void setDropDownListener() {
+        dropDown.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
-
+                DebugLog.log("Pick from Extraction dropdown clicked in Corrective Calls" );
                 ExtractText tempExtractText;
 
-                if (replaceDropDown.getSelectedIndex() != -1) {
-                    tempExtractText = replaceDropDown.getItemAt(replaceDropDown.getSelectedIndex());
+                if (dropDown.getSelectedIndex() != -1) {
+                    tempExtractText = dropDown.getItemAt(dropDown.getSelectedIndex());
                 }
                 else {
                     tempExtractText = null;
                 }
 
-                replaceDropDown.removeAllItems();
+                dropDown.removeAllItems();
 
-                for (int row = 0; row < tableModel.getRowCount(); row++) {
-                    ExtractText extractText = tableModel.getExtractText(row);
-                    replaceDropDown.addItem(extractText);
+                for (int row = 0; row < extractionTableModel.getRowCount(); row++) {
+                    ExtractText extractText = extractionTableModel.getExtractText(row);
+                    dropDown.addItem(extractText);
 
                     if (extractText.equals(tempExtractText)) {
-                        replaceDropDown.setSelectedIndex(row);
+                        dropDown.setSelectedIndex(row);
                     }
                 }
-
-
             }
 
             @Override

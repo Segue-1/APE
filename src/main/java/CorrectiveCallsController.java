@@ -54,19 +54,22 @@ public class CorrectiveCallsController {
 
         setRadioButtons();
         setTableDeleteContextMenu(callSequenceTable);
-        //
         //setTableDeleteContextMenu(extractionTable);
         //setTableDeleteContextMenu(replacementTable);
         setCallSetsButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
         setSelectedCorrectiveCallCallListener();
         initCallSequenceTable();
-        setExtractAddButtonListener();
-        setReplaceDropDownListener();
-        setReplaceAddButtonListener();
+
+        new ReplacementController(correctiveCallsPanel.replacementPanel,
+                requestEditor, extractionTableModel);
+
+        //setExtractAddButtonListener();
+        //setReplaceDropDownListener();
+        //setReplaceAddButtonListener();
         // Split these into two. setExtractFromSelectButton and setReplaceFromSelectButton
-        setFromSelectionListener(extractFromSelect, extractInputFields, "response");
-        setFromSelectionListener(replaceFromSelect, replaceInputFields, "request");
+        //setFromSelectionListener(extractFromSelect, extractInputFields, "response");
+        //setFromSelectionListener(replaceFromSelect, replaceInputFields, "request");
     }
 
     private void initCallSequenceTable() {
@@ -193,6 +196,7 @@ public class CorrectiveCallsController {
         });
     }
 
+    /*
     private void setExtractAddButtonListener() {
         ActionListener extractAddButtonListener = e -> {
             ExtractText extractText = new ExtractText();
@@ -210,6 +214,8 @@ public class CorrectiveCallsController {
         };
         extractAddButton.addActionListener(extractAddButtonListener);
     }
+
+     */
 
     // TODO could use cleanup. 3rd arg probably not necessary. hasBody might be set in a cleaner way.
 
@@ -251,6 +257,7 @@ public class CorrectiveCallsController {
 
      */
 
+    /*
     private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields, String editor) {
         fromSelect.addActionListener(e -> {
             int position;
@@ -350,35 +357,6 @@ public class CorrectiveCallsController {
         return startString.toString();
     }
 
-    private Boolean hasBody(String editor){
-        int position;
-        boolean hasBody;
-        String messageString;
-        String selectedContents;
-
-        if (editor.equals("response")) {
-            position = responseEditor.caretPosition();
-            messageString = responseEditor.getResponse().toString();
-            selectedContents = responseEditor.selection().get().contents().toString();
-            if (responseEditor.getResponse().body().length() > 0){
-                hasBody = true;
-            }
-            else
-                hasBody = false;
-        }
-        else if (editor.equals("request")){
-            position = requestEditor.caretPosition();
-            messageString = requestEditor.getRequest().toString();
-            selectedContents = requestEditor.selection().get().contents().toString();
-            if (requestEditor.getRequest().body().length() > 0){
-                hasBody = true;
-            }
-            else
-                hasBody = false;
-        }
-        return false;
-    }
-
     public void setReplaceDropDownListener() {
         replaceDropDown.addPopupMenuListener(new PopupMenuListener() {
             @Override
@@ -445,6 +423,8 @@ public class CorrectiveCallsController {
         replaceAddButton.addActionListener(replaceAddButtonListener);
     }
 
+     */
+
 
     private void setAttributes(CorrectiveCallsPanel correctiveCallsPanel) {
         correctiveCallSetTableModel = correctiveCallsPanel.correctiveCallSetTableModel;
@@ -459,8 +439,8 @@ public class CorrectiveCallsController {
         addSetBotton = correctiveCallsPanel.addSetBotton;
         removeSetBotton = correctiveCallsPanel.removeSetBotton;
 
-        extractAddButton = correctiveCallsPanel.extractAddButton;
-        replaceAddButton = correctiveCallsPanel.replaceAddButton;
+        extractAddButton = correctiveCallsPanel.extractionPanel.addButton;
+        replaceAddButton = correctiveCallsPanel.replacementPanel.addButton;
 
         extractFromSelect = correctiveCallsPanel.extractFromSelect;
         replaceFromSelect = correctiveCallsPanel.replaceFromSelect;

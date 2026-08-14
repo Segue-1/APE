@@ -44,11 +44,11 @@ public class CorrectiveCallsPanel extends JPanel {
     public JButton extractAddButton;
     public JButton replaceAddButton;
 
-    //public String[] extractDropDownOptions;
-
     public JComboBox<String> extractDropDown;
     public JComboBox<ExtractText> replaceDropDown;
 
+    public ReplacementPanel replacementPanel;
+    public ExtractionPanel extractionPanel;
 
     public CorrectiveCallsPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -211,145 +211,15 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel extractionPanel = new ExtractionPanel();
-
-        bottomPanel.add(extractionPanel, gbc);
-
-        gbc.gridx = 1; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        JPanel replacementPanel = new ReplacementPanel();
-
+        replacementPanel = new ReplacementPanel();
         bottomPanel.add(replacementPanel, gbc);
 
-        add(bottomPanel);
-        /*
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        String[] replaceFieldsLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
-                                        "Pick from Extraction"};
-        replaceDropDown = new JComboBox<>();
-        replaceInputFields = new JTextField[replaceFieldsLabels.length - 1];
-        replaceFromSelect = new JButton();
-        replaceAddButton = new JButton();
-
-        JPanel replaceFields = createInputTextFields("Replacement", replaceFieldsLabels, replaceDropDown,
-                replaceInputFields, replaceFromSelect, replaceAddButton);
-
-        bottomPanel.add(replaceFields, gbc);
-
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        replacementTableModel = new ReplacementTableModel();
-        replacementTable = new JTable(replacementTableModel);
-        replacementTable.setName("Replacement Table");
-
-        JPanel replaceTablePanel = createSmallTable("Replace List", replacementTable);
-        bottomPanel.add(replaceTablePanel, gbc);
-
-        gbc.gridx = 2; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        String[] extractFieldsLabels  = {"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
-                                         "URL encode/decode"};
-        String[] extractDropDownOptions = new String[]{"N/A", "Encode", "Decode"};
-        extractInputFields = new JTextField[replaceFieldsLabels.length - 1];
-        extractFromSelect = new JButton();
-        extractAddButton = new JButton();
-        extractDropDown = new JComboBox<>(extractDropDownOptions);
-
-        JPanel extractFields = createInputTextFields("Extraction", extractFieldsLabels, extractDropDown,
-                extractInputFields, extractFromSelect, extractAddButton);
-
-        bottomPanel.add(extractFields, gbc);
-
-        gbc.gridx = 3; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        extractionTableModel = new ExtractionTableModel();
-        extractionTable = new JTable(extractionTableModel);
-        extractionTable.setName("Extraction Table");
-
-        JPanel extractTablePanel = createSmallTable("Extract List", extractionTable);
-        bottomPanel.add(extractTablePanel, gbc);
+        extractionPanel = new ExtractionPanel();
+        bottomPanel.add(extractionPanel, gbc);
 
         add(bottomPanel);
-
-         */
-    }
-
-    public JPanel createSmallTable(String header, JTable table){
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.insets = new Insets(1, 1, 1, 1);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 0;
-
-        JLabel headerLabel = new JLabel(header);
-        headerLabel.setFont(subHeaderFont);
-        panel.add(headerLabel, gbc);
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
-        panel.add(scrollPane, gbc);
-
-        return panel;
-    }
-
-    public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox dropDown,
-                                        JTextField[] jTextFields, JButton fromSelect, JButton addButton){
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.insets = new Insets(1, 1, 1, 1);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 0; gbc.weighty = 0;
-        gbc.gridwidth = 2;
-
-        JLabel headerLabel = new JLabel(header);
-        headerLabel.setFont(subHeaderFont);
-        panel.add(headerLabel, gbc);
-
-        gbc.weighty = 1;
-        gbc.gridwidth = 1;
-
-        for (int i = 0; i < jTextFields.length; i++) {
-            jTextFields[i] = new JTextField();
-        }
-
-        for (int i = 0; i < fieldNames.length; i++) {
-            gbc.gridx = 0; gbc.gridy = i + 1;
-            gbc.weightx = 1;
-            panel.add(new JLabel(fieldNames[i]), gbc);
-
-            if (i < fieldNames.length - 1) {
-                gbc.gridx = 1;
-                panel.add(jTextFields[i], gbc);
-            }
-        }
-
-        gbc.gridx = 1; gbc.gridy = fieldNames.length;
-        panel.add(dropDown, gbc);
-
-        gbc.gridx = 0; gbc.gridy = fieldNames.length + 1;
-        gbc.weightx = 0; gbc.weighty = 1;
-        fromSelect.setText("From Selection");
-        panel.add(fromSelect, gbc);
-
-        gbc.gridx = 1; gbc.gridy = fieldNames.length + 1;
-        gbc.weightx = 0;
-        addButton.setText("Add");
-        panel.add(addButton, gbc);
-
-        return panel;
     }
 }

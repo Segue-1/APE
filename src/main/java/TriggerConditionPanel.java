@@ -2,11 +2,14 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 
 
 public class TriggerConditionPanel extends JPanel {
     static Color conditionBuilderTextColor = new Color(143, 0, 197);
+    static Color testCallTextColor = new Color(255, 91, 0);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
@@ -20,10 +23,12 @@ public class TriggerConditionPanel extends JPanel {
     public TriggerConditionTableModel triggerConditionTableModel;
     public JTable triggerConditionTable;
 
+    public TableModel testCallTableModel;
+    public JTable testCallTable;
+
 
     TriggerConditionPanel() {
         setLayout(new GridBagLayout());
-        setBackground(Color.PINK);
         GridBagConstraints gbc = new GridBagConstraints();
 
         gbc.fill = GridBagConstraints.BOTH;
@@ -47,7 +52,6 @@ public class TriggerConditionPanel extends JPanel {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
-        //panel.setBackground(new Color(0, 131, 11));
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.gridx = 0; gbc.gridy = 0;
@@ -106,7 +110,6 @@ public class TriggerConditionPanel extends JPanel {
 
         panel.add(subText, gbc);
 
-        //panel.setBackground(new Color(151, 131, 21));
         return panel;
     }
 
@@ -118,8 +121,6 @@ public class TriggerConditionPanel extends JPanel {
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-        //panel.setBackground(new Color(244, 154, 154));
-        //scrollPane.setBackground(new Color(154, 234, 244));
 
         panel.add(new JLabel("Call set "));
         JComboBox<CorrectiveCallSet> correctiveCallsSetDropdown = new JComboBox<>();
@@ -150,8 +151,6 @@ public class TriggerConditionPanel extends JPanel {
     public JPanel createTriggerConditionTable(String header, JTable table){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-
-        panel.setBackground(new Color(138, 79, 243));
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(1, 1, 1, 1);
@@ -184,17 +183,98 @@ public class TriggerConditionPanel extends JPanel {
     }
 
     private JPanel createTestCallPanel(){
-        JPanel panel = new JPanel();
-        panel.setBackground(new Color(153, 41, 250));
-        panel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 100));
-        panel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 100));
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+        panel.add(createTestCallLabel(), gbc);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        testCallTableModel = new DefaultTableModel(new Object[][]{}, 0);
+        testCallTable = new JTable(testCallTableModel);
+        testCallTable.setName("TestCallTable");
+        panel.add(createTestCallTable("APE's Steps", testCallTable), gbc);
+
+        return panel;
+    }
+
+    private JPanel createTestCallLabel(){
+        JPanel panel = new JPanel(new GridBagLayout());
+        JLabel label = new JLabel();
+        JLabel subText = new JLabel();
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        // Label
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+
+        label.setText("Test Calls");
+        label.setFont(headerFont);
+        label.setForeground(testCallTextColor);
+        panel.add(label, gbc);
+
+        // Sub text
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        subText.setFont(subTextFont);
+        subText.setForeground(Color.BLACK);
+
+        subText.setText("Displays step by step what APE does. Send a test call which will execute a trigger condition.");
+
+        panel.add(subText, gbc);
+
+        return panel;
+    }
+
+    private JPanel createTestCallTable(String header, JTable table) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(1, 1, 1, 1);
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+        JLabel headerLabel = new JLabel(header);
+        headerLabel.setFont(subHeaderFont);
+        panel.add(headerLabel, gbc);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(500, 100));
+        scrollPane.setMinimumSize(new Dimension(500, 100));
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 1; gbc.weighty = 1;
+        panel.add(scrollPane, gbc);
+        panel.setMinimumSize(new Dimension(400, 100));
+        panel.setPreferredSize(new Dimension(400, 100));
+
+        //table.getColumnModel().getColumn(0).setMinWidth(125);
+        //table.getColumnModel().getColumn(1).setMinWidth(420);
+
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
         return panel;
     }
 
     private JPanel createEditorPanel(){
         JPanel panel = new JPanel(new BorderLayout());
 
-        panel.setBackground(new Color(211, 173, 19));
         requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
         responseEditor = Controller.montoyaApi.userInterface().createHttpResponseEditor();
 
