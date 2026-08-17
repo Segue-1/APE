@@ -23,7 +23,7 @@ public class TriggerConditionPanel extends JPanel {
     public TriggerConditionTableModel triggerConditionTableModel;
     public JTable triggerConditionTable;
 
-    public TableModel testCallTableModel;
+    public TestCallTableModel testCallTableModel;
     public JTable testCallTable;
 
 
@@ -33,17 +33,17 @@ public class TriggerConditionPanel extends JPanel {
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 0.25;
 
         add(createConditionBuilderPanel(), gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 0.1;
 
         add(createTestCallPanel(), gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
-        gbc.weightx = 1; gbc.weighty = 2;
+        gbc.weightx = 1; gbc.weighty = 1;
 
         add(createEditorPanel(), gbc);
     }
@@ -189,19 +189,42 @@ public class TriggerConditionPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 0;
+        gbc.weightx = 0.33; gbc.weighty = 0;
 
         panel.add(createTestCallLabel(), gbc);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 1; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+        panel.add(createTestCallButtonPanel(), gbc);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.weightx = 1; gbc.weighty = 0.5;
+        gbc.gridwidth = 2;
 
-        testCallTableModel = new DefaultTableModel(new Object[][]{}, 0);
+        testCallTableModel = new TestCallTableModel();
         testCallTable = new JTable(testCallTableModel);
         testCallTable.setName("TestCallTable");
         panel.add(createTestCallTable("APE's Steps", testCallTable), gbc);
+
+        return panel;
+    }
+
+    private JPanel createTestCallButtonPanel(){
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0; gbc.weighty = 0;
+
+        JButton testButton = new JButton("Test");
+
+        panel.add(testButton, gbc);
 
         return panel;
     }
