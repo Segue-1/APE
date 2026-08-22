@@ -25,13 +25,13 @@ public class Model implements HttpHandler{
         ToolType toolType = requestToBeSent.toolSource().toolType();
 
         if (!enabledTools.contains(toolType) || !triggerConditionIsSet) {
-            return null;
+            return RequestToBeSentAction.continueWith(requestToBeSent);
         }
 
-        //HttpRequest request = processRequest(requestToBeSent);
-        HttpRequest request = requestToBeSent.withAddedHeader("lol", "lmao");
+        HttpRequest followupRequest = processRequest(requestToBeSent);
+        //HttpRequest request = requestToBeSent.withAddedHeader("lol", "lmao");
 
-        return RequestToBeSentAction.continueWith(request);
+        return RequestToBeSentAction.continueWith(followupRequest);
     }
 
     @Override
@@ -44,11 +44,12 @@ public class Model implements HttpHandler{
         this.enabledTools = EnumSet.copyOf(enabledTools);
     }
 
-    private HttpRequest processRequest(HttpRequest httpRequest) {
-        HttpRequest followupRequest = null;
+    private HttpRequest processRequest(HttpRequest request) {
+
+        //  Check response, can we check response here? Nope, probably just need to start in handleHttpResponseReceived instead.
+        // But if that is the case then how do you get the request? Perhaps start within handleHttpRequestToBeSent then call handleHttpResponseReceived?
 
 
-
-        return followupRequest;
+        return request;
     }
 }
