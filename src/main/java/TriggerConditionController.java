@@ -112,7 +112,9 @@ public class TriggerConditionController extends Controller {
             TriggerCondition triggerCondition = new TriggerCondition(correctiveCallSet, isNegated, errorConditions, logicalOperators);
             DebugLog.log(triggerCondition.debugString());
             triggerConditionPanel.triggerConditionTableModel.addRow(triggerCondition);
-            UpdateIsTriggerConditionSet();
+            updateIsTriggerConditionSet();
+            updateTriggerConditions();
+            DebugLog.log("Number of trigger conditions: " + this.model.triggerConditions.size());
             Utils.resizeColumnsToFitContent(triggerConditionPanel.triggerConditionTable);
         });
     }
@@ -417,8 +419,12 @@ public class TriggerConditionController extends Controller {
         this.model = model;
     }
 
-    private void UpdateIsTriggerConditionSet() {
+    private void updateIsTriggerConditionSet() {
         model.triggerConditionIsSet = triggerConditionPanel.triggerConditionTableModel.triggerConditionIsSet;
+    }
+
+    private void updateTriggerConditions() {
+        model.triggerConditions = triggerConditionPanel.triggerConditionTableModel.triggerConditions;
     }
     
     public void setTableDeleteContextMenu(JTable table) {
@@ -432,7 +438,9 @@ public class TriggerConditionController extends Controller {
                 DeletableTableModel model = (DeletableTableModel) table.getModel();
                 DebugLog.log(table.getName() + ": User deleted row " + selectedRow);
                 model.removeRow(selectedRow);
-                UpdateIsTriggerConditionSet();
+                updateIsTriggerConditionSet();
+                updateTriggerConditions();
+                DebugLog.log("Number of trigger conditions: " + this.model.triggerConditions.size());
                 Utils.resizeColumnsToFitContent(table);
             }
         });

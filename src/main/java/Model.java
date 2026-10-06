@@ -6,12 +6,14 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 
 import java.util.EnumSet;
+import java.util.List;
 
 
 public class Model implements HttpHandler{
 
     public EnumSet<ToolType> enabledTools;
     public Boolean triggerConditionIsSet;
+    public List<TriggerCondition> triggerConditions;
 
     public Model () {
         // TODO Maybe just move this to controller
@@ -22,24 +24,34 @@ public class Model implements HttpHandler{
     // HTTP Handler which will intercept all traffic generated in burp
     @Override
     public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent requestToBeSent) {
-
-        // This determines which tool (Repeater, Intruder, etc.) a request came from.
-        ToolType toolType = requestToBeSent.toolSource().toolType();
-
-        if (!enabledTools.contains(toolType) || !triggerConditionIsSet) {
-            DebugLog.log("Model: Not processing request!");
-            return RequestToBeSentAction.continueWith(requestToBeSent);
-        }
-
-        DebugLog.log("Model: Processing request...");
-        processRequest(requestToBeSent);
-
-        return RequestToBeSentAction.drop();
+        return null;
     }
 
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
-        return null;
+        HttpRequest request = responseReceived.initiatingRequest();
+
+        // This determines which tool (Repeater, Intruder, etc.) a request came from.
+        // TODO make sure this check makes sense on the response.
+        ToolType toolType = responseReceived.toolSource().toolType();
+
+        DebugLog.log("Model toolType.toolName(): " + toolType.toString());
+
+        /*
+        TODO: Make this work with extensions in an elegant way. Extensions currently disabled.
+         Since APE itself is an extension, it was triggering the processRequest function multiple
+         times. Need a way to make sure processRequest is not called for requests made by APE.
+         Currently no way to identify which extension sends a request.
+         */
+        if (!enabledTools.contains(toolType) || !triggerConditionIsSet || toolType.toolName().equals("Extension")) {
+            DebugLog.log("Model: Not processing request!");
+            return ResponseReceivedAction.continueWith(responseReceived);
+        }
+
+        DebugLog.log("Model: Processing request...");
+        processRequest(request);
+
+        return ResponseReceivedAction.continueWith(responseReceived);
     }
 
     // Allows controller to update model's enabledTools
@@ -47,14 +59,29 @@ public class Model implements HttpHandler{
         this.enabledTools = EnumSet.copyOf(enabledTools);
     }
 
+
     private void processRequest(HttpRequest request) {
 
-        //  Check response, can we check response here? Nope, probably just need to start in handleHttpResponseReceived instead.
-        // But if that is the case then how do you get the request? Perhaps start within handleHttpRequestToBeSent then call handleHttpResponseReceived?
-
-
-        HttpRequestResponse requestResponse = Controller.montoyaApi.http().sendRequest(request.withAddedHeader("Fuck", "You"));
+        HttpRequestResponse requestResponse = Controller.montoyaApi.http().sendRequest(request);
         HttpResponse response = requestResponse.response();
 
+        DebugLog.log("Model: Test Request \n" + requestResponse.request().toString());
+        DebugLog.log("Model: Test Response \n" + response.toString());
+
+        // Need to process trigger conditions in order
+        CorrectiveCallSet correctiveCallSet = detectTriggerCondition(response);
+
+    }
+
+    // Detects error conditions and returns the corrective call set to be called.
+    private CorrectiveCallSet detectTriggerCondition(HttpResponse response) {
+        CorrectiveCallSet correctiveCallSet = new CorrectiveCallSet();
+
+        for (TriggerCondition triggerCondition : triggerConditions){
+
+            DebugLog.log("Fucking off urgently");
+        }
+
+        return correctiveCallSet;
     }
 }

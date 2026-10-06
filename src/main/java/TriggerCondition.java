@@ -89,6 +89,8 @@ public class TriggerCondition {
     }
 
     // TODO need to write Java to run based off conditionString
+    // TODO what the fuck is this and is any of it necessary? 10/5/2026
+    // Move to model? YES!
     private void buildJavaConditionalStatement() {
         StringBuilder conditionStringBuilder = new StringBuilder();
 
@@ -98,9 +100,6 @@ public class TriggerCondition {
 
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine engine = manager.getEngineByName("Java");
-
-
-
     }
 
     public String debugString() {
