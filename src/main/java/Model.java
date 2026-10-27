@@ -1,12 +1,15 @@
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
 import burp.api.montoya.http.handler.*;
+import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 
 public class Model implements HttpHandler{
@@ -14,6 +17,13 @@ public class Model implements HttpHandler{
     public EnumSet<ToolType> enabledTools;
     public Boolean triggerConditionIsSet;
     public List<TriggerCondition> triggerConditions;
+
+    private ArrayList<ErrorCondition> errorConditionsBuffer;
+    private ArrayList<Boolean> negationBuffer;
+    private ArrayList<String> logicalOperatorsBuffer;
+
+
+    private HttpResponse response;
 
     public Model () {
         // TODO Maybe just move this to controller
@@ -30,6 +40,8 @@ public class Model implements HttpHandler{
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
         HttpRequest request = responseReceived.initiatingRequest();
+        response = responseReceived;
+
 
         // This determines which tool (Repeater, Intruder, etc.) a request came from.
         // TODO make sure this check makes sense on the response.
@@ -39,8 +51,8 @@ public class Model implements HttpHandler{
 
         /*
         TODO: Make this work with extensions in an elegant way. Extensions currently disabled.
-         Since APE itself is an extension, it was triggering the processRequest function multiple
-         times. Need a way to make sure processRequest is not called for requests made by APE.
+         Since APE itself is an extension, it was triggering the processResponse function multiple
+         times. Need a way to make sure processResponse is not called for requests made by APE.
          Currently no way to identify which extension sends a request.
          */
         if (!enabledTools.contains(toolType) || !triggerConditionIsSet || toolType.toolName().equals("Extension")) {
@@ -49,7 +61,9 @@ public class Model implements HttpHandler{
         }
 
         DebugLog.log("Model: Processing request...");
-        processRequest(request);
+        if (detectErrorCondition()){
+            // Make corrective calls
+        }
 
         return ResponseReceivedAction.continueWith(responseReceived);
     }
@@ -60,28 +74,155 @@ public class Model implements HttpHandler{
     }
 
 
-    private void processRequest(HttpRequest request) {
-
-        HttpRequestResponse requestResponse = Controller.montoyaApi.http().sendRequest(request);
-        HttpResponse response = requestResponse.response();
-
-        DebugLog.log("Model: Test Request \n" + requestResponse.request().toString());
-        DebugLog.log("Model: Test Response \n" + response.toString());
-
-        // Need to process trigger conditions in order
-        CorrectiveCallSet correctiveCallSet = detectTriggerCondition(response);
-
+    // Detects error conditions and returns the corrective call set to be called.
+    private Boolean detectErrorCondition() {
+        for (TriggerCondition triggerCondition : triggerConditions){
+            // If only 1 error condition, evaluate the single error condition
+            if (triggerCondition.errorConditions.size() == 1) {
+                if (triggerCondition.isNegated.get(0)) {
+                    return !evaluateErrorCondidition(triggerCondition.errorConditions.get(0), response);
+                }
+                return evaluateErrorCondidition(triggerCondition.errorConditions.get(0), response);
+            }
+            // If many error conditions, we need to evaluate the error conditions and logical operators which
+            // belong to the trigger condition
+            else{
+                Boolean result = false; // ASSUMED FALSE BUT IDK IF THIS IS CORRECT
+                initBuffers(triggerCondition);
+                return evaluateErrorConditions(result);
+            }
+        }
+        return false; // Make sure this is correct
     }
 
-    // Detects error conditions and returns the corrective call set to be called.
-    private CorrectiveCallSet detectTriggerCondition(HttpResponse response) {
-        CorrectiveCallSet correctiveCallSet = new CorrectiveCallSet();
+    private void initBuffers(TriggerCondition triggerCondition) {
+        errorConditionsBuffer = new ArrayList<>(triggerCondition.errorConditions);
+        negationBuffer = new ArrayList<>(triggerCondition.isNegated);
+        logicalOperatorsBuffer = new ArrayList<>(triggerCondition.logicalOperator);
+    }
 
-        for (TriggerCondition triggerCondition : triggerConditions){
+    private void popBuffers() {
+        errorConditionsBuffer.removeFirst();
+        negationBuffer.removeFirst();
+        logicalOperatorsBuffer.removeFirst();
+    }
 
-            DebugLog.log("Fucking off urgently");
+    // TODO this was already merged into one method.... cleanup this
+    private Boolean evaluateErrorCondidition(ErrorCondition errorCondition, HttpResponse response) {
+        switch (errorCondition.category) {
+            case "Status Code":
+                return (String.valueOf(response.statusCode()).equals(errorCondition.value));
+            case "Body":
+                return (response.body().toString().contains(errorCondition.value));
+            case "Header":
+                Boolean result = false;
+                for (HttpHeader header : response.headers()) {
+                    if (header.value().contains(errorCondition.value)) result = true;
+                }
+                return result;
+            default:
+                return false;
         }
+    }
 
-        return correctiveCallSet;
+
+    private Boolean evaluateErrorConditions(Boolean result) {
+        // what is base case? when buffer is empty
+        if (errorConditionsBuffer.isEmpty()) {
+            return result;
+        }
+        else if (errorConditionsBuffer.size() == 1) {
+            switch (errorConditionsBuffer.getFirst().category) {
+                case "Status Code":
+                    result = (String.valueOf(response.statusCode()).equals(errorConditionsBuffer.getFirst().value));
+                    return result;
+                case "Body":
+                    result = (response.body().toString().contains(errorConditionsBuffer.getFirst().value));
+                    return result;
+                case "Header":
+                    for (HttpHeader header : response.headers()) {
+                        if (header.value().contains(errorConditionsBuffer.getFirst().value)) result = true;
+                    }
+                    return result;
+            }
+        }
+        else {
+            switch (errorConditionsBuffer.getFirst().category) {
+                case "Status Code":
+                    result = (String.valueOf(response.statusCode()).equals(errorConditionsBuffer.getFirst().value));
+                    result = evaluateNegation(result);
+
+                    if (Objects.equals(logicalOperatorsBuffer.getFirst(), "AND")){
+                        logicalOperatorsBuffer.removeFirst();
+                        errorConditionsBuffer.removeFirst();
+                        return result && evaluateErrorConditions(result);
+                    }
+                    else if (Objects.equals(logicalOperatorsBuffer.getFirst(), "OR")){
+                        logicalOperatorsBuffer.removeFirst();
+                        errorConditionsBuffer.removeFirst();
+                        return result || evaluateErrorConditions(result);
+                    }
+                    else {
+                        return evaluateErrorConditions(result);
+                    }
+
+                case "Body":
+                    result = (response.body().toString().contains(errorConditionsBuffer.getFirst().value));
+                    result = evaluateNegation(result);
+
+                    if (Objects.equals(logicalOperatorsBuffer.getFirst(), "AND")){
+                        logicalOperatorsBuffer.removeFirst();
+                        errorConditionsBuffer.removeFirst();
+                        return result && evaluateErrorConditions(result);
+                    }
+                    else if (Objects.equals(logicalOperatorsBuffer.getFirst(), "OR")){
+                        logicalOperatorsBuffer.removeFirst();
+                        errorConditionsBuffer.removeFirst();
+                        return result || evaluateErrorConditions(result);
+                    }
+                    else {
+                        return evaluateErrorConditions(result);
+                    }
+
+                case "Header":
+                    for (HttpHeader header : response.headers()) {
+                        if (header.value().contains(errorConditionsBuffer.getFirst().value)) result = true;
+                    }
+
+                    result = evaluateNegation(result);
+
+                    if (Objects.equals(logicalOperatorsBuffer.getFirst(), "AND")){
+                        logicalOperatorsBuffer.removeFirst();
+                        errorConditionsBuffer.removeFirst();
+                        return result && evaluateErrorConditions(result);
+                    }
+                    else if (Objects.equals(logicalOperatorsBuffer.getFirst(), "OR")){
+                        logicalOperatorsBuffer.removeFirst();
+                        errorConditionsBuffer.removeFirst();
+                        return result || evaluateErrorConditions(result);
+                    }
+                    else {
+                        return evaluateErrorConditions(result);
+                    }
+            }
+        }
+        return result;
+    }
+
+    // don't know what to do with this yet, placing logic directly in method above for now
+    private Boolean evaluateLogicalOperator() {
+        return true;
+    }
+
+    private Boolean evaluateNegation(Boolean result) {
+        Boolean negation = negationBuffer.getFirst();
+        negationBuffer.removeFirst();
+
+        if (negation){
+            return !result;
+        }
+        else {
+            return result;
+        }
     }
 }

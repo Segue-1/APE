@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import javax.script.*;
 
 public class TriggerCondition {
 
@@ -48,8 +47,6 @@ public class TriggerCondition {
         conditionString = "";
 
         // How about a validation method instead of putting this here?
-
-
         conditionStringBuilder.append(correctiveCallSet.name + " will be called if ");
 
         try{
@@ -88,19 +85,6 @@ public class TriggerCondition {
         DebugLog.log("conditionString: " +  conditionString);
     }
 
-    // TODO need to write Java to run based off conditionString
-    // TODO what the fuck is this and is any of it necessary? 10/5/2026
-    // Move to model? YES!
-    private void buildJavaConditionalStatement() {
-        StringBuilder conditionStringBuilder = new StringBuilder();
-
-        boolean isTrue = true;
-
-        conditionStringBuilder.append("if (isTrue) { DebugLog.log(\"TEST SUCCESSFUL!!!\")");
-
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("Java");
-    }
 
     public String debugString() {
         return "TriggerCondition{" +
