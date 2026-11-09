@@ -8,6 +8,8 @@ public class ExtractionPanel extends JPanel {
     public JTextField[] inputFields;
     public JTable table;
     public ExtractionTableModel tableModel;
+    public ButtonGroup buttonGroup;
+    public JRadioButton[] radioButtons;
     public JButton fromSelectButton;
     public JButton addButton;
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
@@ -19,7 +21,7 @@ public class ExtractionPanel extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
 
         labels = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
-                "URL encode/decode"};
+                "URL encode/decode", "Extract only from: "};
 
         dropDown = new JComboBox<>();
         inputFields = new JTextField[labels.length - 1];
@@ -29,7 +31,7 @@ public class ExtractionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel extractFields = createInputTextFields("Extract", labels, dropDown,
+        JPanel extractFields = createInputTextFields("Extract", labels, dropDown, createRadionButtonPanel(),
                 inputFields, fromSelectButton, addButton);
 
         add(extractFields, gbc);
@@ -39,6 +41,7 @@ public class ExtractionPanel extends JPanel {
 
         tableModel = new ExtractionTableModel();
         table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setName("Extract Table");
 
         JPanel tablePanel = createSmallTable("Extract List", table);
@@ -68,7 +71,7 @@ public class ExtractionPanel extends JPanel {
         return panel;
     }
 
-    public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox dropDown,
+    public JPanel createInputTextFields(String header, String[] fieldNames, JComboBox dropDown, JPanel radioButtonPanel,
                                         JTextField[] jTextFields, JButton fromSelect, JButton addButton){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -94,24 +97,55 @@ public class ExtractionPanel extends JPanel {
             gbc.gridx = 0; gbc.gridy = i + 1;
             panel.add(new JLabel(fieldNames[i]), gbc);
 
-            if (i < fieldNames.length - 1) {
+            if (i < fieldNames.length - 2) {
                 gbc.gridx = 1;
                 panel.add(jTextFields[i], gbc);
             }
         }
 
-        gbc.gridx = 1; gbc.gridy = fieldNames.length;
+        gbc.gridx = 1; gbc.gridy = fieldNames.length - 1;
         panel.add(dropDown, gbc);
 
-        gbc.gridx = 0; gbc.gridy = fieldNames.length + 1;
+        gbc.gridx = 1; gbc.gridy = fieldNames.length;
+        panel.add(radioButtonPanel, gbc);
+
+        gbc.gridx = 0; gbc.gridy = fieldNames.length + 2;
         gbc.weightx = 0; gbc.weighty = 1;
         fromSelect.setText("From Selection");
         panel.add(fromSelect, gbc);
 
-        gbc.gridx = 1; gbc.gridy = fieldNames.length + 1;
+        gbc.gridx = 1; gbc.gridy = fieldNames.length + 2;
         gbc.weightx = 0;
         addButton.setText("Add");
         panel.add(addButton, gbc);
+
+        return panel;
+    }
+
+    private JPanel createRadionButtonPanel(){
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        radioButtons = new JRadioButton[3];
+        radioButtons[0] = new JRadioButton("Response", true);
+        radioButtons[1] = new JRadioButton("Request");
+        radioButtons[2] = new JRadioButton("Both");
+        buttonGroup = new ButtonGroup();
+        buttonGroup.add(radioButtons[0]);
+        buttonGroup.add(radioButtons[1]);
+        buttonGroup.add(radioButtons[2]);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 1;
+
+        panel.add(radioButtons[0], gbc);
+
+        gbc.gridx = 1;
+        panel.add(radioButtons[1], gbc);
+
+        gbc.gridx = 2;
+        panel.add(radioButtons[2], gbc);
 
         return panel;
     }

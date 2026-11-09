@@ -3,8 +3,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExtractionTableModel extends AbstractTableModel implements DeletableTableModel {
-    public List<ExtractText> extractTextList = new ArrayList<>();
-    private String[] columns = {"Name", "Id"};
+    public List<ExtractText> extractTextList;
+    private String[] columns;
+
+    ExtractionTableModel() {
+        extractTextList =  new ArrayList<>();
+        columns = new String[]{"Name", "Id"};
+    }
 
     @Override
     public int getRowCount() {
@@ -52,7 +57,16 @@ public class ExtractionTableModel extends AbstractTableModel implements Deletabl
         };
     }
 
+    public void loadExtractList(List<ExtractText> extractList) {
+        this.extractTextList = extractList;
+        fireTableDataChanged();
+    }
+
     public ExtractText getExtractText(int rowIndex) {
         return extractTextList.get(rowIndex);
+    }
+
+    public void refresh() {
+        fireTableDataChanged();
     }
 }

@@ -49,27 +49,27 @@ public class CorrectiveCallsController {
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
 
+    private ReplacementController replacementController;
+    private ExtractionController extractionController;
+
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
         setAttributes(correctiveCallsPanel);
 
         setRadioButtons();
         setTableDeleteContextMenu(callSequenceTable);
-        //setTableDeleteContextMenu(extractionTable);
-        //setTableDeleteContextMenu(replacementTable);
+        setTableDeleteContextMenu(extractionTable);
+        setTableDeleteContextMenu(replacementTable);
         setCallSetsButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
         setSelectedCorrectiveCallCallListener();
         initCallSequenceTable();
 
-        new ReplacementController(correctiveCallsPanel.replacementPanel,
-                requestEditor, extractionTableModel);
+        replacementController = new ReplacementController(correctiveCallsPanel.replacementPanel,
+                requestEditor, extractionTableModel, callSequenceTableModel, callSequenceTable);
 
-        //setExtractAddButtonListener();
-        //setReplaceDropDownListener();
-        //setReplaceAddButtonListener();
-        // Split these into two. setExtractFromSelectButton and setReplaceFromSelectButton
-        //setFromSelectionListener(extractFromSelect, extractInputFields, "response");
-        //setFromSelectionListener(replaceFromSelect, replaceInputFields, "request");
+        extractionController = new ExtractionController(correctiveCallsPanel.extractionPanel,
+                requestEditor, responseEditor, callSequenceTableModel, callSequenceTable);
+
     }
 
     private void initCallSequenceTable() {
@@ -167,6 +167,7 @@ public class CorrectiveCallsController {
         removeSetBotton.addActionListener(removeBottonListener);
     }
 
+    // TODO rename: poor naming between the following two methods
     private void setSelectedCorrectiveCallsSetListener() {
         correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -191,6 +192,9 @@ public class CorrectiveCallsController {
                     requestEditor.setRequest(reqResp.request());
                     responseEditor.setResponse(reqResp.response());
                     DebugLog.log("Corrective call selected. Loaded call at row " + selectedRow + " to http editors.");
+                    extractionTableModel.loadExtractList(callSequenceTableModel.getCorrectiveCall(selectedRow).extractList);
+                    replacementTableModel.loadReplaceList(callSequenceTableModel.getCorrectiveCall(selectedRow).replaceList);
+                    replacementController.refreshDropDown();
                 }
             }
         });
@@ -448,14 +452,14 @@ public class CorrectiveCallsController {
         extractInputFields = correctiveCallsPanel.extractInputFields;
         replaceInputFields = correctiveCallsPanel.replaceInputFields;
 
-        extractionTableModel = correctiveCallsPanel.extractionTableModel;
-        replacementTableModel = correctiveCallsPanel.replacementTableModel;
+        extractionTableModel = correctiveCallsPanel.extractionPanel.tableModel;
+        replacementTableModel = correctiveCallsPanel.replacementPanel.tableModel;
 
         extractDropDown = correctiveCallsPanel.extractDropDown;
         replaceDropDown = correctiveCallsPanel.replaceDropDown;
 
-        extractionTable = correctiveCallsPanel.extractionTable;
-        replacementTable = correctiveCallsPanel.replacementTable;
+        extractionTable = correctiveCallsPanel.extractionPanel.table;
+        replacementTable = correctiveCallsPanel.replacementPanel.table;
 
         requestEditor = correctiveCallsPanel.requestEditor;
         responseEditor = correctiveCallsPanel.responseEditor;

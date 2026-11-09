@@ -6,6 +6,9 @@ public class ExtractText {
     public String stopString;
     public String selectedText;
     public String urlEncodeDecode;
+    public boolean extractFromResponse;
+    public boolean extractFromRequest;
+    public boolean extractFromBoth;
 
 
     public void setId () {
@@ -27,6 +30,9 @@ public class ExtractText {
                 ", stopString='" + stopString + '\'' +
                 ", selectedText='" + selectedText + '\'' +
                 ", urlEncodeDecode='" + urlEncodeDecode + '\'' +
+                ", extractFromResponse=" + extractFromResponse +
+                ", extractFromRequest=" + extractFromRequest +
+                ", extractFromBoth=" + extractFromBoth +
                 '}';
     }
 }

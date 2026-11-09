@@ -5,6 +5,8 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Array;
+import java.util.List;
 
 public class ReplacementController {
 
@@ -16,9 +18,12 @@ public class ReplacementController {
     public JButton fromSelectButton;
     public JButton addButton;
     public HttpRequestEditor requestEditor;
+    private CallSequenceTableModel callSequenceTableModel;
+    private JTable callSequenceTable;
     
     ReplacementController (ReplacementPanel replacementPanel, HttpRequestEditor httpRequestEditor,
-                           ExtractionTableModel extractionTableModel) {
+                           ExtractionTableModel extractionTableModel, CallSequenceTableModel callSequenceTableModel,
+                           JTable callSequenceTable) {
         this.dropDown = replacementPanel.dropDown;
         this.inputFields = replacementPanel.inputFields;
         this.table = replacementPanel.table;
@@ -27,6 +32,8 @@ public class ReplacementController {
         this.fromSelectButton = replacementPanel.fromSelectButton;
         this.addButton = replacementPanel.addButton;
         this.requestEditor = httpRequestEditor;
+        this.callSequenceTableModel = callSequenceTableModel;
+        this.callSequenceTable = callSequenceTable;
 
         setFromSelectionListener();
         setAddButtonListener();
@@ -69,7 +76,7 @@ public class ReplacementController {
             String startString = Utils.getStartString(startIndex, messageString);
             inputFields[1].setText(startString);
 
-            DebugLog.log("'From Selection' button clicked in corrective calls panel's Replace text section. " +
+            DebugLog.log("'From Selection' button clicked in Replace text section. " +
                     "The following input fields were set.");
             DebugLog.log("Selected Text: " + selectedContents);
             DebugLog.log("Stop String: " + stopString);
@@ -107,25 +114,7 @@ public class ReplacementController {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
                 DebugLog.log("Pick from Extraction dropdown clicked in Corrective Calls" );
-                ExtractText tempExtractText;
-
-                if (dropDown.getSelectedIndex() != -1) {
-                    tempExtractText = dropDown.getItemAt(dropDown.getSelectedIndex());
-                }
-                else {
-                    tempExtractText = null;
-                }
-
-                dropDown.removeAllItems();
-
-                for (int row = 0; row < extractionTableModel.getRowCount(); row++) {
-                    ExtractText extractText = extractionTableModel.getExtractText(row);
-                    dropDown.addItem(extractText);
-
-                    if (extractText.equals(tempExtractText)) {
-                        dropDown.setSelectedIndex(row);
-                    }
-                }
+                refreshDropDown();
             }
 
             @Override
@@ -138,5 +127,32 @@ public class ReplacementController {
 
             }
         });
+    }
+
+    // TODO Doesn't seem to work
+    public void refreshDropDown() {
+        ExtractText tempExtractText;
+
+        if (dropDown.getSelectedIndex() != -1) {
+            tempExtractText = dropDown.getItemAt(dropDown.getSelectedIndex());
+        }
+        else {
+            tempExtractText = null;
+        }
+
+        dropDown.removeAllItems();
+
+        if (callSequenceTable.getSelectedRow() > 0) {
+            for (int i = 0; i < callSequenceTable.getSelectedRow() - 1; i++) {
+                List<ExtractText> extractTextList = callSequenceTableModel.correctiveCallList.get(i).extractList;
+                for (int j = 0; j < extractTextList.size(); j++) {
+                    dropDown.addItem(extractTextList.get(j));
+
+                    if (extractTextList.get(j).equals(tempExtractText)) {
+                        dropDown.setSelectedIndex(j);
+                    }
+                }
+            }
+        }
     }
 }

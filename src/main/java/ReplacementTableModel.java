@@ -63,4 +63,9 @@ public class ReplacementTableModel extends AbstractTableModel implements Deletab
 
         fireTableCellUpdated(rowIndex, columnIndex);
     }
+
+    public void loadReplaceList(List<ReplaceText> replaceList) {
+        this.replaceTextList = replaceList;
+        fireTableDataChanged();
+    }
 }

@@ -20,3 +20,15 @@ jar {
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+// Standalone harness for the trigger condition parser in Model (src/test/java/ConditionLogicTest.java).
+// It is a plain main() with its own assertions, so no test framework is needed on the classpath.
+// Run with: ./gradlew conditionLogicTest
+tasks.register('conditionLogicTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the trigger condition parser logic harness'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ConditionLogicTest'
+}
+
+// No JUnit on the classpath. The harness above is the entry point instead.
+test.enabled = false

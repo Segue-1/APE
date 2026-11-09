@@ -12,15 +12,16 @@ public class CorrectiveCall {
         this.requestResponse = requestResponse;
     }
 
-    CorrectiveCall(HttpRequestResponse requestResponse, List<ReplaceText> replaceList) {
-        this.requestResponse = requestResponse;
-        this.replaceList = replaceList;
-    }
 
-    CorrectiveCall(HttpRequestResponse requestResponse, List<ReplaceText> replaceList,  List<ExtractText> extractList) {
-        this.requestResponse = requestResponse;
-        this.replaceList = replaceList;
-        this.extractList = extractList;
+    public void sendCorrectiveCall() {
+        if (!extractList.isEmpty()){
+
+        }
+        else if (!replaceList.isEmpty()){
+
+        }
+
+        Controller.montoyaApi.http().sendRequest(requestResponse.request());
     }
 
     HttpRequestResponse getRequestResponse() {

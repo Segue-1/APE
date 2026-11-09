@@ -49,14 +49,26 @@ public class DebugLog {
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
             String logMessage = "[" + timestamp + "] " + message;
 
-            api.logging().logToOutput(logMessage);
+            // Outside of Burp (e.g. the logic harness in src/test/java) there is no Montoya API to
+            // log to, so fall back to stdout.
+            if (api != null) {
+                api.logging().logToOutput(logMessage);
+            }
+            else {
+                System.out.println(logMessage);
+            }
 
             if (logWriter != null) {
                 try {
                     logWriter.write(logMessage + System.lineSeparator());
                 }
                 catch (IOException e) {
-                    api.logging().logToError("Log write failed: " + e.getMessage());
+                    if (api != null) {
+                        api.logging().logToError("Log write failed: " + e.getMessage());
+                    }
+                    else {
+                        System.err.println("Log write failed: " + e.getMessage());
+                    }
                 }
             }
         }

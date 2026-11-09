@@ -60,4 +60,8 @@ public class CallSequenceTableModel extends AbstractTableModel implements Deleta
     public boolean isCellEditable(int row, int column) {
         return false;
     }
+
+    public CorrectiveCall getCorrectiveCall(int row) {
+        return correctiveCallList.get(row);
+    }
 }

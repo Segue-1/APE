@@ -39,6 +39,7 @@ public class ReplacementPanel extends JPanel {
 
         tableModel = new ReplacementTableModel();
         table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setName("Replacement Table");
 
         JPanel tablePanel = createSmallTable("Replace List", table);

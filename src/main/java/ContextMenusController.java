@@ -73,6 +73,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                               correctiveCallSetTableModel.correctiveCallSetList.get(getSelectedRow()).toString());
 
                 callSequenceTableModel.fireTableDataChanged();
+                callSequenceTable.setRowSelectionInterval(callSequenceTableModel.correctiveCallList.size() - 1, callSequenceTableModel.correctiveCallList.size() - 1);
                 Utils.resizeColumnsToFitContent(callSequenceTable);
             }
         });

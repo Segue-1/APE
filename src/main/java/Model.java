@@ -5,32 +5,33 @@ import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
-import org.xml.sax.ErrorHandler;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 
 
 public class Model implements HttpHandler{
+
+    // Logical operators as they appear in the UI dropdown (TriggerConditionController).
+    public static final String AND = "AND";
+    public static final String OR = "OR";
 
     public EnumSet<ToolType> enabledTools;
     public Boolean triggerConditionIsSet;
     public List<TriggerCondition> triggerConditions;
 
-    private List<Boolean> conditions;
-    public ArrayList<ErrorCondition> errorConditionsBuffer;
-    public ArrayList<Boolean> negationBuffer;
-    public ArrayList<String> logicalOperatorsBuffer;
-    
-    private TriggerCondition triggerCondition;
-    private HttpResponse response;
+    // The trigger condition that most recently evaluated to true. Set by detectErrorCondition so the
+    // caller knows which corrective call set to run.
+    TriggerCondition matchedTriggerCondition;
 
     public Model () {
         // TODO Maybe just move this to controller
-        Controller.montoyaApi.extension().setName("APE");
-        Controller.montoyaApi.http().registerHttpHandler(this);
+        // Guarded so Model can be built outside of Burp (the logic harness in src/test/java does this).
+        if (Controller.montoyaApi != null) {
+            Controller.montoyaApi.extension().setName("APE");
+            Controller.montoyaApi.http().registerHttpHandler(this);
+        }
     }
 
     // HTTP Handler which will intercept all traffic generated in burp
@@ -41,8 +42,6 @@ public class Model implements HttpHandler{
 
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
-        response = responseReceived;
-
 
         // This determines which tool (Repeater, Intruder, etc.) a request came from.
         // TODO make sure this check makes sense on the response.
@@ -62,10 +61,9 @@ public class Model implements HttpHandler{
         }
 
         DebugLog.log("Model: Processing response...");
-        
-        if (detectErrorCondition()){
-            // Make corrective calls
-        }
+
+        detectErrorCondition(responseReceived);
+
 
         return ResponseReceivedAction.continueWith(responseReceived);
     }
@@ -76,69 +74,154 @@ public class Model implements HttpHandler{
     }
 
 
+
     // Detects error conditions and returns the corrective call set to be called.
-    private Boolean detectErrorCondition() {
-        for (TriggerCondition triggerCondition : triggerConditions){
-            // If only 1 error condition, evaluate the single error condition
-            if (triggerCondition.errorConditions.size() == 1) {
-                if (triggerCondition.isNegated.get(0)) {
-                    return !evaluateErrorCondidition(triggerCondition.errorConditions.get(0), response);
+    // A response triggers APE if ANY of the configured trigger conditions evaluates to true.
+    void detectErrorCondition(HttpResponse response) {
+
+        if (triggerConditions == null || triggerConditions.isEmpty()) {
+            DebugLog.log("detectErrorCondition: no trigger conditions configured -> false");
+            return;
+        }
+
+
+
+        for (TriggerCondition triggerCondition : triggerConditions) {
+            DebugLog.log("detectErrorCondition: evaluating " + triggerCondition.name);
+            if (evaluateTriggerCondition(triggerCondition, response)) {
+                // Remember which one fired so the corrective call step knows what to run.
+
+                DebugLog.log("detectErrorCondition: " + triggerCondition.name + " MATCHED -> true");
+
+                // Make corrective calls
+                for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList){
+                    Controller.montoyaApi.http().sendRequest(correctiveCall.requestResponse.request());
                 }
-                return evaluateErrorCondidition(triggerCondition.errorConditions.get(0), response);
-            }
-            // If many error conditions, we need to evaluate the error conditions and logical operators which
-            // belong to the trigger condition
-            else{
-
-                for (int i = 0; i < triggerCondition.errorConditions.size(); i++) {
-                    boolean result = evaluateErrorCondidition(triggerCondition.errorConditions.get(i), response);
-                    result = evaluateNegation(result, i);
-                    conditions.add(result);
-                }
-
-                initBuffers();
-                evalAND();
-                evalOR();
-
-                /*
-                Boolean result = false; // ASSUMED FALSE BUT IDK IF THIS IS CORRECT
-                this.triggerCondition = triggerCondition; // This is a bit disorganized... sets the class attribute to the iterated obj
-                return evaluateErrorConditions(result);
-                */
             }
         }
-        return false; // Make sure this is correct
+        DebugLog.log("detectErrorCondition: no trigger condition matched -> false");
     }
 
-    private void evalAND() {
-        for (int i = 0; i < logicalOperatorsBuffer.size(); i++ ) {
-            if (logicalOperatorsBuffer.get(i).equals("AND")) {
-                // Get boolean before and after index
-                Boolean result = conditions.get(i) && conditions.get(i+1);
-                // need to collapse / erase / pop the AND into a single boolean now
-                logicalOperatorsBuffer.remove(i);
-                conditions.remove(i);
-                conditions.remove(i+1);
-                conditions.addFirst(result);
-            }
+    /*
+    Evaluates one trigger condition in three steps, which is the only logic the UI can express:
+      1. evaluate each error condition on its own and apply its negation checkbox
+      2. collapse every AND (AND binds tighter than OR)
+      3. collapse every remaining OR
+    The working lists are local, so nothing carries over between responses or between trigger conditions.
+     */
+    Boolean evaluateTriggerCondition(TriggerCondition triggerCondition, HttpResponse response) {
+        DebugLog.log("evaluateTriggerCondition: " + triggerCondition.name
+                + " [" + triggerCondition.conditionString + "]");
+
+        List<Boolean> conditions = new ArrayList<>();
+        List<String> operators = new ArrayList<>();
+
+        // Step 1: each error condition on its own, negation applied immediately.
+        for (int i = 0; i < triggerCondition.errorConditions.size(); i++) {
+            ErrorCondition errorCondition = triggerCondition.errorConditions.get(i);
+
+            Boolean raw = evaluateErrorCondidition(errorCondition, response);
+            Boolean isNegated = triggerCondition.isNegated.get(i);
+            Boolean result = evaluateNegation(raw, isNegated);
+
+            DebugLog.log("  condition[" + i + "] " + errorCondition.name
+                    + " (" + errorCondition.category + " = '" + errorCondition.value + "')"
+                    + " raw=" + raw + " negated=" + isNegated + " -> " + result);
+
+            conditions.add(result);
         }
-    }
 
-    private void evalOR() {
-        for (int i = 0; i < logicalOperatorsBuffer.size(); i++ ) {
-            if (logicalOperatorsBuffer.get(i).equals("OR")) {
-                // Get boolean before and after index
-                Boolean result = conditions.get(i) || conditions.get(i+1);
-                // need to collapse / erase / pop the AND into a single boolean now
-                logicalOperatorsBuffer.remove(i);
-                conditions.remove(i);
-                conditions.remove(i+1);
-                conditions.addFirst(result);
-            }
+        // TriggerCondition leaves logicalOperator null when there is only one error condition.
+        if (triggerCondition.logicalOperator != null) {
+            operators.addAll(triggerCondition.logicalOperator);
         }
+
+        DebugLog.log("  parsed conditions=" + conditions + " operators=" + operators);
+
+        // One operator joins each adjacent pair of error conditions, so there is always one fewer
+        // operator than condition. Anything else means the UI handed us something malformed.
+        if (operators.size() != conditions.size() - 1) {
+            DebugLog.log("  [Error] malformed trigger condition: " + conditions.size() + " condition(s) with "
+                    + operators.size() + " operator(s), expected " + (conditions.size() - 1) + " -> false");
+            return false;
+        }
+
+        // Step 2 then step 3.
+        evalAND(conditions, operators);
+        evalOR(conditions, operators);
+
+        if (conditions.size() != 1 || !operators.isEmpty()) {
+            DebugLog.log("  [Error] did not collapse to a single value, conditions=" + conditions
+                    + " operators=" + operators + " -> false");
+            return false;
+        }
+
+        DebugLog.log("  => " + triggerCondition.name + " evaluates to " + conditions.getFirst());
+        return conditions.getFirst();
     }
 
-    // TODO this was already merged into one method.... cleanup this
+    /*
+    Collapses every AND in place, left to right. operators.get(i) joins conditions.get(i) and
+    conditions.get(i+1), so folding an AND replaces that pair with a single value at index i and
+    drops the operator. Mutates both lists.
+     */
+    void evalAND(List<Boolean> conditions, List<String> operators) {
+        DebugLog.log("  evalAND  in: conditions=" + conditions + " operators=" + operators);
+
+        int i = 0;
+        while (i < operators.size()) {
+            if (!operators.get(i).equals(AND)) {
+                i++; // leave ORs alone, evalOR handles them
+                continue;
+            }
+
+            Boolean left = conditions.get(i);
+            Boolean right = conditions.get(i + 1);
+            Boolean result = left && right;
+
+            DebugLog.log("    AND at operator[" + i + "]: " + left + " AND " + right + " = " + result);
+
+            operators.remove(i);       // operator is consumed
+            conditions.remove(i + 1);  // right operand folds into the left one
+            conditions.set(i, result); // which now holds the result
+
+            // i is deliberately not advanced. operators.get(i) is now whatever followed the pair we
+            // just folded, e.g. the second AND of "A AND B AND C", which must fold into this result.
+            DebugLog.log("    collapsed to: conditions=" + conditions + " operators=" + operators);
+        }
+
+        DebugLog.log("  evalAND out: conditions=" + conditions + " operators=" + operators);
+    }
+
+    // Same collapse as evalAND. Runs second, so by now every remaining operator should be an OR.
+    void evalOR(List<Boolean> conditions, List<String> operators) {
+        DebugLog.log("  evalOR   in: conditions=" + conditions + " operators=" + operators);
+
+        int i = 0;
+        while (i < operators.size()) {
+            if (!operators.get(i).equals(OR)) {
+                DebugLog.log("    [Error] unrecognized operator[" + i + "] '" + operators.get(i)
+                        + "', skipping it");
+                i++;
+                continue;
+            }
+
+            Boolean left = conditions.get(i);
+            Boolean right = conditions.get(i + 1);
+            Boolean result = left || right;
+
+            DebugLog.log("    OR at operator[" + i + "]: " + left + " OR " + right + " = " + result);
+
+            operators.remove(i);
+            conditions.remove(i + 1);
+            conditions.set(i, result);
+
+            DebugLog.log("    collapsed to: conditions=" + conditions + " operators=" + operators);
+        }
+
+        DebugLog.log("  evalOR  out: conditions=" + conditions + " operators=" + operators);
+    }
+
     private Boolean evaluateErrorCondidition(ErrorCondition errorCondition, HttpResponse response) {
         boolean result = false; //Should use only primitive boolean not obj Boolean because there is no use for it and it is more expensive
 
@@ -155,116 +238,16 @@ public class Model implements HttpHandler{
                 }
                 return result;
             default:
+                DebugLog.log("  [Error] unknown error condition category '" + errorCondition.category + "'");
                 return false;
         }
     }
 
 
-
-    /*
-    private Boolean evaluateErrorConditions(Boolean result) {
-        // what is base case? when buffer is empty
-        if (triggerCondition.errorConditionsBuffer.isEmpty()) {
-            return result;
-        }
-        else if (triggerCondition.errorConditionsBuffer.size() == 1) {
-            switch (triggerCondition.errorConditionsBuffer.getFirst().category) {
-                case "Status Code":
-                    result = (String.valueOf(response.statusCode()).equals(triggerCondition.errorConditionsBuffer.getFirst().value));
-                    triggerCondition.errorConditionsBuffer.removeFirst();
-                    return result;
-                case "Body":
-                    result = (response.body().toString().contains(triggerCondition.errorConditionsBuffer.getFirst().value));
-                    triggerCondition.errorConditionsBuffer.removeFirst();
-                    return result;
-                case "Header":
-                    for (HttpHeader header : response.headers()) {
-                        if (header.value().contains(triggerCondition.errorConditionsBuffer.getFirst().value)) result = true;
-                    }
-                    triggerCondition.errorConditionsBuffer.removeFirst();
-                    return result;
-            }
-        }
-        else {
-            switch (triggerCondition.errorConditionsBuffer.getFirst().category) {
-                case "Status Code":
-                    result = (String.valueOf(response.statusCode()).equals(triggerCondition.errorConditionsBuffer.getFirst().value));
-                    result = evaluateNegation(result);
-
-                    if (Objects.equals(errorConditionsBuffer.getFirst(), "AND")){
-                        errorConditionsBuffer.removeFirst();
-                        triggerCondition.errorConditionsBuffer.removeFirst();
-                        return result && evaluateErrorConditions(result);
-                    }
-                    else if (Objects.equals(errorConditionsBuffer.getFirst(), "OR")){
-                        errorConditionsBuffer.removeFirst();
-                        triggerCondition.errorConditionsBuffer.removeFirst();
-                        return result || evaluateErrorConditions(result);
-                    }
-                    else {
-                        return evaluateErrorConditions(result);
-                    }
-
-                case "Body":
-                    result = (response.body().toString().contains(triggerCondition.errorConditionsBuffer.getFirst().value));
-                    result = evaluateNegation(result);
-
-                    if (Objects.equals(errorConditionsBuffer.getFirst(), "AND")){
-                        errorConditionsBuffer.removeFirst();
-                        triggerCondition.errorConditionsBuffer.removeFirst();
-                        return result && evaluateErrorConditions(result);
-                    }
-                    else if (Objects.equals(errorConditionsBuffer.getFirst(), "OR")){
-                        errorConditionsBuffer.removeFirst();
-                        triggerCondition.errorConditionsBuffer.removeFirst();
-                        return result || evaluateErrorConditions(result);
-                    }
-                    else {
-                        return evaluateErrorConditions(result);
-                    }
-
-                case "Header":
-                    for (HttpHeader header : response.headers()) {
-                        if (header.value().contains(triggerCondition.errorConditionsBuffer.getFirst().value)) result = true;
-                    }
-
-                    result = evaluateNegation(result);
-
-                    if (Objects.equals(errorConditionsBuffer.getFirst(), "AND")){
-                        errorConditionsBuffer.removeFirst();
-                        triggerCondition.errorConditionsBuffer.removeFirst();
-                        return result && evaluateErrorConditions(result);
-                    }
-                    else if (Objects.equals(errorConditionsBuffer.getFirst(), "OR")){
-                        errorConditionsBuffer.removeFirst();
-                        triggerCondition.errorConditionsBuffer.removeFirst();
-                        return result || evaluateErrorConditions(result);
-                    }
-                    else {
-                        return evaluateErrorConditions(result);
-                    }
-            }
-        }
-        return result;
-    }
-     */
-
-    // don't know what to do with this yet, placing logic directly in method above for now
-    private Boolean evaluateLogicalOperator() {
-        return true;
-    }
-
-    private void initBuffers() {
-        errorConditionsBuffer = new ArrayList<>(triggerCondition.errorConditions);
-        negationBuffer = new ArrayList<>(triggerCondition.isNegated);
-        logicalOperatorsBuffer = new ArrayList<>(triggerCondition.logicalOperator);
-        
-    }
-
-    private Boolean evaluateNegation(Boolean result, int index) {
-        Boolean negation = negationBuffer.get(index);
-
-        if (negation){
+    // Applies the negation checkbox that belongs to a single error condition. Through the UI, negation
+    // can only be attached to an individual error condition, never to a group of them.
+    Boolean evaluateNegation(Boolean result, Boolean isNegated) {
+        if (isNegated) {
             return !result;
         }
         else {

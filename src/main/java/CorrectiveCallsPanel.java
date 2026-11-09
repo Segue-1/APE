@@ -41,9 +41,6 @@ public class CorrectiveCallsPanel extends JPanel {
     public JButton extractFromSelect;
     public JButton replaceFromSelect;
 
-    public JButton extractAddButton;
-    public JButton replaceAddButton;
-
     public JComboBox<String> extractDropDown;
     public JComboBox<ExtractText> replaceDropDown;
 
@@ -104,6 +101,7 @@ public class CorrectiveCallsPanel extends JPanel {
         callSequenceTableModel = new CallSequenceTableModel();
         callSequenceTable = new JTable(callSequenceTableModel);
         callSequenceTable.setName("Call Sequence Table"); // Not used
+        callSequenceTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         callSequenceTable.getColumnModel().getColumn(0).setMinWidth(90);
         callSequenceTable.getTableHeader().setReorderingAllowed(false);
@@ -212,12 +210,14 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.weightx = 1; gbc.weighty = 1;
 
         replacementPanel = new ReplacementPanel();
+        this.replacementTableModel = replacementPanel.tableModel;
         bottomPanel.add(replacementPanel, gbc);
 
         gbc.gridx = 1; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
         extractionPanel = new ExtractionPanel();
+        this.extractionTableModel = extractionPanel.tableModel;
         bottomPanel.add(extractionPanel, gbc);
 
         add(bottomPanel);

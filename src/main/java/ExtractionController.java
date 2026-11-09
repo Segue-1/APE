@@ -13,18 +13,29 @@ public class ExtractionController {
     public JButton fromSelectButton;
     public JButton addButton;
     public HttpRequestEditor requestEditor;
+    public HttpResponseEditor responseEditor;
     public JComboBox<String> dropDown;
+    public ButtonGroup buttonGroup;
+    public JRadioButton[] radioButtons;
+    private CallSequenceTableModel callSequenceTableModel;
+    private JTable callSequenceTable;
 
     ExtractionController(ExtractionPanel extractionPanel, HttpRequestEditor httpRequestEditor,
-                         HttpResponseEditor httpResponseEditor) {
+                         HttpResponseEditor httpResponseEditor, CallSequenceTableModel callSequenceTableModel,
+                         JTable callSequenceTable) {
 
         this.dropDown = extractionPanel.dropDown;
+        this.buttonGroup = extractionPanel.buttonGroup;
+        this.radioButtons = extractionPanel.radioButtons;
         this.inputFields = extractionPanel.inputFields;
         this.table = extractionPanel.table;
         this.tableModel = extractionPanel.tableModel;
         this.fromSelectButton = extractionPanel.fromSelectButton;
         this.addButton = extractionPanel.addButton;
         this.requestEditor = httpRequestEditor;
+        this.responseEditor = httpResponseEditor;
+        this.callSequenceTableModel = callSequenceTableModel;
+        this.callSequenceTable = callSequenceTable;
 
         setFromSelectionListener();
         setAddButtonListener();
@@ -35,7 +46,7 @@ public class ExtractionController {
     private void setAddButtonListener() {
         ActionListener addButtonListener = e -> {
             ExtractText extractText = new ExtractText();
-            for (int i = 0; i < inputFields.length - 1; i++) {
+            for (int i = 0; i < inputFields.length - 2; i++) {
                 if (inputFields[i].getText().isEmpty())
                     return;
             }
@@ -44,56 +55,109 @@ public class ExtractionController {
             extractText.stopString = inputFields[2].getText();
             extractText.selectedText = inputFields[3].getText();
             extractText.urlEncodeDecode = (String) dropDown.getSelectedItem();
-            tableModel.addRow(extractText);
+            extractText.extractFromRequest = radioButtons[0].isSelected();
+            extractText.extractFromResponse = radioButtons[1].isSelected();
+            extractText.extractFromBoth = radioButtons[2].isSelected();
+
             DebugLog.log("Extract Text added to table: " + extractText.debugString());
+
+            tableModel.addRow(extractText);
+            DebugLog.log("Extract Text added to corrective call" + callSequenceTableModel.getCorrectiveCall(callSequenceTable.getSelectedRow()).toString());
         };
         addButton.addActionListener(addButtonListener);
     }
     
     private void setFromSelectionListener() {
         fromSelectButton.addActionListener(e -> {
-            int position;
-            boolean hasBody;
-            String messageString;
-            String selectedContents;
+            int requestEditorposition;
+            int responseEditorposition;
 
-            position = requestEditor.caretPosition();
-            messageString = requestEditor.getRequest().toString();
-            selectedContents = requestEditor.selection().get().contents().toString();
+            DebugLog.log("'From Selection' button clicked in Extract text section.");
 
+            requestEditorposition = requestEditor.caretPosition();
+            responseEditorposition = responseEditor.caretPosition();
 
-            if (requestEditor.getRequest().body().length() > 0) {
-                hasBody = true;
+            if (requestEditorposition > 0) {
+                extractFromRequestEditor(requestEditorposition);
+                radioButtons[1].setSelected(true);
             }
-            else
-                hasBody = false;
-
-
-            inputFields[3].setText(selectedContents);
-
-            if (selectedContents.startsWith(" "))
-                inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
-            else
-                inputFields[3].setToolTipText(null);
-
-
-            String stopString = Utils.getStopString(position, messageString, hasBody);
-            inputFields[2].setText(stopString);
-
-            int offset = selectedContents.length();
-            int startIndex = position - offset;
-
-            String startString = Utils.getStartString(startIndex, messageString);
-            inputFields[1].setText(startString);
-
-            DebugLog.log("'From Selection' button clicked in corrective calls panel's Replace text section. " +
-                    "The following input fields were set.");
-            DebugLog.log("Selected Text: " + selectedContents);
-            DebugLog.log("Stop String: " + stopString);
-            DebugLog.log("Start String: " + startString);
+            else if (responseEditorposition > 0) {
+                extractFromResponseEditor(responseEditorposition);
+                radioButtons[0].setSelected(true);
+            }
+            else{
+                DebugLog.log("Extraction fromSelection button clicked while no editor selected.");
+            }
         });
     }
 
+    private void extractFromRequestEditor(int position) {
+        String messageString = requestEditor.getRequest().toString();
+        String selectedContents = requestEditor.selection().get().contents().toString();
+        boolean hasBody;
 
 
+        if (requestEditor.getRequest().body().length() > 0) {
+            hasBody = true;
+        }
+        else
+            hasBody = false;
+
+
+        inputFields[3].setText(selectedContents);
+
+        if (selectedContents.startsWith(" "))
+            inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
+        else
+            inputFields[3].setToolTipText(null);
+
+
+        String stopString = Utils.getStopString(position, messageString, hasBody);
+        inputFields[2].setText(stopString);
+
+        int offset = selectedContents.length();
+        int startIndex = position - offset;
+
+        String startString = Utils.getStartString(startIndex, messageString);
+        inputFields[1].setText(startString);
+
+        DebugLog.log("Selected Text: " + selectedContents);
+        DebugLog.log("Stop String: " + stopString);
+        DebugLog.log("Start String: " + startString);
+    }
+
+    private void extractFromResponseEditor(int position) {
+        String messageString = responseEditor.getResponse().toString();
+        String selectedContents = responseEditor.selection().get().contents().toString();
+        boolean hasBody;
+
+
+        if (responseEditor.getResponse().body().length() > 0) {
+            hasBody = true;
+        }
+        else
+            hasBody = false;
+
+
+        inputFields[3].setText(selectedContents);
+
+        if (selectedContents.startsWith(" "))
+            inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
+        else
+            inputFields[3].setToolTipText(null);
+
+
+        String stopString = Utils.getStopString(position, messageString, hasBody);
+        inputFields[2].setText(stopString);
+
+        int offset = selectedContents.length();
+        int startIndex = position - offset;
+
+        String startString = Utils.getStartString(startIndex, messageString);
+        inputFields[1].setText(startString);
+
+        DebugLog.log("Selected Text: " + selectedContents);
+        DebugLog.log("Stop String: " + stopString);
+        DebugLog.log("Start String: " + startString);
+    }
 }
