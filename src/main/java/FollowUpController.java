@@ -118,13 +118,13 @@ public class FollowUpController {
                 inputFields[3].setToolTipText(null);
 
 
-            String stopString = getStopString(position, messageString, hasBody);
+            String stopString = Utils.getStopString(position, messageString, hasBody);
             inputFields[2].setText(stopString);
 
             int offset = selectedContents.length();
             int startIndex = position - offset;
 
-            String startString = getStartString(startIndex, messageString);
+            String startString = Utils.getStartString(startIndex, messageString);
             inputFields[1].setText(startString);
 
             DebugLog.log("'From Selection' button clicked in followup call. The following input fields were set.");
@@ -134,48 +134,6 @@ public class FollowUpController {
         });
     }
 
-    private String getStopString(int caretPosition, String messageString, Boolean hasBody) {
-        StringBuilder stopString = new StringBuilder();
-        int index = 0;
-        int count = 0;
-
-        if (hasBody && caretPosition == messageString.length())
-            return "[End of Line]";
-        else if (!hasBody && caretPosition == messageString.length() - 4) // - 2x \r\n
-            return "[End of Line]";
-
-        while (count < 8 && caretPosition + index < messageString.length()) {
-            char c = messageString.charAt(caretPosition + index);
-            if (c != '\r' && c != '\n') {
-                stopString.append(c);
-                count++;
-            }
-            index++;
-        }
-        return stopString.toString();
-    }
-
-    private String getStartString(int startIndex, String messageString){
-        StringBuilder startString = new StringBuilder();
-        int count = 8;
-
-        if (startIndex == 0)
-            return "[Start of Line]";
-
-        while (count > 0){
-            if (startIndex - count >= 0) {
-                char c = messageString.charAt(startIndex - count);
-                if (c != '\r' && c != '\n') {
-                    startString.append(c);
-                    count--;
-                }
-            }
-            else {
-                count--;
-            }
-        }
-        return startString.toString();
-    }
 
     // TODO need to go through all controllers and update them to use this method
     public void setTableDeleteContextMenu(JTable table) {

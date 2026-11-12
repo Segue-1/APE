@@ -95,6 +95,32 @@ public class Model implements HttpHandler{
 
                 // Make corrective calls
                 for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList){
+                    if (!correctiveCall.extractList.isEmpty()) {
+                        for (ExtractText extractText : correctiveCall.extractList) {
+                            if (extractText.extractFromResponse) {
+                                HttpResponse correctiveCallResponse = correctiveCall.requestResponse.response();
+                                String text = correctiveCallResponse.bodyToString();
+                                extractText.extractedText = extractBetween(text, extractText.startString, extractText.stopString);
+                            }
+                            else if (extractText.extractFromRequest) {
+                                HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
+                                String text = correctiveCallRequest.bodyToString();
+                                extractText.extractedText = extractBetween(text, extractText.startString, extractText.stopString);
+                            }
+                            else {
+                                // Not possible but whatever
+                            }
+                        }
+                    }
+
+                    if (!correctiveCall.replaceList.isEmpty()) {
+                        for (ReplaceText replaceText : correctiveCall.replaceList) {
+                            HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
+                            String text = correctiveCallRequest.bodyToString();
+                            // Iterate through all extractions per corrective call? per replace?
+                        }
+                    }
+
                     Controller.montoyaApi.http().sendRequest(correctiveCall.requestResponse.request());
                 }
             }
@@ -246,12 +272,27 @@ public class Model implements HttpHandler{
 
     // Applies the negation checkbox that belongs to a single error condition. Through the UI, negation
     // can only be attached to an individual error condition, never to a group of them.
-    Boolean evaluateNegation(Boolean result, Boolean isNegated) {
+    private Boolean evaluateNegation(Boolean result, Boolean isNegated) {
         if (isNegated) {
             return !result;
         }
         else {
             return result;
         }
+    }
+
+    private void processText() {
+
+    }
+
+    private String extractBetween(String text, String start, String stop) {
+        int s = text.indexOf(start);
+        if (s == -1) return null;              // start not in this text
+
+        s += start.length();
+        int e = text.indexOf(stop, s);
+        if (e == -1) return null;              // stop not found after start
+
+        return text.substring(s, e);
     }
 }

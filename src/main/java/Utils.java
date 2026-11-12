@@ -24,21 +24,32 @@ public class Utils {
         StringBuilder startString = new StringBuilder();
         int count = 8;
 
-        if (startIndex == 0)
-            return "[Start of Line]";
+        DebugLog.log("Getting start string. Start index: " + startIndex
+                     + ", message length: " + messageString.length());
 
+        // If the selected string is at the very beginning of the request body and there are no previous characters,
+        // then set to [Start of Line]
+        if (startIndex == 0) {
+            DebugLog.log("Start index is at start of message. Start string: [Start of Line]");
+            return "[Start of Line]";
+        }
+
+        // Collect the 8 previous characters from the start index
         while (count > 0){
-            if (startIndex - count >= 0) {
+            if (startIndex - count >= 0) { // Make sure index is not out of bounds
                 char c = messageString.charAt(startIndex - count);
-                if (c != '\r' && c != '\n') {
+                if (c != '\r' && c != '\n') {  // Append non \r and \n chars
                     startString.append(c);
-                    count--;
                 }
             }
-            else {
-                count--;
-            }
+            count--;
         }
+
+        if (startString.length() < 8)
+            DebugLog.log("Reached start of message before 8 characters were collected. Characters collected: " + startString.length());
+
+        DebugLog.log("Start string: " + startString.toString());
+
         return startString.toString();
     }
 
@@ -48,10 +59,18 @@ public class Utils {
         int index = 0;
         int count = 0;
 
-        if (hasBody && caretPosition == messageString.length())
+        DebugLog.log("Getting stop string. Caret position: " + caretPosition
+                     + ", message length: " + messageString.length()
+                     + ", has body: " + hasBody);
+
+        if (hasBody && caretPosition == messageString.length()) {
+            DebugLog.log("Caret position is at end of message with body. Stop string: [End of Line]");
             return "[End of Line]";
-        else if (!hasBody && caretPosition == messageString.length() - 4) // - 2x \r\n
+        }
+        else if (!hasBody && caretPosition == messageString.length() - 4) { // - 2x \r\n
+            DebugLog.log("Caret position is at end of message without body. Stop string: [End of Line]");
             return "[End of Line]";
+        }
 
         while (count < 8 && caretPosition + index < messageString.length()) {
             char c = messageString.charAt(caretPosition + index);
@@ -61,6 +80,12 @@ public class Utils {
             }
             index++;
         }
+
+        if (count < 8)
+            DebugLog.log("Reached end of message before 8 characters were collected. Characters collected: " + count);
+
+        DebugLog.log("Stop string: " + stopString.toString());
+
         return stopString.toString();
     }
 

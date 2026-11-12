@@ -129,7 +129,8 @@ public class ReplacementController {
         });
     }
 
-    // TODO Doesn't seem to work
+    // Populates "Pick from Extraction" drop down menu. Extractions in this drop down may only come from previous requests
+    // in relation to the currently selected corrective call in the call sequence table.
     public void refreshDropDown() {
         ExtractText tempExtractText;
 
@@ -143,7 +144,7 @@ public class ReplacementController {
         dropDown.removeAllItems();
 
         if (callSequenceTable.getSelectedRow() > 0) {
-            for (int i = 0; i < callSequenceTable.getSelectedRow() - 1; i++) {
+            for (int i = 0; i < callSequenceTable.getSelectedRow(); i++) {
                 List<ExtractText> extractTextList = callSequenceTableModel.correctiveCallList.get(i).extractList;
                 for (int j = 0; j < extractTextList.size(); j++) {
                     dropDown.addItem(extractTextList.get(j));

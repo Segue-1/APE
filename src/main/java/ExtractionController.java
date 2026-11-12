@@ -2,6 +2,7 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class ExtractionController {
@@ -19,6 +20,7 @@ public class ExtractionController {
     public JRadioButton[] radioButtons;
     private CallSequenceTableModel callSequenceTableModel;
     private JTable callSequenceTable;
+
 
     ExtractionController(ExtractionPanel extractionPanel, HttpRequestEditor httpRequestEditor,
                          HttpResponseEditor httpResponseEditor, CallSequenceTableModel callSequenceTableModel,
@@ -57,7 +59,6 @@ public class ExtractionController {
             extractText.urlEncodeDecode = (String) dropDown.getSelectedItem();
             extractText.extractFromRequest = radioButtons[0].isSelected();
             extractText.extractFromResponse = radioButtons[1].isSelected();
-            extractText.extractFromBoth = radioButtons[2].isSelected();
 
             DebugLog.log("Extract Text added to table: " + extractText.debugString());
 
@@ -69,13 +70,15 @@ public class ExtractionController {
     
     private void setFromSelectionListener() {
         fromSelectButton.addActionListener(e -> {
+            DebugLog.log("From Select button pressed");
             int requestEditorposition;
             int responseEditorposition;
 
-            DebugLog.log("'From Selection' button clicked in Extract text section.");
-
             requestEditorposition = requestEditor.caretPosition();
+            DebugLog.log("Caret position of request editor: " + requestEditorposition);
             responseEditorposition = responseEditor.caretPosition();
+            DebugLog.log("Caret position of response editor: " + responseEditorposition);
+
 
             if (requestEditorposition > 0) {
                 extractFromRequestEditor(requestEditorposition);
@@ -92,6 +95,8 @@ public class ExtractionController {
     }
 
     private void extractFromRequestEditor(int position) {
+        DebugLog.log("Extracting from request editor at caret position " + position);
+
         String messageString = requestEditor.getRequest().toString();
         String selectedContents = requestEditor.selection().get().contents().toString();
         boolean hasBody;
@@ -103,11 +108,14 @@ public class ExtractionController {
         else
             hasBody = false;
 
+        DebugLog.log("Request message length: " + messageString.length() + ", has body: " + hasBody);
 
         inputFields[3].setText(selectedContents);
 
-        if (selectedContents.startsWith(" "))
+        if (selectedContents.startsWith(" ")) {
             inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
+            DebugLog.log("Selection starts with whitespace. Whitespace warning tool tip set on selected text field.");
+        }
         else
             inputFields[3].setToolTipText(null);
 
@@ -118,6 +126,8 @@ public class ExtractionController {
         int offset = selectedContents.length();
         int startIndex = position - offset;
 
+        DebugLog.log("Selection length: " + offset + ", calculated start index: " + startIndex);
+
         String startString = Utils.getStartString(startIndex, messageString);
         inputFields[1].setText(startString);
 
@@ -127,6 +137,8 @@ public class ExtractionController {
     }
 
     private void extractFromResponseEditor(int position) {
+        DebugLog.log("Extracting from response editor at caret position " + position);
+
         String messageString = responseEditor.getResponse().toString();
         String selectedContents = responseEditor.selection().get().contents().toString();
         boolean hasBody;
@@ -138,11 +150,14 @@ public class ExtractionController {
         else
             hasBody = false;
 
+        DebugLog.log("Response message length: " + messageString.length() + ", has body: " + hasBody);
 
         inputFields[3].setText(selectedContents);
 
-        if (selectedContents.startsWith(" "))
+        if (selectedContents.startsWith(" ")) {
             inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
+            DebugLog.log("Selection starts with whitespace. Whitespace warning tool tip set on selected text field.");
+        }
         else
             inputFields[3].setToolTipText(null);
 
@@ -152,6 +167,8 @@ public class ExtractionController {
 
         int offset = selectedContents.length();
         int startIndex = position - offset;
+
+        DebugLog.log("Selection length: " + offset + ", calculated start index: " + startIndex);
 
         String startString = Utils.getStartString(startIndex, messageString);
         inputFields[1].setText(startString);

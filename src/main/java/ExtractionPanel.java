@@ -21,7 +21,7 @@ public class ExtractionPanel extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
 
         labels = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
-                "URL encode/decode", "Extract only from: "};
+                "URL encode/decode:", "Extract from: "};
 
         dropDown = new JComboBox<>();
         inputFields = new JTextField[labels.length - 1];
@@ -128,11 +128,9 @@ public class ExtractionPanel extends JPanel {
         radioButtons = new JRadioButton[3];
         radioButtons[0] = new JRadioButton("Response", true);
         radioButtons[1] = new JRadioButton("Request");
-        radioButtons[2] = new JRadioButton("Both");
         buttonGroup = new ButtonGroup();
         buttonGroup.add(radioButtons[0]);
         buttonGroup.add(radioButtons[1]);
-        buttonGroup.add(radioButtons[2]);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -144,8 +142,6 @@ public class ExtractionPanel extends JPanel {
         gbc.gridx = 1;
         panel.add(radioButtons[1], gbc);
 
-        gbc.gridx = 2;
-        panel.add(radioButtons[2], gbc);
 
         return panel;
     }

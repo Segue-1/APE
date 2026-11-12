@@ -7,9 +7,12 @@ import burp.api.montoya.ui.editor.HttpResponseEditor;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import javax.swing.text.JTextComponent;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 
 
@@ -52,6 +55,7 @@ public class CorrectiveCallsController {
     private ReplacementController replacementController;
     private ExtractionController extractionController;
 
+
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
         setAttributes(correctiveCallsPanel);
 
@@ -63,6 +67,7 @@ public class CorrectiveCallsController {
         setSelectedCorrectiveCallsSetListener();
         setSelectedCorrectiveCallCallListener();
         initCallSequenceTable();
+        setEditorFocusListener();
 
         replacementController = new ReplacementController(correctiveCallsPanel.replacementPanel,
                 requestEditor, extractionTableModel, callSequenceTableModel, callSequenceTable);
@@ -147,8 +152,8 @@ public class CorrectiveCallsController {
             correctiveCallSetTableModel.addRow(new CorrectiveCallSet());
             Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
             DebugLog.log("Add button clicked on corrective call set table. Call set "
-                         + correctiveCallSetTableModel.correctiveCallSetList.getLast().name
-                         + " has been added");
+                    + correctiveCallSetTableModel.correctiveCallSetList.getLast().name
+                    + " has been added");
         };
 
         ActionListener removeBottonListener = e -> {
@@ -160,8 +165,8 @@ public class CorrectiveCallsController {
             correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
 
             DebugLog.log("Remove button clicked on corrective call set table. Call set "
-                         + correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).name
-                         + " has been deleted.");
+                    + correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).name
+                    + " has been deleted.");
         };
         addSetBotton.addActionListener(addButtonListener);
         removeSetBotton.addActionListener(removeBottonListener);
@@ -176,7 +181,7 @@ public class CorrectiveCallsController {
                 if (selectedRow != -1) {
                     callSequenceTableModel.loadCallSequence(correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).correctiveCallList);
                     DebugLog.log("Corrective call set selected. Loaded to call sequence table: " +
-                                  correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).toString());
+                            correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).toString());
                 }
             }
         });
@@ -200,234 +205,71 @@ public class CorrectiveCallsController {
         });
     }
 
-    /*
-    private void setExtractAddButtonListener() {
-        ActionListener extractAddButtonListener = e -> {
-            ExtractText extractText = new ExtractText();
-            for (int i = 0; i < extractInputFields.length - 1; i++) {
-                if (extractInputFields[i].getText().isEmpty())
-                    return;
+    private void setEditorFocusListener() {
+        MouseAdapter requestListener = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                responseEditor.setCaretPosition(0);
+                DebugLog.log("Mouse pressed on request editor.");
+                DebugLog.log("Caret position of request editor: " + requestEditor.caretPosition());
+                DebugLog.log("Caret position of response editor: " + responseEditor.caretPosition());
             }
-            extractText.name = extractInputFields[0].getText();
-            extractText.startString = extractInputFields[1].getText();
-            extractText.stopString = extractInputFields[2].getText();
-            extractText.selectedText = extractInputFields[3].getText();
-            extractText.urlEncodeDecode = (String) extractDropDown.getSelectedItem();
-            extractionTableModel.addRow(extractText);
-            DebugLog.log("Extract Text added to table: " + extractText.debugString());
         };
-        extractAddButton.addActionListener(extractAddButtonListener);
-    }
 
-     */
-
-    // TODO could use cleanup. 3rd arg probably not necessary. hasBody might be set in a cleaner way.
-
-    // Sets the action listener for the "From Selection" button for Extractions.
-    /*
-    private void setExtractFromSelListener(JButton fromSelect, JTextField[] inputFields) {
-        fromSelect.addActionListener(e -> {
-            int position;
-            boolean hasBody;
-            String messageString;
-            String selectedContents;
-
-            // Separate out into its own function
-            if (editor.equals("response")) {
-                position = responseEditor.caretPosition();
-                messageString = responseEditor.getResponse().toString();
-                selectedContents = responseEditor.selection().get().contents().toString();
-                if (responseEditor.getResponse().body().length() > 0){
-                    hasBody = true;
-                }
-                else
-                    hasBody = false;
-            }
-            else if (editor.equals("request")){
-                position = requestEditor.caretPosition();
-                messageString = requestEditor.getRequest().toString();
-                selectedContents = requestEditor.selection().get().contents().toString();
-                if (requestEditor.getRequest().body().length() > 0){
-                    hasBody = true;
-                }
-                else
-                    hasBody = false;
-            }
-            else
-                return;
-
-        });
-    }
-
-     */
-
-    /*
-    private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields, String editor) {
-        fromSelect.addActionListener(e -> {
-            int position;
-            boolean hasBody;
-            String messageString;
-            String selectedContents;
-
-            // Separate out into its own function
-            if (editor.equals("response")) {
-                position = responseEditor.caretPosition();
-                messageString = responseEditor.getResponse().toString();
-                selectedContents = responseEditor.selection().get().contents().toString();
-                if (responseEditor.getResponse().body().length() > 0){
-                    hasBody = true;
-                }
-                else
-                    hasBody = false;
-            }
-            else if (editor.equals("request")){
-                position = requestEditor.caretPosition();
-                messageString = requestEditor.getRequest().toString();
-                selectedContents = requestEditor.selection().get().contents().toString();
-                if (requestEditor.getRequest().body().length() > 0){
-                    hasBody = true;
-                }
-                else
-                    hasBody = false;
-            }
-            else
-                return;
-
-
-            inputFields[3].setText(selectedContents);
-
-            if (selectedContents.startsWith(" "))
-                inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
-            else
-                inputFields[3].setToolTipText(null);
-
-
-            String stopString = getStopString(position, messageString, hasBody);
-            inputFields[2].setText(stopString);
-
-            int offset = selectedContents.length();
-            int startIndex = position - offset;
-
-            String startString = getStartString(startIndex, messageString);
-            inputFields[1].setText(startString);
-
-            DebugLog.log("'From Selection' button clicked in corrective calls panel. The following input fields were set.");
-            DebugLog.log("Selected Text: " + selectedContents);
-            DebugLog.log("Stop String: " + stopString);
-            DebugLog.log("Start String: " + startString);
-        });
-    }
-
-    private String getStopString(int caretPosition, String messageString, Boolean hasBody) {
-        StringBuilder stopString = new StringBuilder();
-        int index = 0;
-        int count = 0;
-
-        if (hasBody && caretPosition == messageString.length())
-            return "[End of Line]";
-        else if (!hasBody && caretPosition == messageString.length() - 4) // - 2x \r\n
-            return "[End of Line]";
-
-        while (count < 8 && caretPosition + index < messageString.length()) {
-            char c = messageString.charAt(caretPosition + index);
-            if (c != '\r' && c != '\n') {
-                stopString.append(c);
-                count++;
-            }
-            index++;
-        }
-        return stopString.toString();
-    }
-
-    private String getStartString(int startIndex, String messageString){
-        StringBuilder startString = new StringBuilder();
-        int count = 8;
-
-        if (startIndex == 0)
-            return "[Start of Line]";
-
-        while (count > 0){
-            if (startIndex - count >= 0) {
-                char c = messageString.charAt(startIndex - count);
-                if (c != '\r' && c != '\n') {
-                    startString.append(c);
-                    count--;
-                }
-            }
-            else {
-                count--;
-            }
-        }
-        return startString.toString();
-    }
-
-    public void setReplaceDropDownListener() {
-        replaceDropDown.addPopupMenuListener(new PopupMenuListener() {
+        MouseAdapter responseListener = new MouseAdapter() {
             @Override
-            public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
-
-                ExtractText tempExtractText;
-
-                if (replaceDropDown.getSelectedIndex() != -1) {
-                    tempExtractText = replaceDropDown.getItemAt(replaceDropDown.getSelectedIndex());
-                }
-                else {
-                    tempExtractText = null;
-                }
-
-                replaceDropDown.removeAllItems();
-
-                for (int row = 0; row < extractionTableModel.getRowCount(); row++) {
-                    ExtractText extractText = extractionTableModel.getExtractText(row);
-                    replaceDropDown.addItem(extractText);
-
-                    if (extractText.equals(tempExtractText)) {
-                        replaceDropDown.setSelectedIndex(row);
-                    }
-                }
-
-
+            public void mousePressed(MouseEvent e) {
+                requestEditor.setCaretPosition(0);
+                DebugLog.log("Mouse pressed on response editor.");
+                DebugLog.log("Caret position of request editor: " + requestEditor.caretPosition());
+                DebugLog.log("Caret position of response editor: " + responseEditor.caretPosition());
             }
-
-            @Override
-            public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
-
-            }
-
-            @Override
-            public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {
-
-            }
-        });
-    }
-
-    private void setReplaceAddButtonListener() {
-        ActionListener replaceAddButtonListener = e -> {
-
-            // Create ReplaceText object
-            ReplaceText replaceText = new ReplaceText();
-            for (int i = 0; i < replaceInputFields.length - 1; i++) {
-                if (replaceInputFields[i].getText().isEmpty()) {
-                    DebugLog.log("Replacement 'Add' button clicked while input field empty.");
-                    return;
-                }
-            }
-            replaceText.name = replaceInputFields[0].getText();
-            replaceText.startString = replaceInputFields[1].getText();
-            replaceText.stopString = replaceInputFields[2].getText();
-            replaceText.selectedText = replaceInputFields[3].getText();
-            replaceText.extractText = (ExtractText) replaceDropDown.getSelectedItem();
-            replacementTableModel.addRow(replaceText);
-            DebugLog.log("Replace Text added to table: " + replaceText);
-
-            // Associate ReplaceText object with currently selected corrective call.
-
-
         };
-        replaceAddButton.addActionListener(replaceAddButtonListener);
+
+        // Very hacky way of attaching a mouse listener to the text field within montoya http editors
+        // Iterates through all components of the editor and looks for a JTextComponent with a parent JViewport
+        try {
+            boolean found = false;
+            Deque<Component> stack = new ArrayDeque<>();
+            stack.push(requestEditor.uiComponent());
+            while (!stack.isEmpty()) {
+                Component c = stack.pop();
+                if (c instanceof JTextComponent && c.getParent() instanceof JViewport) {
+                    c.addMouseListener(requestListener);
+                    found = true;
+                }
+                if (c instanceof Container) {
+                    for (Component child : ((Container) c).getComponents()) stack.push(child);
+                }
+            }
+            if (!found)
+                DebugLog.log("Corrective Call Controller: Could not attach listener to request editor text component.");
+        } catch (Exception ex) {
+            DebugLog.log("Corrective Call Controller: Error attaching request editor listener: " + ex);
+        }
+
+        try {
+            boolean found = false;
+            Deque<Component> stack = new ArrayDeque<>();
+            stack.push(responseEditor.uiComponent());
+            while (!stack.isEmpty()) {
+                Component c = stack.pop();
+                if (c instanceof JTextComponent && c.getParent() instanceof JViewport) {
+                    DebugLog.log("Component name " + c.getName());
+                    c.addMouseListener(responseListener);
+                    found = true;
+                }
+                if (c instanceof Container) {
+                    for (Component child : ((Container) c).getComponents()) stack.push(child);
+                }
+            }
+            if (!found)
+                DebugLog.log("Corrective Call Controller: Could not attach listener to response editor text component.");
+        } catch (Exception ex) {
+            DebugLog.log("Corrective Call Controller: Error attaching response editor listener: " + ex);
+        }
     }
 
-     */
 
 
     private void setAttributes(CorrectiveCallsPanel correctiveCallsPanel) {
