@@ -13,6 +13,10 @@ public class ReplaceText {
 
     @Override
     public String toString() {
+        // extractText is null when a replacement was added without picking anything from the
+        // "Pick from Extraction" dropdown, so it cannot be dereferenced unguarded here. This is only
+        // ever called to build a debug line, and it used to throw a NullPointerException from inside
+        // the logging itself.
         return "ReplaceText{" +
                 "index=" + index +
                 ", name='" + name + '\'' +
@@ -20,7 +24,7 @@ public class ReplaceText {
                 ", startString='" + startString + '\'' +
                 ", stopString='" + stopString + '\'' +
                 ", selectedText='" + selectedText + '\'' +
-                ", extractText='" + extractText.debugString() + '\'' +
+                ", extractText='" + (extractText == null ? "null" : extractText.debugString()) + '\'' +
                 '}';
     }
 }

@@ -43,21 +43,12 @@ public class ReplacementController {
     private void setFromSelectionListener() {
         fromSelectButton.addActionListener(e -> {
             int position;
-            boolean hasBody;
             String messageString;
             String selectedContents;
 
             position = requestEditor.caretPosition();
             messageString = requestEditor.getRequest().toString();
             selectedContents = requestEditor.selection().get().contents().toString();
-
-
-            if (requestEditor.getRequest().body().length() > 0) {
-                hasBody = true;
-            }
-            else
-                hasBody = false;
-
 
             inputFields[3].setText(selectedContents);
 
@@ -67,7 +58,7 @@ public class ReplacementController {
                 inputFields[3].setToolTipText(null);
 
 
-            String stopString = Utils.getStopString(position, messageString, hasBody);
+            String stopString = Utils.getStopString(position, messageString);
             inputFields[2].setText(stopString);
 
             int offset = selectedContents.length();

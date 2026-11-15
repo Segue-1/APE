@@ -30,5 +30,16 @@ tasks.register('conditionLogicTest', JavaExec) {
     mainClass = 'ConditionLogicTest'
 }
 
-// No JUnit on the classpath. The harness above is the entry point instead.
+// Standalone harness for the replacement / extraction logic in Model and the start / stop string
+// collection in Utils (src/test/java/ReplacementLogicTest.java). Same deal as above, a plain main()
+// with its own assertions.
+// Run with: ./gradlew replacementLogicTest
+tasks.register('replacementLogicTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the text replacement and extraction logic harness'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'ReplacementLogicTest'
+}
+
+// No JUnit on the classpath. The harnesses above are the entry point instead.
 test.enabled = false

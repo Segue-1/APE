@@ -100,24 +100,17 @@ public class FollowUpController {
         addButton.addActionListener(replaceAddButtonListener);
     }
 
-    // TODO could use cleanup. 3rd arg probably not necessary. hasBody might be set in a cleaner way.
+    // TODO could use cleanup. The hasBody argument is gone, Utils.getContentEnd() derives it from the message.
     private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields) {
         fromSelect.addActionListener(e -> {
             int position;
-            boolean hasBody;
             String messageString;
             String selectedContents;
 
-   
             position = requestEditor.caretPosition();
             messageString = requestEditor.getRequest().toString();
             selectedContents = requestEditor.selection().get().contents().toString();
-            if (requestEditor.getRequest().body().length() > 0){
-                hasBody = true;
-            }
-            else
-                hasBody = false;
-            
+
             inputFields[3].setText(selectedContents);
 
             if (selectedContents.startsWith(" "))
@@ -126,7 +119,7 @@ public class FollowUpController {
                 inputFields[3].setToolTipText(null);
 
 
-            String stopString = Utils.getStopString(position, messageString, hasBody);
+            String stopString = Utils.getStopString(position, messageString);
             inputFields[2].setText(stopString);
 
             int offset = selectedContents.length();

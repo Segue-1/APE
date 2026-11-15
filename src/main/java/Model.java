@@ -7,7 +7,9 @@ import burp.api.montoya.http.message.responses.HttpResponse;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class Model implements HttpHandler{
@@ -54,10 +56,65 @@ public class Model implements HttpHandler{
             return RequestToBeSentAction.continueWith(requestToBeSent);
         }
 
+        /*
+        What each extraction pulled out, for this request only. Declared here so it is a local of this
+        handler invocation and therefore confined to the thread serving this request. Burp calls this
+        handler on many threads at once, and ExtractText objects are long lived config, one instance per
+        row in the extraction table, shared by every request that triggers. Holding the extracted value
+        on that shared object let two concurrent requests overwrite each other, so a followup call could
+        go out carrying a token extracted for a different request. Keyed by identity because ExtractText
+        does not override equals/hashCode, which is the comparison being relied on anyway.
+
+        A fresh map per request is also empty per request, so nothing needs clearing and a failed
+        extraction cannot fall back on a value left over from an earlier request.
+         */
+        Map<ExtractText, String> extracted = new IdentityHashMap<>();
+
         HttpRequestResponse requestResponse = Controller.montoyaApi.http().sendRequest(requestToBeSent);
 
-        detectErrorCondition(requestResponse);
-        HttpResponse followupCallResponse = sendFollowupCall();
+        /*
+        A send that never completed (connection refused, timeout, TLS failure) comes back with a null
+        response. There is nothing to evaluate trigger conditions against and nothing to spoof, so hand
+        the request back to Burp and let it do its own send and report its own connection error.
+
+        This is the one path where continueWith() is correct despite the note below. That note is about
+        not sending a request twice, and the send above produced no response at all, so Burp trying it
+        is the user's single real attempt rather than a duplicate.
+
+        Guarding here rather than at each spoof() below, because detectErrorCondition() reads the
+        response too.
+         */
+        if (requestResponse.response() == null) {
+            DebugLog.log("[Error] Model: Request produced no response. Handing it back to Burp.");
+            return RequestToBeSentAction.continueWith(requestToBeSent);
+        }
+
+        boolean triggered = detectErrorCondition(requestResponse, extracted);
+
+        /*
+        The request above has already gone out, so every path from here has to spoof a response rather
+        than continueWith(). Returning continueWith() would hand the request back to Burp and send it a
+        second time.
+         */
+        if (!triggered) {
+            DebugLog.log("Model: No trigger condition matched. Returning the original response.");
+            return RequestToBeSentAction.spoof(requestResponse.response());
+        }
+
+        // followupCall stays null until the user configures one on the Followup Call tab. This used to be
+        // called unconditionally, which meant an unconfigured followup call threw a NullPointerException.
+        if (followupCall == null) {
+            DebugLog.log("[Error] Model: Trigger condition matched but no followup call is configured. "
+                    + "Returning the original response.");
+            return RequestToBeSentAction.spoof(requestResponse.response());
+        }
+
+        HttpResponse followupCallResponse = sendFollowupCall(extracted);
+
+        if (followupCallResponse == null) {
+            DebugLog.log("[Error] Model: Followup call returned no response. Returning the original response.");
+            return RequestToBeSentAction.spoof(requestResponse.response());
+        }
 
         return RequestToBeSentAction.spoof(followupCallResponse);
     }
@@ -75,14 +132,20 @@ public class Model implements HttpHandler{
 
 
 
-    // Detects error conditions and returns the corrective call set to be called.
-    // A response triggers APE if ANY of the configured trigger conditions evaluates to true.
-    void detectErrorCondition(HttpRequestResponse requestResponse) {
+    /*
+    Detects error conditions and makes the corrective calls belonging to whichever trigger conditions
+    matched. A response triggers APE if ANY of the configured trigger conditions evaluates to true.
+
+    Returns true if at least one trigger condition matched, so the caller knows whether the followup call
+    is supposed to run at all.
+     */
+    boolean detectErrorCondition(HttpRequestResponse requestResponse, Map<ExtractText, String> extracted) {
         HttpResponse response = requestResponse.response();
+        boolean triggered = false;
 
         if (triggerConditions == null || triggerConditions.isEmpty()) {
             DebugLog.log("Model: No trigger conditions configured. Not processing response further.");
-            return;
+            return false;
         }
 
 
@@ -95,11 +158,15 @@ public class Model implements HttpHandler{
                 DebugLog.log("Model: Trigger condition matched: " + triggerCondition.name
                         + ". Making corrective calls.");
 
-                processCorrectiveCalls(triggerCondition);
+                triggered = true;
+                processCorrectiveCalls(triggerCondition, extracted);
             }
 
         }
-        DebugLog.log("Model: Finished evaluating " + triggerConditions.size() + " trigger condition(s).");
+        DebugLog.log("Model: Finished evaluating " + triggerConditions.size() + " trigger condition(s). "
+                + "Triggered: " + triggered);
+
+        return triggered;
     }
 
     /*
@@ -267,18 +334,21 @@ public class Model implements HttpHandler{
 
 
     // Processes text replacements and extractions and sends requests.
-    private void processCorrectiveCalls(TriggerCondition triggerCondition) {
+    private void processCorrectiveCalls(TriggerCondition triggerCondition, Map<ExtractText, String> extracted) {
         DebugLog.log("Model: Processing corrective call set: " + triggerCondition.correctiveCallSet.name
                 + ". Call sequence size: " + triggerCondition.correctiveCallSet.correctiveCallList.size());
 
         int callIndex = 0;
         String rawRequest;
         String rawResponse;
-        String updatedRequest = null;
 
         for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList) {
             HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
             rawRequest = correctiveCallRequest.toString();
+
+            // Declared inside the loop on purpose. It used to be declared outside, which meant a call with
+            // no replacements of its own re-sent the previous call's modified request.
+            String updatedRequest = null;
 
             HttpRequestResponse sentRequestResponse;
             HttpResponse sentResponse;
@@ -291,7 +361,37 @@ public class Model implements HttpHandler{
             if (!correctiveCall.replaceList.isEmpty()) {
                 for (ReplaceText replaceText : correctiveCall.replaceList) {
                     DebugLog.log("Model: Applying replacement to corrective call request: " + replaceText);
-                    updatedRequest = replaceBetween(rawRequest, replaceText.startString, replaceText.stopString, replaceText.extractText.extractedText);
+
+                    /*
+                    The extraction this replacement points at has nothing in the map until it actually
+                    runs. Without this guard the replacement inserts the four characters "null" into the
+                    request. extractText itself is null when the user adds a replacement without picking
+                    anything from the "Pick from Extraction" dropdown.
+                     */
+                    String replacement = replaceText.extractText == null
+                            ? null
+                            : extracted.get(replaceText.extractText);
+
+                    if (replacement == null) {
+                        DebugLog.log("[Error] Model: Replacement has no extracted text to insert, skipping it: "
+                                + replaceText.name);
+                        continue;
+                    }
+
+                    // Each replacement works on the result of the one before it, not on rawRequest, so that
+                    // every replacement in the list survives instead of only the last one.
+                    String textToReplace = updatedRequest != null ? updatedRequest : rawRequest;
+                    String replacedRequest = replaceBetween(textToReplace, replaceText.startString, replaceText.stopString, replacement);
+
+                    if (replacedRequest != null) {
+                        updatedRequest = replacedRequest;
+                    }
+                    else {
+                        // Hold on to whatever the earlier replacements produced. Overwriting updatedRequest with
+                        // null here used to throw away replacements that had already applied cleanly.
+                        DebugLog.log("[Error] Model: Replacement did not apply, leaving request as it was: "
+                                + replaceText.name);
+                    }
                 }
             }
 
@@ -316,8 +416,8 @@ public class Model implements HttpHandler{
                         String extractedText = extractBetween(rawResponse, extractText.startString, extractText.stopString);
 
                         if (extractedText != null) {
-                            extractText.extractedText = extractedText;
-                            DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                            extracted.put(extractText, extractedText);
+                            DebugLog.log("Model: Extracted text: " + extractedText);
                         }
                     }
                     else if (extractText.extractFromRequest) {
@@ -325,8 +425,8 @@ public class Model implements HttpHandler{
 
                         String extractedText = extractBetween(rawRequest, extractText.startString, extractText.stopString);
                         if (extractedText != null) {
-                            extractText.extractedText = extractedText;
-                            DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                            extracted.put(extractText, extractedText);
+                            DebugLog.log("Model: Extracted text: " + extractedText);
                         }
                     }
                     else {
@@ -339,7 +439,7 @@ public class Model implements HttpHandler{
         }
     }
 
-    private HttpResponse sendFollowupCall() {
+    private HttpResponse sendFollowupCall(Map<ExtractText, String> extracted) {
         DebugLog.log("Model: Sending followup call...");
 
         String rawRequest;
@@ -359,7 +459,31 @@ public class Model implements HttpHandler{
         if (!followupCall.replaceList.isEmpty()) {
             for (ReplaceText replaceText : followupCall.replaceList) {
                 DebugLog.log("Model: Applying replacement to followup call request: " + replaceText);
-                updatedRequest = replaceBetween(rawRequest, replaceText.startString, replaceText.stopString, replaceText.extractText.extractedText);
+
+                // Same as processCorrectiveCalls(). Nothing to insert means skip the replacement rather
+                // than writing "null" into the request.
+                String replacement = replaceText.extractText == null
+                        ? null
+                        : extracted.get(replaceText.extractText);
+
+                if (replacement == null) {
+                    DebugLog.log("[Error] Model: Replacement has no extracted text to insert, skipping it: "
+                            + replaceText.name);
+                    continue;
+                }
+
+                // Same as processCorrectiveCalls(). Chain off the previous result so every replacement
+                // survives, and keep the previous result if one of them fails to apply.
+                String textToReplace = updatedRequest != null ? updatedRequest : rawRequest;
+                String replacedRequest = replaceBetween(textToReplace, replaceText.startString, replaceText.stopString, replacement);
+
+                if (replacedRequest != null) {
+                    updatedRequest = replacedRequest;
+                }
+                else {
+                    DebugLog.log("[Error] Model: Replacement did not apply, leaving request as it was: "
+                            + replaceText.name);
+                }
             }
         }
 
@@ -383,17 +507,13 @@ public class Model implements HttpHandler{
                 + "', within text : '" + text + "'");
 
 
-        int s = text.indexOf(start);
+        int s = findStart(text, start, "replaced");
         if (s == -1) {
-            DebugLog.log("Model: Start string not found in text. Nothing replaced.");
             return null;
         }
 
-
-        s += start.length();
-        int e = text.indexOf(stop, s);
+        int e = findStop(text, stop, s, "replaced");
         if (e == -1) {
-            DebugLog.log("Model: Stop string not found after start string. Nothing replaced.");
             return null;
         }
 
@@ -404,20 +524,57 @@ public class Model implements HttpHandler{
     private String extractBetween(String text, String start, String stop) {
         DebugLog.log("Model: extractBetween() start string: '" + start + "', stop string: '" + stop + "' within text : '" + text + "'");
 
-        int s = text.indexOf(start);
+        int s = findStart(text, start, "extracted");
         if (s == -1) {
-            DebugLog.log("Model: Start string not found in text. Nothing extracted.");
             return null;
         }
 
-        s += start.length();
-        int e = text.indexOf(stop, s);
+        int e = findStop(text, stop, s, "extracted");
         if (e == -1) {
-            DebugLog.log("Model: Stop string not found after start string. Nothing extracted.");
             return null;
         }
 
         DebugLog.log("Model: Extracting text between index " + s + " and index " + e + ".");
         return text.substring(s, e);
+    }
+
+    /*
+    Resolves a start string to the index the extraction or replacement should begin at, or -1 if it
+    cannot be found.
+
+    Utils.START_OF_LINE is a marker rather than real text, so there is nothing in the message to
+    indexOf(). It means the very beginning of the message, which is index 0. It used to be fed straight
+    into indexOf(), which always returned -1, so every selection made at the very start of a message
+    quietly did nothing at all.
+     */
+    private int findStart(String text, String start, String action) {
+        if (start.equals(Utils.START_OF_LINE)) {
+            DebugLog.log("Model: Start string is " + Utils.START_OF_LINE + ". Starting at index 0.");
+            return 0;
+        }
+
+        int s = text.indexOf(start);
+        if (s == -1) {
+            DebugLog.log("Model: Start string not found in text. Nothing " + action + ".");
+            return -1;
+        }
+
+        return s + start.length();
+    }
+
+    // Same as findStart(). Utils.END_OF_LINE means the very end of the message, which is index length().
+    private int findStop(String text, String stop, int fromIndex, String action) {
+        if (stop.equals(Utils.END_OF_LINE)) {
+            DebugLog.log("Model: Stop string is " + Utils.END_OF_LINE + ". Stopping at index " + text.length() + ".");
+            return text.length();
+        }
+
+        int e = text.indexOf(stop, fromIndex);
+        if (e == -1) {
+            DebugLog.log("Model: Stop string not found after start string. Nothing " + action + ".");
+            return -1;
+        }
+
+        return e;
     }
 }

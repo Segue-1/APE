@@ -101,16 +101,9 @@ public class ExtractionController {
 
         String messageString = requestEditor.getRequest().toString();
         String selectedContents = requestEditor.selection().get().contents().toString();
-        boolean hasBody;
 
-
-        if (requestEditor.getRequest().body().length() > 0) {
-            hasBody = true;
-        }
-        else
-            hasBody = false;
-
-        DebugLog.log("Request message length: " + messageString.length() + ", has body: " + hasBody);
+        DebugLog.log("Request message length: " + messageString.length()
+                + ", content ends at: " + Utils.getContentEnd(messageString));
 
         inputFields[3].setText(selectedContents);
 
@@ -122,7 +115,7 @@ public class ExtractionController {
             inputFields[3].setToolTipText(null);
 
 
-        String stopString = Utils.getStopString(position, messageString, hasBody);
+        String stopString = Utils.getStopString(position, messageString);
         inputFields[2].setText(stopString);
 
         int offset = selectedContents.length();
@@ -143,16 +136,9 @@ public class ExtractionController {
 
         String messageString = responseEditor.getResponse().toString();
         String selectedContents = responseEditor.selection().get().contents().toString();
-        boolean hasBody;
 
-
-        if (responseEditor.getResponse().body().length() > 0) {
-            hasBody = true;
-        }
-        else
-            hasBody = false;
-
-        DebugLog.log("Response message length: " + messageString.length() + ", has body: " + hasBody);
+        DebugLog.log("Response message length: " + messageString.length()
+                + ", content ends at: " + Utils.getContentEnd(messageString));
 
         inputFields[3].setText(selectedContents);
 
@@ -164,7 +150,7 @@ public class ExtractionController {
             inputFields[3].setToolTipText(null);
 
 
-        String stopString = Utils.getStopString(position, messageString, hasBody);
+        String stopString = Utils.getStopString(position, messageString);
         inputFields[2].setText(stopString);
 
         int offset = selectedContents.length();
