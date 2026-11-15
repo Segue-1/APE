@@ -1,0 +1,52 @@
+Example of JPanel hierarchy, how to get individual components of UI. It becomes a bit confusing since every single panel
+has a parent / child relationship. This snippet can be copy pasted into controller.getToolType
+
+// view.mainPanel is the root panel "API Processing Engine"
+// getComponent(0) will get the first child of a panel
+// mainPanel > tabbedPane > panel returned from method calls in tabbedPane
+JTabbedPane zero = (JTabbedPane) view.mainPanel.getComponent(0); // tabbedPane
+montoyaApi.logging().logToOutput(zero.getTitleAt(0)); // Error Detection
+montoyaApi.logging().logToOutput(zero.getTitleAt(1)); // Corrective Calls
+montoyaApi.logging().logToOutput(zero.getTitleAt(2)); // Followup Call
+montoyaApi.logging().logToOutput(zero.getTitleAt(3)); // Test Calls
+montoyaApi.logging().logToOutput(zero.getTitleAt(4)); // Settings
+JPanel one = (JPanel) zero.getComponent(4); // gets the panel returned from createSettingsPanel()
+//JLabel two = (JLabel) one.getComponent(0); // Scope (first child of panel returned from createSettingsPanel())
+JPanel two = (JPanel) one.getComponent(1); // Gets panel returned from createToolSelectorPanel()
+JPanel three = (JPanel) two.getComponent(0); // checkBoxGrid. panel from createToolSelectorPanel() has this as its first child.
+JCheckBox four = (JCheckBox) three.getComponent(0); // JCheckBox which are the children of checkBoxGrid.
+montoyaApi.logging().logToOutput(four.getText()); // Repeater
+
+TODO or feature ideas
+You should be able to extract text in step 2 from the error condition call in step one. This call should be accessible
+in some way in step 2 corrective calls. You could automatically populate the top table with a grayed out error condition
+call. Or perhaps add a button to "extract text from error condition". Something like that.
+
+Multi set of corrective calls (already started implementation)
+
+More flexible logic for error condition triggers. When using multiple error conditions to trigger APE, users
+should be able to write out logically exactly what they want. This should include logical AND, OR, and negation.
+Also should essentially permit parenthesis to group conditions and within the parenthesis more logical operators can be
+supported.
+
+condition 1 ^ (condition 2 \/ condition 3 \/ !condition4)
+
+Consider whether you should be able to extract text from requests and not just responses.
+Should extract text only be for responses, or both request and response?
+
+Option which limits rate of requests by ensuring corrective calls complete before the next call can be made. It
+is possible for the rate of requests in intruder to be too fast and trigger errors. If an error condition is hit, enforce
+a wait period until corrective calls complete.
+
+TODO bugs
+Extraction table resizing messed up.
+
+Example:
+Send delete instances to corrective calls. Highlight the UUID in the following message and add to extraction.
+
+{"message": "Instance 8798c781-c767-4413-acff-f55166a10efe has been deleted!"}
+
+Then select "been" and click "From Selection". Move the cursor. Fields resize in a weird way.
+
+Need to set minimum size for first column of call set table
+
