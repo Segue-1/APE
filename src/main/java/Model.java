@@ -1,4 +1,3 @@
-import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
 import burp.api.montoya.http.handler.*;
 import burp.api.montoya.http.message.HttpHeader;
@@ -21,12 +20,6 @@ public class Model implements HttpHandler{
     public Boolean triggerConditionIsSet;
     public List<TriggerCondition> triggerConditions;
     public CorrectiveCall followupCall;
-
-    private HttpRequest processedRequest;
-
-    // The trigger condition that most recently evaluated to true. Set by detectErrorCondition so the
-    // caller knows which corrective call set to run.
-    TriggerCondition matchedTriggerCondition;
 
     public Model () {
         // TODO Maybe just move this to controller
@@ -72,30 +65,6 @@ public class Model implements HttpHandler{
 
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
-
-        // This determines which tool (Repeater, Intruder, etc.) a request came from.
-        // TODO make sure this check makes sense on the response.
-        ToolType toolType = responseReceived.toolSource().toolType();
-
-        /*
-        TODO: Make this work with extensions in an elegant way. Extensions currently disabled.
-         Since APE itself is an extension, it was triggering the processResponse function multiple
-         times. Need a way to make sure processResponse is not called for requests made by APE.
-         Currently no way to identify which extension sends a request.
-         */
-
-        /*
-        if (!enabledTools.contains(toolType) || !triggerConditionIsSet || toolType.toolName().equals("Extension")) {
-            DebugLog.log("Model: Not processing response!");
-            return ResponseReceivedAction.continueWith(responseReceived);
-        }
-
-        DebugLog.log("Model: Processing response...");
-
-        detectErrorCondition(responseReceived);
-
-         */
-
         return ResponseReceivedAction.continueWith(responseReceived);
     }
 
@@ -109,7 +78,6 @@ public class Model implements HttpHandler{
     // Detects error conditions and returns the corrective call set to be called.
     // A response triggers APE if ANY of the configured trigger conditions evaluates to true.
     void detectErrorCondition(HttpRequestResponse requestResponse) {
-        HttpRequest originalRequest = requestResponse.request();
         HttpResponse response = requestResponse.response();
 
         if (triggerConditions == null || triggerConditions.isEmpty()) {
@@ -152,7 +120,7 @@ public class Model implements HttpHandler{
         for (int i = 0; i < triggerCondition.errorConditions.size(); i++) {
             ErrorCondition errorCondition = triggerCondition.errorConditions.get(i);
 
-            Boolean raw = evaluateErrorCondidition(errorCondition, response);
+            Boolean raw = evaluateErrorCondition(errorCondition, response);
             Boolean isNegated = triggerCondition.isNegated.get(i);
             Boolean result = evaluateNegation(raw, isNegated);
 
@@ -220,7 +188,7 @@ public class Model implements HttpHandler{
             conditions.remove(i + 1);  // right operand folds into the left one
             conditions.set(i, result); // which now holds the result
 
-            // i is deliberately not advanced. operators.get(i) is now whatever followed the pair we
+            // int "i" is deliberately not advanced. operators.get(i) is now whatever followed the pair we
             // just folded, e.g. the second AND of "A AND B AND C", which must fold into this result.
             DebugLog.log("Model: Collapsed to conditions: " + conditions + ", operators: " + operators);
         }
@@ -257,8 +225,8 @@ public class Model implements HttpHandler{
         DebugLog.log("Model: evalOR() output. Conditions: " + conditions + ", operators: " + operators);
     }
 
-    private Boolean evaluateErrorCondidition(ErrorCondition errorCondition, HttpResponse response) {
-        boolean result = false; //Should use only primitive boolean not obj Boolean because there is no use for it and it is more expensive
+    private Boolean evaluateErrorCondition(ErrorCondition errorCondition, HttpResponse response) {
+        boolean result = false; //Should use only primitive boolean not obj Boolean because there is no use for it, and it is more expensive
 
         switch (errorCondition.category) {
             case "Status Code":
@@ -332,13 +300,12 @@ public class Model implements HttpHandler{
                 HttpRequest rebuiltRequest = HttpRequest.httpRequest(correctiveCallRequest.httpService(), updatedRequest);
                 rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
                 sentRequestResponse = Controller.montoyaApi.http().sendRequest(rebuiltRequest);
-                sentResponse = sentRequestResponse.response();
             }
             else {
                 DebugLog.log("Model: Sending corrective call with unmodified request body.");
                 sentRequestResponse = Controller.montoyaApi.http().sendRequest(correctiveCallRequest);
-                sentResponse = sentRequestResponse.response();
             }
+            sentResponse = sentRequestResponse.response();
 
             if (!correctiveCall.extractList.isEmpty()) {
                 for (ExtractText extractText : correctiveCall.extractList) {
@@ -347,7 +314,8 @@ public class Model implements HttpHandler{
 
                         rawResponse = sentResponse.toString();
                         String extractedText = extractBetween(rawResponse, extractText.startString, extractText.stopString);
-                        if (!extractedText.isEmpty()) {
+
+                        if (extractedText != null) {
                             extractText.extractedText = extractedText;
                             DebugLog.log("Model: Extracted text: " + extractText.extractedText);
                         }
@@ -356,7 +324,7 @@ public class Model implements HttpHandler{
                         DebugLog.log("Model: Extracting from corrective call request: " + extractText.debugString());
 
                         String extractedText = extractBetween(rawRequest, extractText.startString, extractText.stopString);
-                        if (!extractedText.isEmpty()) {
+                        if (extractedText != null) {
                             extractText.extractedText = extractedText;
                             DebugLog.log("Model: Extracted text: " + extractText.extractedText);
                         }
@@ -400,13 +368,12 @@ public class Model implements HttpHandler{
             HttpRequest rebuiltRequest = HttpRequest.httpRequest(followupCallRequest.httpService(), updatedRequest);
             rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
             sentRequestResponse = Controller.montoyaApi.http().sendRequest(rebuiltRequest);
-            sentResponse = sentRequestResponse.response();
         }
         else {
             DebugLog.log("Model: Sending followup call with unmodified request body.");
             sentRequestResponse = Controller.montoyaApi.http().sendRequest(followupCallRequest);
-            sentResponse = sentRequestResponse.response();
         }
+        sentResponse = sentRequestResponse.response();
 
         return sentResponse;
     }
