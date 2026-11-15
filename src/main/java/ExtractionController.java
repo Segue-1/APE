@@ -86,6 +86,7 @@ public class ExtractionController {
                 radioButtons[1].setSelected(true);
             }
             else if (responseEditorposition > 0) {
+
                 extractFromResponseEditor(responseEditorposition);
                 radioButtons[0].setSelected(true);
             }

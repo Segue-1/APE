@@ -22,6 +22,8 @@ public class Model implements HttpHandler{
     public List<TriggerCondition> triggerConditions;
     public CorrectiveCall followupCall;
 
+    private HttpRequest processedRequest;
+
     // The trigger condition that most recently evaluated to true. Set by detectErrorCondition so the
     // caller knows which corrective call set to run.
     TriggerCondition matchedTriggerCondition;
@@ -40,8 +42,33 @@ public class Model implements HttpHandler{
     // HTTP Handler which will intercept all traffic generated in burp
     @Override
     public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent requestToBeSent) {
-        return null;
+
+
+        // This determines which tool (Repeater, Intruder, etc.) a request came from.
+        // TODO make sure this check makes sense on the response.
+        ToolType toolType = requestToBeSent.toolSource().toolType();
+
+        /*
+        TODO: Make this work with extensions in an elegant way. Extensions currently disabled.
+         Since APE itself is an extension, it was triggering the processResponse function multiple
+         times. Need a way to make sure processResponse is not called for requests made by APE.
+         Currently no way to identify which extension sends a request.
+         */
+
+
+        if (!enabledTools.contains(toolType) || toolType.toolName().equals("Extension")) {
+            DebugLog.log("Model: Not processing response!");
+            return RequestToBeSentAction.continueWith(requestToBeSent);
+        }
+
+        HttpRequestResponse requestResponse = Controller.montoyaApi.http().sendRequest(requestToBeSent);
+
+        detectErrorCondition(requestResponse);
+        HttpResponse followupCallResponse = sendFollowupCall();
+
+        return RequestToBeSentAction.spoof(followupCallResponse);
     }
+
 
     @Override
     public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
@@ -56,6 +83,8 @@ public class Model implements HttpHandler{
          times. Need a way to make sure processResponse is not called for requests made by APE.
          Currently no way to identify which extension sends a request.
          */
+
+        /*
         if (!enabledTools.contains(toolType) || !triggerConditionIsSet || toolType.toolName().equals("Extension")) {
             DebugLog.log("Model: Not processing response!");
             return ResponseReceivedAction.continueWith(responseReceived);
@@ -64,6 +93,8 @@ public class Model implements HttpHandler{
         DebugLog.log("Model: Processing response...");
 
         detectErrorCondition(responseReceived);
+
+         */
 
         return ResponseReceivedAction.continueWith(responseReceived);
     }
@@ -77,7 +108,9 @@ public class Model implements HttpHandler{
 
     // Detects error conditions and returns the corrective call set to be called.
     // A response triggers APE if ANY of the configured trigger conditions evaluates to true.
-    void detectErrorCondition(HttpResponse response) {
+    void detectErrorCondition(HttpRequestResponse requestResponse) {
+        HttpRequest originalRequest = requestResponse.request();
+        HttpResponse response = requestResponse.response();
 
         if (triggerConditions == null || triggerConditions.isEmpty()) {
             DebugLog.log("Model: No trigger conditions configured. Not processing response further.");
@@ -96,6 +129,7 @@ public class Model implements HttpHandler{
 
                 processCorrectiveCalls(triggerCondition);
             }
+
         }
         DebugLog.log("Model: Finished evaluating " + triggerConditions.size() + " trigger condition(s).");
     }
@@ -263,44 +297,47 @@ public class Model implements HttpHandler{
         }
     }
 
+
     // Processes text replacements and extractions and sends requests.
     private void processCorrectiveCalls(TriggerCondition triggerCondition) {
         DebugLog.log("Model: Processing corrective call set: " + triggerCondition.correctiveCallSet.name
                 + ". Call sequence size: " + triggerCondition.correctiveCallSet.correctiveCallList.size());
 
         int callIndex = 0;
+        String rawRequest;
+        String rawResponse;
+        String updatedRequest = null;
 
-        for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList){
-            HttpRequestResponse sentRequestResponse = null;
-            String updatedRequest = null;
+        for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList) {
             HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
+            rawRequest = correctiveCallRequest.toString();
+
+            HttpRequestResponse sentRequestResponse;
+            HttpResponse sentResponse;
 
             DebugLog.log("Model: Processing corrective call at row " + callIndex + ". Replacements: "
                     + correctiveCall.replaceList.size() + ", extractions: " + correctiveCall.extractList.size());
+
             callIndex++;
 
             if (!correctiveCall.replaceList.isEmpty()) {
                 for (ReplaceText replaceText : correctiveCall.replaceList) {
-
                     DebugLog.log("Model: Applying replacement to corrective call request: " + replaceText);
-
-                    String text = correctiveCallRequest.bodyToString();
-                    updatedRequest = replaceBetween(text, replaceText.startString, replaceText.stopString, replaceText.extractText.extractedText);
-
-                    if (updatedRequest == null) {
-                        DebugLog.log("[Error] Replacement not applied. Start string '" + replaceText.startString
-                                + "' and stop string '" + replaceText.stopString + "' were not found in the request body.");
-                    }
+                    updatedRequest = replaceBetween(rawRequest, replaceText.startString, replaceText.stopString, replaceText.extractText.extractedText);
                 }
             }
 
             if (updatedRequest != null) {
                 DebugLog.log("Model: Sending corrective call with replaced request body.");
-                sentRequestResponse = Controller.montoyaApi.http().sendRequest(correctiveCallRequest.withBody(updatedRequest));
+                HttpRequest rebuiltRequest = HttpRequest.httpRequest(correctiveCallRequest.httpService(), updatedRequest);
+                rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
+                sentRequestResponse = Controller.montoyaApi.http().sendRequest(rebuiltRequest);
+                sentResponse = sentRequestResponse.response();
             }
             else {
                 DebugLog.log("Model: Sending corrective call with unmodified request body.");
                 sentRequestResponse = Controller.montoyaApi.http().sendRequest(correctiveCallRequest);
+                sentResponse = sentRequestResponse.response();
             }
 
             if (!correctiveCall.extractList.isEmpty()) {
@@ -308,25 +345,21 @@ public class Model implements HttpHandler{
                     if (extractText.extractFromResponse) { // Needs to come AFTER corrective call is made, this extracts from whatever is sent from repeater
                         DebugLog.log("Model: Extracting from corrective call response: " + extractText.debugString());
 
-                        HttpResponse sentResponse = sentRequestResponse.response();
-                        String text = sentResponse.bodyToString();
-                        String extractedText = extractBetween(text, extractText.startString, extractText.stopString);
-                        if (!extractedText.isEmpty())
-                                extractText.extractedText = extractedText;
-
-                        DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                        rawResponse = sentResponse.toString();
+                        String extractedText = extractBetween(rawResponse, extractText.startString, extractText.stopString);
+                        if (!extractedText.isEmpty()) {
+                            extractText.extractedText = extractedText;
+                            DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                        }
                     }
                     else if (extractText.extractFromRequest) {
                         DebugLog.log("Model: Extracting from corrective call request: " + extractText.debugString());
 
-                        HttpRequest sentRequest = sentRequestResponse.request();
-                        String text = sentRequest.bodyToString();
-
-                        String extractedText = extractBetween(text, extractText.startString, extractText.stopString);
-                        if (!extractedText.isEmpty())
+                        String extractedText = extractBetween(rawRequest, extractText.startString, extractText.stopString);
+                        if (!extractedText.isEmpty()) {
                             extractText.extractedText = extractedText;
-
-                        DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                            DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                        }
                     }
                     else {
                         // Not possible but whatever
@@ -336,39 +369,46 @@ public class Model implements HttpHandler{
                 }
             }
         }
+    }
 
-        DebugLog.log("Model: Finished processing corrective call set: " + triggerCondition.correctiveCallSet.name);
-        DebugLog.log("Model: Processing followup call...");
+    private HttpResponse sendFollowupCall() {
+        DebugLog.log("Model: Sending followup call...");
 
-        HttpRequestResponse sentRequestResponse = null;
+        String rawRequest;
         String updatedRequest = null;
-        HttpRequest correctiveCallRequest = followupCall.requestResponse.request();
+
+
+        HttpRequest followupCallRequest = followupCall.requestResponse.request();
+        rawRequest = followupCallRequest.toString();
+
+        HttpRequestResponse sentRequestResponse;
+        HttpResponse sentResponse;
+
+        DebugLog.log("Model: Processing followup call. Replacements: "
+                + followupCall.replaceList.size() + ", extractions: " + followupCall.extractList.size());
 
 
         if (!followupCall.replaceList.isEmpty()) {
             for (ReplaceText replaceText : followupCall.replaceList) {
-                DebugLog.log("Model: Applying replacement to followupCall call request: " + replaceText);
-
-                String rawRequest = correctiveCallRequest.toString();
+                DebugLog.log("Model: Applying replacement to followup call request: " + replaceText);
                 updatedRequest = replaceBetween(rawRequest, replaceText.startString, replaceText.stopString, replaceText.extractText.extractedText);
-
-                if (updatedRequest == null) {
-                    DebugLog.log("[Error] Replacement not applied. Start string '" + replaceText.startString
-                            + "' and stop string '" + replaceText.stopString + "' were not found in the request body.");
-                }
             }
         }
 
         if (updatedRequest != null) {
-            DebugLog.log("Model: Sending corrective call with replaced request body.");
-            HttpRequest rebuiltRequest = HttpRequest.httpRequest(correctiveCallRequest.httpService(), updatedRequest);
+            DebugLog.log("Model: Sending followup call with replaced request body.");
+            HttpRequest rebuiltRequest = HttpRequest.httpRequest(followupCallRequest.httpService(), updatedRequest);
             rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
-            Controller.montoyaApi.http().sendRequest(rebuiltRequest);
+            sentRequestResponse = Controller.montoyaApi.http().sendRequest(rebuiltRequest);
+            sentResponse = sentRequestResponse.response();
         }
         else {
-            DebugLog.log("Model: Sending corrective call with unmodified request body.");
-            Controller.montoyaApi.http().sendRequest(correctiveCallRequest);
+            DebugLog.log("Model: Sending followup call with unmodified request body.");
+            sentRequestResponse = Controller.montoyaApi.http().sendRequest(followupCallRequest);
+            sentResponse = sentRequestResponse.response();
         }
+
+        return sentResponse;
     }
 
     private String replaceBetween(String text, String start, String stop, String replacement) {
