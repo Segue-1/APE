@@ -54,6 +54,7 @@ public class ContextMenusController implements ContextMenuItemsProvider {
 
                 // Pass call to follow up call panel
                 view.followUpPanel.requestEditor.setRequest(reqResp.request());
+                controller.followUpController.setfollowUpCall();
                // view.followUpPanel.responseEditor.setResponse(reqResp.response());
 
                 DebugLog.log("Context menu 'Send to Error Detection' was clicked. Call sent to Error Detection panel.");

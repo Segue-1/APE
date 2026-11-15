@@ -1,3 +1,6 @@
+import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
@@ -7,6 +10,8 @@ import javax.swing.event.PopupMenuListener;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
+import static burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse;
 
 public class FollowUpController {
 
@@ -23,13 +28,16 @@ public class FollowUpController {
     
     private ExtractionTableModel extractionTableModel;
 
+    private Model model;
+
     FollowUpController (View view, Model model, Controller controller) {
-        setAttributes(view);
+        setAttributes(model, view);
         
         setTableDeleteContextMenu(followUpReplaceTable);
         setReplaceDropDownListener();
         setReplaceAddButtonListener();
         setFromSelectionListener(fromSelect, inputFields);
+        //setfollowUpCall();
     }
     
 
@@ -179,7 +187,13 @@ public class FollowUpController {
         });
     }
 
-    private void setAttributes (View view) {
+    public void setfollowUpCall(){
+        model.followupCall = new CorrectiveCall(httpRequestResponse(requestEditor.getRequest(), responseEditor.getResponse()));
+        followUpReplaceTableModel.loadReplaceList(model.followupCall.replaceList);
+    }
+
+
+    private void setAttributes (Model model, View view) {
 
         requestEditor = view.followUpPanel.requestEditor;
         responseEditor = view.followUpPanel.responseEditor;
@@ -190,8 +204,10 @@ public class FollowUpController {
         replaceDropDown = view.followUpPanel.dropDown;
 
         followUpReplaceTableModel = view.followUpPanel.followUpReplaceTableModel;
-        followUpReplaceTable =  view.followUpPanel.followUpReplaceTable;
+        followUpReplaceTable = view.followUpPanel.followUpReplaceTable;
         
         extractionTableModel = view.correctiveCallsPanel.extractionTableModel;
+
+        this.model = model;
     }
 }

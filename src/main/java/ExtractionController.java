@@ -57,12 +57,13 @@ public class ExtractionController {
             extractText.stopString = inputFields[2].getText();
             extractText.selectedText = inputFields[3].getText();
             extractText.urlEncodeDecode = (String) dropDown.getSelectedItem();
-            extractText.extractFromRequest = radioButtons[0].isSelected();
-            extractText.extractFromResponse = radioButtons[1].isSelected();
+            extractText.extractFromResponse = radioButtons[0].isSelected();
+            extractText.extractFromRequest = radioButtons[1].isSelected();
 
             DebugLog.log("Extract Text added to table: " + extractText.debugString());
 
             tableModel.addRow(extractText);
+
             DebugLog.log("Extract Text added to corrective call" + callSequenceTableModel.getCorrectiveCall(callSequenceTable.getSelectedRow()).toString());
         };
         addButton.addActionListener(addButtonListener);

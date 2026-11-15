@@ -20,6 +20,7 @@ public class Model implements HttpHandler{
     public EnumSet<ToolType> enabledTools;
     public Boolean triggerConditionIsSet;
     public List<TriggerCondition> triggerConditions;
+    public CorrectiveCall followupCall;
 
     // The trigger condition that most recently evaluated to true. Set by detectErrorCondition so the
     // caller knows which corrective call set to run.
@@ -34,6 +35,8 @@ public class Model implements HttpHandler{
         }
     }
 
+
+
     // HTTP Handler which will intercept all traffic generated in burp
     @Override
     public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent requestToBeSent) {
@@ -46,8 +49,6 @@ public class Model implements HttpHandler{
         // This determines which tool (Repeater, Intruder, etc.) a request came from.
         // TODO make sure this check makes sense on the response.
         ToolType toolType = responseReceived.toolSource().toolType();
-
-        DebugLog.log("Model toolType.toolName(): " + toolType.toString());
 
         /*
         TODO: Make this work with extensions in an elegant way. Extensions currently disabled.
@@ -64,7 +65,6 @@ public class Model implements HttpHandler{
 
         detectErrorCondition(responseReceived);
 
-
         return ResponseReceivedAction.continueWith(responseReceived);
     }
 
@@ -80,52 +80,24 @@ public class Model implements HttpHandler{
     void detectErrorCondition(HttpResponse response) {
 
         if (triggerConditions == null || triggerConditions.isEmpty()) {
-            DebugLog.log("detectErrorCondition: no trigger conditions configured -> false");
+            DebugLog.log("Model: No trigger conditions configured. Not processing response further.");
             return;
         }
 
 
 
         for (TriggerCondition triggerCondition : triggerConditions) {
-            DebugLog.log("detectErrorCondition: evaluating " + triggerCondition.name);
+            DebugLog.log("Model: Evaluating trigger condition: " + triggerCondition.name);
             if (evaluateTriggerCondition(triggerCondition, response)) {
                 // Remember which one fired so the corrective call step knows what to run.
 
-                DebugLog.log("detectErrorCondition: " + triggerCondition.name + " MATCHED -> true");
+                DebugLog.log("Model: Trigger condition matched: " + triggerCondition.name
+                        + ". Making corrective calls.");
 
-                // Make corrective calls
-                for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList){
-                    if (!correctiveCall.extractList.isEmpty()) {
-                        for (ExtractText extractText : correctiveCall.extractList) {
-                            if (extractText.extractFromResponse) {
-                                HttpResponse correctiveCallResponse = correctiveCall.requestResponse.response();
-                                String text = correctiveCallResponse.bodyToString();
-                                extractText.extractedText = extractBetween(text, extractText.startString, extractText.stopString);
-                            }
-                            else if (extractText.extractFromRequest) {
-                                HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
-                                String text = correctiveCallRequest.bodyToString();
-                                extractText.extractedText = extractBetween(text, extractText.startString, extractText.stopString);
-                            }
-                            else {
-                                // Not possible but whatever
-                            }
-                        }
-                    }
-
-                    if (!correctiveCall.replaceList.isEmpty()) {
-                        for (ReplaceText replaceText : correctiveCall.replaceList) {
-                            HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
-                            String text = correctiveCallRequest.bodyToString();
-                            // Iterate through all extractions per corrective call? per replace?
-                        }
-                    }
-
-                    Controller.montoyaApi.http().sendRequest(correctiveCall.requestResponse.request());
-                }
+                processCorrectiveCalls(triggerCondition);
             }
         }
-        DebugLog.log("detectErrorCondition: no trigger condition matched -> false");
+        DebugLog.log("Model: Finished evaluating " + triggerConditions.size() + " trigger condition(s).");
     }
 
     /*
@@ -136,8 +108,8 @@ public class Model implements HttpHandler{
     The working lists are local, so nothing carries over between responses or between trigger conditions.
      */
     Boolean evaluateTriggerCondition(TriggerCondition triggerCondition, HttpResponse response) {
-        DebugLog.log("evaluateTriggerCondition: " + triggerCondition.name
-                + " [" + triggerCondition.conditionString + "]");
+        DebugLog.log("Model: Evaluating trigger condition " + triggerCondition.name
+                + ". Condition string: " + triggerCondition.conditionString);
 
         List<Boolean> conditions = new ArrayList<>();
         List<String> operators = new ArrayList<>();
@@ -150,9 +122,9 @@ public class Model implements HttpHandler{
             Boolean isNegated = triggerCondition.isNegated.get(i);
             Boolean result = evaluateNegation(raw, isNegated);
 
-            DebugLog.log("  condition[" + i + "] " + errorCondition.name
-                    + " (" + errorCondition.category + " = '" + errorCondition.value + "')"
-                    + " raw=" + raw + " negated=" + isNegated + " -> " + result);
+            DebugLog.log("Model: Error condition " + i + " evaluated: " + errorCondition.name
+                    + ". Category: '" + errorCondition.category + "', value: '" + errorCondition.value + "'");
+            DebugLog.log("Model: Result: " + raw + ", negated: " + isNegated + ", result after negation: " + result);
 
             conditions.add(result);
         }
@@ -162,13 +134,15 @@ public class Model implements HttpHandler{
             operators.addAll(triggerCondition.logicalOperator);
         }
 
-        DebugLog.log("  parsed conditions=" + conditions + " operators=" + operators);
+        DebugLog.log("Model: Parsed trigger condition. Conditions: " + conditions + ", operators: " + operators);
 
         // One operator joins each adjacent pair of error conditions, so there is always one fewer
         // operator than condition. Anything else means the UI handed us something malformed.
         if (operators.size() != conditions.size() - 1) {
-            DebugLog.log("  [Error] malformed trigger condition: " + conditions.size() + " condition(s) with "
-                    + operators.size() + " operator(s), expected " + (conditions.size() - 1) + " -> false");
+            DebugLog.log("[Error] Malformed trigger condition: " + triggerCondition.name + ". Found "
+                    + conditions.size() + " condition(s) and " + operators.size() + " operator(s).");
+            DebugLog.log("A trigger condition must have exactly " + (conditions.size() - 1)
+                    + " operator(s) for " + conditions.size() + " condition(s)");
             return false;
         }
 
@@ -177,12 +151,13 @@ public class Model implements HttpHandler{
         evalOR(conditions, operators);
 
         if (conditions.size() != 1 || !operators.isEmpty()) {
-            DebugLog.log("  [Error] did not collapse to a single value, conditions=" + conditions
-                    + " operators=" + operators + " -> false");
+            DebugLog.log("[Error] Trigger condition did not collapse to a single value: " + triggerCondition.name);
+            DebugLog.log("Conditions: " + conditions + ", operators: " + operators);
             return false;
         }
 
-        DebugLog.log("  => " + triggerCondition.name + " evaluates to " + conditions.getFirst());
+        DebugLog.log("Model: Trigger condition " + triggerCondition.name + " evaluates to "
+                + conditions.getFirst());
         return conditions.getFirst();
     }
 
@@ -192,7 +167,7 @@ public class Model implements HttpHandler{
     drops the operator. Mutates both lists.
      */
     void evalAND(List<Boolean> conditions, List<String> operators) {
-        DebugLog.log("  evalAND  in: conditions=" + conditions + " operators=" + operators);
+        DebugLog.log("Model: evalAND() input. Conditions: " + conditions + ", operators: " + operators);
 
         int i = 0;
         while (i < operators.size()) {
@@ -205,7 +180,7 @@ public class Model implements HttpHandler{
             Boolean right = conditions.get(i + 1);
             Boolean result = left && right;
 
-            DebugLog.log("    AND at operator[" + i + "]: " + left + " AND " + right + " = " + result);
+            DebugLog.log("Model: Collapsing AND at operator " + i + ". " + left + " AND " + right + " = " + result);
 
             operators.remove(i);       // operator is consumed
             conditions.remove(i + 1);  // right operand folds into the left one
@@ -213,21 +188,21 @@ public class Model implements HttpHandler{
 
             // i is deliberately not advanced. operators.get(i) is now whatever followed the pair we
             // just folded, e.g. the second AND of "A AND B AND C", which must fold into this result.
-            DebugLog.log("    collapsed to: conditions=" + conditions + " operators=" + operators);
+            DebugLog.log("Model: Collapsed to conditions: " + conditions + ", operators: " + operators);
         }
 
-        DebugLog.log("  evalAND out: conditions=" + conditions + " operators=" + operators);
+        DebugLog.log("Model: evalAND() output. Conditions: " + conditions + ", operators: " + operators);
     }
 
     // Same collapse as evalAND. Runs second, so by now every remaining operator should be an OR.
     void evalOR(List<Boolean> conditions, List<String> operators) {
-        DebugLog.log("  evalOR   in: conditions=" + conditions + " operators=" + operators);
+        DebugLog.log("Model: evalOR() input. Conditions: " + conditions + ", operators: " + operators);
 
         int i = 0;
         while (i < operators.size()) {
             if (!operators.get(i).equals(OR)) {
-                DebugLog.log("    [Error] unrecognized operator[" + i + "] '" + operators.get(i)
-                        + "', skipping it");
+                DebugLog.log("[Error] Unrecognized logical operator at index " + i + ": '"
+                        + operators.get(i) + "'. Skipping it.");
                 i++;
                 continue;
             }
@@ -236,16 +211,16 @@ public class Model implements HttpHandler{
             Boolean right = conditions.get(i + 1);
             Boolean result = left || right;
 
-            DebugLog.log("    OR at operator[" + i + "]: " + left + " OR " + right + " = " + result);
+            DebugLog.log("Model: Collapsing OR at operator " + i + ". " + left + " OR " + right + " = " + result);
 
             operators.remove(i);
             conditions.remove(i + 1);
             conditions.set(i, result);
 
-            DebugLog.log("    collapsed to: conditions=" + conditions + " operators=" + operators);
+            DebugLog.log("Model: Collapsed to conditions: " + conditions + ", operators: " + operators);
         }
 
-        DebugLog.log("  evalOR  out: conditions=" + conditions + " operators=" + operators);
+        DebugLog.log("Model: evalOR() output. Conditions: " + conditions + ", operators: " + operators);
     }
 
     private Boolean evaluateErrorCondidition(ErrorCondition errorCondition, HttpResponse response) {
@@ -254,17 +229,23 @@ public class Model implements HttpHandler{
         switch (errorCondition.category) {
             case "Status Code":
                 result = String.valueOf(response.statusCode()).equals(errorCondition.value);
+                DebugLog.log("Model: Status code " + response.statusCode() + " compared to '"
+                        + errorCondition.value + "'. Result: " + result);
                 return result;
             case "Body":
                 result = response.body().toString().contains(errorCondition.value);
+                DebugLog.log("Model: Response body searched for '" + errorCondition.value
+                        + "'. Result: " + result);
                 return result;
             case "Header":
                 for (HttpHeader header : response.headers()) {
                     if (header.value().contains(errorCondition.value)) result = true;
                 }
+                DebugLog.log("Model: " + response.headers().size() + " response header(s) searched for '"
+                        + errorCondition.value + "'. Result: " + result);
                 return result;
             default:
-                DebugLog.log("  [Error] unknown error condition category '" + errorCondition.category + "'");
+                DebugLog.log("[Error] Unknown error condition category: '" + errorCondition.category + "'");
                 return false;
         }
     }
@@ -274,6 +255,7 @@ public class Model implements HttpHandler{
     // can only be attached to an individual error condition, never to a group of them.
     private Boolean evaluateNegation(Boolean result, Boolean isNegated) {
         if (isNegated) {
+            DebugLog.log("Model: Error condition is negated. Negating result " + result + ".");
             return !result;
         }
         else {
@@ -281,18 +263,154 @@ public class Model implements HttpHandler{
         }
     }
 
-    private void processText() {
+    // Processes text replacements and extractions and sends requests.
+    private void processCorrectiveCalls(TriggerCondition triggerCondition) {
+        DebugLog.log("Model: Processing corrective call set: " + triggerCondition.correctiveCallSet.name
+                + ". Call sequence size: " + triggerCondition.correctiveCallSet.correctiveCallList.size());
 
+        int callIndex = 0;
+
+        for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList){
+            HttpRequestResponse sentRequestResponse = null;
+            String updatedRequest = null;
+            HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
+
+            DebugLog.log("Model: Processing corrective call at row " + callIndex + ". Replacements: "
+                    + correctiveCall.replaceList.size() + ", extractions: " + correctiveCall.extractList.size());
+            callIndex++;
+
+            if (!correctiveCall.replaceList.isEmpty()) {
+                for (ReplaceText replaceText : correctiveCall.replaceList) {
+
+                    DebugLog.log("Model: Applying replacement to corrective call request: " + replaceText);
+
+                    String text = correctiveCallRequest.bodyToString();
+                    updatedRequest = replaceBetween(text, replaceText.startString, replaceText.stopString, replaceText.extractText.extractedText);
+
+                    if (updatedRequest == null) {
+                        DebugLog.log("[Error] Replacement not applied. Start string '" + replaceText.startString
+                                + "' and stop string '" + replaceText.stopString + "' were not found in the request body.");
+                    }
+                }
+            }
+
+            if (updatedRequest != null) {
+                DebugLog.log("Model: Sending corrective call with replaced request body.");
+                sentRequestResponse = Controller.montoyaApi.http().sendRequest(correctiveCallRequest.withBody(updatedRequest));
+            }
+            else {
+                DebugLog.log("Model: Sending corrective call with unmodified request body.");
+                sentRequestResponse = Controller.montoyaApi.http().sendRequest(correctiveCallRequest);
+            }
+
+            if (!correctiveCall.extractList.isEmpty()) {
+                for (ExtractText extractText : correctiveCall.extractList) {
+                    if (extractText.extractFromResponse) { // Needs to come AFTER corrective call is made, this extracts from whatever is sent from repeater
+                        DebugLog.log("Model: Extracting from corrective call response: " + extractText.debugString());
+
+                        HttpResponse sentResponse = sentRequestResponse.response();
+                        String text = sentResponse.bodyToString();
+                        String extractedText = extractBetween(text, extractText.startString, extractText.stopString);
+                        if (!extractedText.isEmpty())
+                                extractText.extractedText = extractedText;
+
+                        DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                    }
+                    else if (extractText.extractFromRequest) {
+                        DebugLog.log("Model: Extracting from corrective call request: " + extractText.debugString());
+
+                        HttpRequest sentRequest = sentRequestResponse.request();
+                        String text = sentRequest.bodyToString();
+
+                        String extractedText = extractBetween(text, extractText.startString, extractText.stopString);
+                        if (!extractedText.isEmpty())
+                            extractText.extractedText = extractedText;
+
+                        DebugLog.log("Model: Extracted text: " + extractText.extractedText);
+                    }
+                    else {
+                        // Not possible but whatever
+                        DebugLog.log("[Error] Extraction is set to extract from neither the request nor the response: "
+                                + extractText.debugString());
+                    }
+                }
+            }
+        }
+
+        DebugLog.log("Model: Finished processing corrective call set: " + triggerCondition.correctiveCallSet.name);
+        DebugLog.log("Model: Processing followup call...");
+
+        HttpRequestResponse sentRequestResponse = null;
+        String updatedRequest = null;
+        HttpRequest correctiveCallRequest = followupCall.requestResponse.request();
+
+
+        if (!followupCall.replaceList.isEmpty()) {
+            for (ReplaceText replaceText : followupCall.replaceList) {
+                DebugLog.log("Model: Applying replacement to followupCall call request: " + replaceText);
+
+                String rawRequest = correctiveCallRequest.toString();
+                updatedRequest = replaceBetween(rawRequest, replaceText.startString, replaceText.stopString, replaceText.extractText.extractedText);
+
+                if (updatedRequest == null) {
+                    DebugLog.log("[Error] Replacement not applied. Start string '" + replaceText.startString
+                            + "' and stop string '" + replaceText.stopString + "' were not found in the request body.");
+                }
+            }
+        }
+
+        if (updatedRequest != null) {
+            DebugLog.log("Model: Sending corrective call with replaced request body.");
+            HttpRequest rebuiltRequest = HttpRequest.httpRequest(correctiveCallRequest.httpService(), updatedRequest);
+            rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
+            Controller.montoyaApi.http().sendRequest(rebuiltRequest);
+        }
+        else {
+            DebugLog.log("Model: Sending corrective call with unmodified request body.");
+            Controller.montoyaApi.http().sendRequest(correctiveCallRequest);
+        }
     }
 
-    private String extractBetween(String text, String start, String stop) {
+    private String replaceBetween(String text, String start, String stop, String replacement) {
+        DebugLog.log("Model: replaceBetween() start string: '" + start + "', stop string: '" + stop
+                + "', within text : '" + text + "'");
+
+
         int s = text.indexOf(start);
-        if (s == -1) return null;              // start not in this text
+        if (s == -1) {
+            DebugLog.log("Model: Start string not found in text. Nothing replaced.");
+            return null;
+        }
+
 
         s += start.length();
         int e = text.indexOf(stop, s);
-        if (e == -1) return null;              // stop not found after start
+        if (e == -1) {
+            DebugLog.log("Model: Stop string not found after start string. Nothing replaced.");
+            return null;
+        }
 
+        DebugLog.log("Model: Replacing text between index " + s + " and index " + e + ".");
+        return text.substring(0, s) + replacement + text.substring(e);
+    }
+
+    private String extractBetween(String text, String start, String stop) {
+        DebugLog.log("Model: extractBetween() start string: '" + start + "', stop string: '" + stop + "' within text : '" + text + "'");
+
+        int s = text.indexOf(start);
+        if (s == -1) {
+            DebugLog.log("Model: Start string not found in text. Nothing extracted.");
+            return null;
+        }
+
+        s += start.length();
+        int e = text.indexOf(stop, s);
+        if (e == -1) {
+            DebugLog.log("Model: Stop string not found after start string. Nothing extracted.");
+            return null;
+        }
+
+        DebugLog.log("Model: Extracting text between index " + s + " and index " + e + ".");
         return text.substring(s, e);
     }
 }
