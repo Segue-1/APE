@@ -7,6 +7,17 @@ public class ReplaceText {
     public String selectedText;
     public ExtractText extractText;
 
+    /*
+    Which occurrence of startString to act on, counting from 1.
+
+    replaceBetween() locates the start string with indexOf(), so without this it always acted on the
+    FIRST occurrence. An 8 character key taken from "From Selection" can easily also appear earlier in
+    the message, typically in a header, and the replacement then silently rewrote the wrong place.
+
+    Defaults to 1, which is the old behaviour.
+     */
+    public int occurrence = 1;
+
     public void setId () {
         id = "Replacement-" + index;
     }
@@ -24,6 +35,7 @@ public class ReplaceText {
                 ", startString='" + startString + '\'' +
                 ", stopString='" + stopString + '\'' +
                 ", selectedText='" + selectedText + '\'' +
+                ", occurrence=" + occurrence +
                 ", extractText='" + (extractText == null ? "null" : extractText.debugString()) + '\'' +
                 '}';
     }

@@ -13,6 +13,15 @@ public class ExtractionPanel extends JPanel {
     public JButton fromSelectButton;
     public JButton addButton;
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
+    /*
+    Column count for the input fields. A JTextField built with no column count reports a preferred width
+    based on whatever text it currently holds, so "From Selection" dropping a long selected string into a
+    field grew that field's preferred width and GridBagLayout re-laid out the whole panel. With a column
+    count the preferred width is fixed and setText() no longer moves anything. fill = BOTH still expands
+    the fields to the full cell, so this is only a floor, not the displayed width.
+     */
+    private static final int FIELD_COLUMNS = 8;
+
 
 
     ExtractionPanel(){
@@ -23,7 +32,10 @@ public class ExtractionPanel extends JPanel {
         labels = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
                 "URL encode/decode:", "Extract from: "};
 
-        dropDown = new JComboBox<>();
+        // The "URL encode/decode:" selector. Was created empty, so getSelectedItem() returned null and
+        // the feature did nothing. Populated here; the controller stores the choice on the ExtractText
+        // and Model applies it to the extracted value.
+        dropDown = new JComboBox<>(new String[]{Utils.URL_NONE, Utils.URL_ENCODE, Utils.URL_DECODE});
         inputFields = new JTextField[labels.length - 1];
         fromSelectButton = new JButton();
         addButton = new JButton();
@@ -90,7 +102,7 @@ public class ExtractionPanel extends JPanel {
         gbc.weighty = 1;
 
         for (int i = 0; i < jTextFields.length; i++) {
-            jTextFields[i] = new JTextField();
+            jTextFields[i] = new JTextField(FIELD_COLUMNS);
         }
 
         for (int i = 0; i < fieldNames.length; i++) {

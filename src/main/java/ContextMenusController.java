@@ -51,6 +51,9 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
                 view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
                 controller.errorDetectionController.errorCall = reqResp;
+                // Also on the Model's error call, so the object the extractions belong to carries the
+                // exchange they were configured against.
+                model.errorCall.requestResponse = reqResp;
 
                 // Pass call to follow up call panel
                 view.followUpPanel.requestEditor.setRequest(reqResp.request());
@@ -67,23 +70,36 @@ public class ContextMenusController implements ContextMenuItemsProvider {
                 view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
                 view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
 
+                /*
+                Resolve the target row once. addRequestResponse() maps -1 to Set 0, and the log below
+                used to re-read the selection without that mapping and index the list with -1.
+                 */
+                int targetRow = correctiveCallsSetsTable.getSelectedRow();
+                if (targetRow == -1) {
+                    targetRow = 0;
+                }
+
                 // Stores call in currently selected corrective calls set.
-                correctiveCallSetTableModel.addRequestResponse(reqResp, correctiveCallsSetsTable.getSelectedRow());
+                CorrectiveCallSet targetSet = correctiveCallSetTableModel.getCorrectiveCallsSet(targetRow);
+                correctiveCallSetTableModel.addRequestResponse(reqResp, targetRow);
                 DebugLog.log("Context menu 'Send to Corrective Calls' was clicked. " +
                              "Call sent to Corrective Calls panel and stored in corrective call set: " +
-                              correctiveCallSetTableModel.correctiveCallSetList.get(getSelectedRow()).toString());
+                              targetSet);
 
-                callSequenceTableModel.fireTableDataChanged();
-                callSequenceTable.setRowSelectionInterval(callSequenceTableModel.correctiveCallList.size() - 1, callSequenceTableModel.correctiveCallList.size() - 1);
+                /*
+                Point the call sequence table at the set the call was actually added to. It could still
+                be showing a different set's list, in which case fireTableDataChanged() on its own
+                redrew the wrong calls and the row selection below could land out of range.
+                 */
+                callSequenceTableModel.loadCallSequence(targetSet.correctiveCallList);
+
+                int lastRow = callSequenceTableModel.getRowCount() - 1;
+                if (lastRow >= 0) {
+                    callSequenceTable.setRowSelectionInterval(lastRow, lastRow);
+                }
                 Utils.resizeColumnsToFitContent(callSequenceTable);
             }
         });
-    }
-
-    int getSelectedRow() {
-        int index;
-        index = correctiveCallsSetsTable.getSelectedRow();
-        return index;
     }
 
     // Loads context menus.

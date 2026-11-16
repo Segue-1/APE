@@ -35,14 +35,8 @@ public class CorrectiveCallsPanel extends JPanel {
     public JTable extractionTable;
     public JTable replacementTable;
 
-    public JTextField[] extractInputFields;
-    public JTextField[] replaceInputFields;
 
-    public JButton extractFromSelect;
-    public JButton replaceFromSelect;
 
-    public JComboBox<String> extractDropDown;
-    public JComboBox<ExtractText> replaceDropDown;
 
     public ReplacementPanel replacementPanel;
     public ExtractionPanel extractionPanel;

@@ -12,6 +12,15 @@ public class FollowUpPanel extends JPanel {
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
+    /*
+    Column count for the input fields. A JTextField built with no column count reports a preferred width
+    based on whatever text it currently holds, so "From Selection" dropping a long selected string into a
+    field grew that field's preferred width and GridBagLayout re-laid out the whole panel. With a column
+    count the preferred width is fixed and setText() no longer moves anything. fill = BOTH still expands
+    the fields to the full cell, so this is only a floor, not the displayed width.
+     */
+    private static final int FIELD_COLUMNS = 8;
+
 
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
@@ -90,9 +99,12 @@ public class FollowUpPanel extends JPanel {
         requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
         responseEditor = Controller.montoyaApi.userInterface().createHttpResponseEditor();
 
+        // The followup call only edits a request, so the response editor has nothing to show and was
+        // collapsing to its minimum size. It is still created because setfollowUpCall() reads
+        // getResponse() off it, but an empty panel holds the space instead.
         JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         editorPane.setLeftComponent(requestEditor.uiComponent());
-        editorPane.setRightComponent(responseEditor.uiComponent());
+        editorPane.setRightComponent(new JPanel());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
         editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 500));
@@ -114,7 +126,7 @@ public class FollowUpPanel extends JPanel {
         gbc.weightx = .75; gbc.weighty = 1;
 
         String[] fieldLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
-                "Pick from Extraction"};
+                "Occurrence:", "Pick from Extraction"};
         dropDown = new JComboBox<>();
         inputFields = new JTextField[fieldLabels.length - 1];
         fromSelect = new JButton();
@@ -160,7 +172,11 @@ public class FollowUpPanel extends JPanel {
         gbc.gridwidth = 1;
 
         for (int i = 0; i < jTextFields.length; i++) {
-            jTextFields[i] = new JTextField();
+            // "Occurrence:" is optional and defaults to the first match, so it carries a placeholder.
+            // Matched on the label rather than a fixed index so reordering the fields cannot break it.
+            jTextFields[i] = "Occurrence:".equals(fieldNames[i])
+                    ? new HintTextField("Optional", FIELD_COLUMNS)
+                    : new JTextField(FIELD_COLUMNS);
         }
 
         for (int i = 0; i < fieldNames.length; i++) {

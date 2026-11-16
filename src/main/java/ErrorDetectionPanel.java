@@ -20,9 +20,26 @@ public class ErrorDetectionPanel extends JPanel {
     public JComboBox<String> dropdown;
     public JButton submitButton;
     public JTextArea conditionTextField;
+    // Shown in place of conditionTextField when the "Header" category is selected.
+    public JTextField headerNameField;
+    public JTextField headerValueField;
+    // Which half of the exchange a Body or Header condition looks at.
+    public JRadioButton matchResponseButton;
+    public JRadioButton matchRequestButton;
+    private JLabel matchSourceLabel;
+    private JPanel conditionCards;
+    private static final String CARD_SINGLE = "single";
+    private static final String CARD_HEADER = "header";
 
     public ErrorConditionTableModel errorConditionTableModel;
     public JTable errorConditionTable;
+
+    /*
+    Extractions taken from the errored call itself. The same ExtractionPanel the Corrective Calls tab
+    uses, so the two behave identically; what differs is only which exchange it reads and which list it
+    writes to. Wired by ErrorDetectionController.setUpErroredCallExtraction().
+     */
+    public ExtractionPanel errorExtractionPanel;
 
 
     public ErrorDetectionPanel() {
@@ -56,7 +73,17 @@ public class ErrorDetectionPanel extends JPanel {
         editorPane.setRightComponent(responseEditor.uiComponent());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
-        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 875));
+        /*
+        Preferred height, not a cap: the editor still absorbs spare vertical space on a tall window,
+        because BoxLayout hands slack to whatever has room to grow and the bottom panel is capped at
+        400. What this number decides is how much the panel asks for in total, and so whether the
+        bottom row gets its preferred 250 or is squeezed when the window is short.
+
+        Was 875, which left the bottom row short on anything but a tall window -- and that row now
+        holds three sub-panels: the condition table, the condition builder, and the errored call
+        extraction panel.
+         */
+        editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 600));
         editorPane.setMinimumSize(new Dimension(Integer.MAX_VALUE, 200));
         add(editorPane, BorderLayout.CENTER);
 
@@ -86,11 +113,12 @@ public class ErrorDetectionPanel extends JPanel {
         JPanel triggerConditionPanel = createTriggerConditionPanel();
         bottomPanel.add(triggerConditionPanel, gbc);
 
-        // New stuff
         gbc.gridx = 2;
         gbc.weightx = 0.33;
 
-        JPanel replacementPanel;
+        errorExtractionPanel = new ExtractionPanel();
+        errorExtractionPanel.table.setName("Errored Call Extract Table");
+        bottomPanel.add(errorExtractionPanel, gbc);
 
         add(bottomPanel);
     }
@@ -142,7 +170,27 @@ public class ErrorDetectionPanel extends JPanel {
         dropdown = new JComboBox<>(options);
         panel.add(dropdown, gbc);
 
+        /*
+        Body and Header conditions can be aimed at the request or the response. Status Code only exists
+        on a response, so the choice is disabled for it.
+
+        Worth having because the editors above show both halves of the exchange, so picking a header
+        out of the request -- "Connection", for instance -- looks like it should work, and before this
+        existed such a condition silently never fired.
+         */
         gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0;
+
+        matchSourceLabel = new JLabel("Match in:");
+        matchSourceLabel.setFont(labelFont);
+        panel.add(matchSourceLabel, gbc);
+
+        gbc.gridy = 3;
+        panel.add(createMatchSourcePanel(), gbc);
+
+        gbc.gridy = 4;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
@@ -151,15 +199,112 @@ public class ErrorDetectionPanel extends JPanel {
         conditionTextField.setLineWrap(true);
         JScrollPane scrollPane = new JScrollPane(conditionTextField);
 
-        panel.add(scrollPane, gbc);
+        /*
+        Status Code and Body take a single value, so they keep the plain text area. Header needs two
+        values, a header name and the value it should contain, so the same cell swaps to a pair of
+        labelled fields. A CardLayout keeps both built and shows whichever the dropdown selects.
+         */
+        conditionCards = new JPanel(new CardLayout());
+        conditionCards.add(scrollPane, CARD_SINGLE);
+        conditionCards.add(createHeaderFieldsPanel(), CARD_HEADER);
+        panel.add(conditionCards, gbc);
 
-        gbc.gridy = 3;
+        gbc.gridy = 5;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         gbc.weighty = 0;
         submitButton = new JButton("Add");
         panel.add(submitButton, gbc);
 
+        dropdown.addActionListener(e -> showConditionCard());
+        showConditionCard();
+
         return panel;
+    }
+
+    // Request / Response selector for Body and Header conditions.
+    private JPanel createMatchSourcePanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 1; gbc.weighty = 0;
+
+        matchResponseButton = new JRadioButton("Response", true);
+        matchRequestButton = new JRadioButton("Request");
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(matchResponseButton);
+        group.add(matchRequestButton);
+
+        panel.add(matchResponseButton, gbc);
+
+        gbc.gridx = 1;
+        panel.add(matchRequestButton, gbc);
+
+        return panel;
+    }
+
+    // Header name and the value it must contain, side by side with their labels. Only shown for the
+    // "Header" category.
+    private JPanel createHeaderFieldsPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(1, 1, 1, 1);
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0; gbc.weighty = 0;
+
+        JLabel nameLabel = new JLabel("Header");
+        nameLabel.setFont(labelFont);
+        panel.add(nameLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        headerNameField = new JTextField();
+        panel.add(headerNameField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 0;
+
+        JLabel valueLabel = new JLabel("Value");
+        valueLabel.setFont(labelFont);
+        panel.add(valueLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+        headerValueField = new JTextField();
+        panel.add(headerValueField, gbc);
+
+        // Keeps the two rows at the top of the cell instead of stretched down it.
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1; gbc.weighty = 1;
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(new JPanel(), gbc);
+
+        return panel;
+    }
+
+    private void showConditionCard() {
+        String selected = (String) dropdown.getSelectedItem();
+
+        String card = "Header".equals(selected) ? CARD_HEADER : CARD_SINGLE;
+        ((CardLayout) conditionCards.getLayout()).show(conditionCards, card);
+
+        // A status code only exists on a response, so there is nothing to choose for it.
+        boolean sourceApplies = !"Status Code".equals(selected);
+        matchSourceLabel.setEnabled(sourceApplies);
+        matchResponseButton.setEnabled(sourceApplies);
+        matchRequestButton.setEnabled(sourceApplies);
+
+        if (!sourceApplies) {
+            matchResponseButton.setSelected(true);
+        }
     }
 }

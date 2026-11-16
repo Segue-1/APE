@@ -66,9 +66,15 @@ public class TriggerConditionTableModel extends AbstractTableModel implements De
         }
     }
 
+    /*
+    Re-numbers the rows after a deletion. Calls the object's own setName() rather than rebuilding
+    the string here, which is how ErrorCondition rows ended up renamed from "Error Condition N" to
+    "Condition N" after a delete.
+     */
     private void resetNames(int start) {
         for (int i = start; i < triggerConditions.size(); i++) {
-            triggerConditions.get(i).name = "Trigger Condition " + --triggerConditions.get(i).index;
+            triggerConditions.get(i).index--;
+            triggerConditions.get(i).setName();
         }
     }
 

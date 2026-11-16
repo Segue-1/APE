@@ -82,12 +82,12 @@ public class ExtractionController {
 
 
             if (requestEditorposition > 0) {
-                extractFromRequestEditor(requestEditorposition);
+                extractFromRequestEditor();
                 radioButtons[1].setSelected(true);
             }
             else if (responseEditorposition > 0) {
 
-                extractFromResponseEditor(responseEditorposition);
+                extractFromResponseEditor();
                 radioButtons[0].setSelected(true);
             }
             else{
@@ -96,73 +96,18 @@ public class ExtractionController {
         });
     }
 
-    private void extractFromRequestEditor(int position) {
-        DebugLog.log("Extracting from request editor at caret position " + position);
-
+    /*
+    Both of these now just hand the editor and its raw message to Utils.applyFromSelection(), which
+    reads the selection, guards the empty case and fills in the input fields. The position argument is
+    no longer needed, since the helper reads the caret off the editor itself.
+     */
+    private void extractFromRequestEditor() {
         String messageString = requestEditor.getRequest().toString();
-        String selectedContents = requestEditor.selection().get().contents().toString();
-
-        DebugLog.log("Request message length: " + messageString.length()
-                + ", content ends at: " + Utils.getContentEnd(messageString));
-
-        inputFields[3].setText(selectedContents);
-
-        if (selectedContents.startsWith(" ")) {
-            inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
-            DebugLog.log("Selection starts with whitespace. Whitespace warning tool tip set on selected text field.");
-        }
-        else
-            inputFields[3].setToolTipText(null);
-
-
-        String stopString = Utils.getStopString(position, messageString);
-        inputFields[2].setText(stopString);
-
-        int offset = selectedContents.length();
-        int startIndex = position - offset;
-
-        DebugLog.log("Selection length: " + offset + ", calculated start index: " + startIndex);
-
-        String startString = Utils.getStartString(startIndex, messageString);
-        inputFields[1].setText(startString);
-
-        DebugLog.log("Selected Text: " + selectedContents);
-        DebugLog.log("Stop String: " + stopString);
-        DebugLog.log("Start String: " + startString);
+        Utils.applyFromSelection(requestEditor, messageString, inputFields, "Extraction (request)");
     }
 
-    private void extractFromResponseEditor(int position) {
-        DebugLog.log("Extracting from response editor at caret position " + position);
-
+    private void extractFromResponseEditor() {
         String messageString = responseEditor.getResponse().toString();
-        String selectedContents = responseEditor.selection().get().contents().toString();
-
-        DebugLog.log("Response message length: " + messageString.length()
-                + ", content ends at: " + Utils.getContentEnd(messageString));
-
-        inputFields[3].setText(selectedContents);
-
-        if (selectedContents.startsWith(" ")) {
-            inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
-            DebugLog.log("Selection starts with whitespace. Whitespace warning tool tip set on selected text field.");
-        }
-        else
-            inputFields[3].setToolTipText(null);
-
-
-        String stopString = Utils.getStopString(position, messageString);
-        inputFields[2].setText(stopString);
-
-        int offset = selectedContents.length();
-        int startIndex = position - offset;
-
-        DebugLog.log("Selection length: " + offset + ", calculated start index: " + startIndex);
-
-        String startString = Utils.getStartString(startIndex, messageString);
-        inputFields[1].setText(startString);
-
-        DebugLog.log("Selected Text: " + selectedContents);
-        DebugLog.log("Stop String: " + stopString);
-        DebugLog.log("Start String: " + startString);
+        Utils.applyFromSelection(responseEditor, messageString, inputFields, "Extraction (response)");
     }
 }

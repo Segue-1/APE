@@ -9,7 +9,6 @@ import java.awt.*;
 
 public class TriggerConditionPanel extends JPanel {
     static Color conditionBuilderTextColor = new Color(143, 0, 197);
-    static Color testCallTextColor = new Color(255, 91, 0);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
@@ -23,8 +22,10 @@ public class TriggerConditionPanel extends JPanel {
     public TriggerConditionTableModel triggerConditionTableModel;
     public JTable triggerConditionTable;
 
-    public TestCallTableModel testCallTableModel;
-    public JTable testCallTable;
+    // Sub-panel with its own controller, the way CorrectiveCallsPanel owns its extraction and
+    // replacement panels. Added at the same position the inline test call panel occupied, so the
+    // getComponent() indices this tab's controller relies on are unchanged.
+    public TestCallPanel testCallPanel;
 
 
     TriggerConditionPanel() {
@@ -40,7 +41,7 @@ public class TriggerConditionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 1;
         gbc.weightx = 1; gbc.weighty = 0.1;
 
-        add(createTestCallPanel(), gbc);
+        add(testCallPanel = new TestCallPanel(), gbc);
 
         gbc.gridx = 0; gbc.gridy = 2;
         gbc.weightx = 1; gbc.weighty = 1;
@@ -175,119 +176,6 @@ public class TriggerConditionPanel extends JPanel {
 
         table.getColumnModel().getColumn(0).setMinWidth(125);
         table.getColumnModel().getColumn(1).setMinWidth(420);
-
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
-        return panel;
-    }
-
-    private JPanel createTestCallPanel(){
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 0.33; gbc.weighty = 0;
-
-        panel.add(createTestCallLabel(), gbc);
-
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.gridx = 1; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 0;
-
-        panel.add(createTestCallButtonPanel(), gbc);
-
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 0.5;
-        gbc.gridwidth = 2;
-
-        testCallTableModel = new TestCallTableModel();
-        testCallTable = new JTable(testCallTableModel);
-        testCallTable.setName("TestCallTable");
-        panel.add(createTestCallTable("APE's Steps", testCallTable), gbc);
-
-        return panel;
-    }
-
-    private JPanel createTestCallButtonPanel(){
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.anchor = GridBagConstraints.EAST;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 0; gbc.weighty = 0;
-
-        JButton testButton = new JButton("Test");
-
-        panel.add(testButton, gbc);
-
-        return panel;
-    }
-
-    private JPanel createTestCallLabel(){
-        JPanel panel = new JPanel(new GridBagLayout());
-        JLabel label = new JLabel();
-        JLabel subText = new JLabel();
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        // Label
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 0;
-
-
-        label.setText("Test Calls");
-        label.setFont(headerFont);
-        label.setForeground(testCallTextColor);
-        panel.add(label, gbc);
-
-        // Sub text
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
-
-        subText.setFont(subTextFont);
-        subText.setForeground(Color.BLACK);
-
-        subText.setText("Displays step by step what APE does. Send a test call which will execute a trigger condition.");
-
-        panel.add(subText, gbc);
-
-        return panel;
-    }
-
-    private JPanel createTestCallTable(String header, JTable table) {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(1, 1, 1, 1);
-
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.weightx = 1; gbc.weighty = 0;
-
-        JLabel headerLabel = new JLabel(header);
-        headerLabel.setFont(subHeaderFont);
-        panel.add(headerLabel, gbc);
-
-        gbc.fill = GridBagConstraints.BOTH;
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setPreferredSize(new Dimension(500, 100));
-        scrollPane.setMinimumSize(new Dimension(500, 100));
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.weightx = 1; gbc.weighty = 1;
-        panel.add(scrollPane, gbc);
-        panel.setMinimumSize(new Dimension(400, 100));
-        panel.setPreferredSize(new Dimension(400, 100));
-
-        //table.getColumnModel().getColumn(0).setMinWidth(125);
-        //table.getColumnModel().getColumn(1).setMinWidth(420);
 
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);

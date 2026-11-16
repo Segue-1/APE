@@ -59,9 +59,15 @@ public class CorrectiveCallSetTableModel extends AbstractTableModel {
         fireTableRowsInserted(correctiveCallSetList.size() - 1, correctiveCallSetList.size() - 1);
     }
 
+    /*
+    Re-numbers the rows after a deletion. Calls the object's own setName() rather than rebuilding
+    the string here, which is how ErrorCondition rows ended up renamed from "Error Condition N" to
+    "Condition N" after a delete.
+     */
     private void resetNames(int start) {
         for (int i = start; i < correctiveCallSetList.size(); i++) {
-            correctiveCallSetList.get(i).name = "Set " + --correctiveCallSetList.get(i).index;
+            correctiveCallSetList.get(i).index--;
+            correctiveCallSetList.get(i).setName();
         }
     }
 

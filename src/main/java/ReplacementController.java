@@ -5,7 +5,7 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.event.ActionListener;
-import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReplacementController {
@@ -20,10 +20,12 @@ public class ReplacementController {
     public HttpRequestEditor requestEditor;
     private CallSequenceTableModel callSequenceTableModel;
     private JTable callSequenceTable;
+    private Model model;
     
     ReplacementController (ReplacementPanel replacementPanel, HttpRequestEditor httpRequestEditor,
                            ExtractionTableModel extractionTableModel, CallSequenceTableModel callSequenceTableModel,
-                           JTable callSequenceTable) {
+                           JTable callSequenceTable, Model model) {
+        this.model = model;
         this.dropDown = replacementPanel.dropDown;
         this.inputFields = replacementPanel.inputFields;
         this.table = replacementPanel.table;
@@ -42,36 +44,8 @@ public class ReplacementController {
 
     private void setFromSelectionListener() {
         fromSelectButton.addActionListener(e -> {
-            int position;
-            String messageString;
-            String selectedContents;
-
-            position = requestEditor.caretPosition();
-            messageString = requestEditor.getRequest().toString();
-            selectedContents = requestEditor.selection().get().contents().toString();
-
-            inputFields[3].setText(selectedContents);
-
-            if (selectedContents.startsWith(" "))
-                inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
-            else
-                inputFields[3].setToolTipText(null);
-
-
-            String stopString = Utils.getStopString(position, messageString);
-            inputFields[2].setText(stopString);
-
-            int offset = selectedContents.length();
-            int startIndex = position - offset;
-
-            String startString = Utils.getStartString(startIndex, messageString);
-            inputFields[1].setText(startString);
-
-            DebugLog.log("'From Selection' button clicked in Replace text section. " +
-                    "The following input fields were set.");
-            DebugLog.log("Selected Text: " + selectedContents);
-            DebugLog.log("Stop String: " + stopString);
-            DebugLog.log("Start String: " + startString);
+            String messageString = requestEditor.getRequest().toString();
+            Utils.applyFromSelection(requestEditor, messageString, inputFields, "Replacement");
         });
     }
 
@@ -92,6 +66,7 @@ public class ReplacementController {
             replaceText.stopString = inputFields[2].getText();
             replaceText.selectedText = inputFields[3].getText();
             replaceText.extractText = (ExtractText) dropDown.getSelectedItem();
+            replaceText.occurrence = parseOccurrence(inputFields[4].getText(), replaceText.name);
             tableModel.addRow(replaceText);
             DebugLog.log("Replacement Add button clicked in Corrective Calls: " + replaceText);
         };
@@ -123,28 +98,70 @@ public class ReplacementController {
     // Populates "Pick from Extraction" drop down menu. Extractions in this drop down may only come from previous requests
     // in relation to the currently selected corrective call in the call sequence table.
     public void refreshDropDown() {
-        ExtractText tempExtractText;
+        Utils.repopulatePreservingSelection(dropDown, pickableExtractions());
+    }
 
-        if (dropDown.getSelectedIndex() != -1) {
-            tempExtractText = dropDown.getItemAt(dropDown.getSelectedIndex());
+    /*
+    Every extraction belonging to a corrective call BEFORE the one currently selected in the call
+    sequence table, within this set only.
+
+    Replacements are applied to a call before it is sent and extractions happen after it returns, so
+    only an earlier call can have produced a value this replacement could insert. The first call in a
+    set therefore has nothing to pick and the dropdown is empty. Only one set runs per intercepted
+    request, so another set's extractions are never available either.
+
+    The followup call is the opposite case and may use any extraction, since it always runs last. See
+    CorrectiveCallSet.allExtractionsFrom().
+     */
+    List<ExtractText> pickableExtractions() {
+        List<ExtractText> pickable = new ArrayList<>();
+
+        /*
+        The errored call comes before every corrective call, so its extractions are always available --
+        including to the FIRST call in a set, which has no earlier call to draw on and so used to have
+        an empty dropdown.
+         */
+        pickable.addAll(model.errorCallExtractions());
+
+        int selectedRow = callSequenceTable.getSelectedRow();
+
+        if (selectedRow <= 0 || callSequenceTableModel.correctiveCallList == null) {
+            return pickable;
         }
-        else {
-            tempExtractText = null;
+
+        for (int i = 0; i < selectedRow && i < callSequenceTableModel.correctiveCallList.size(); i++) {
+            pickable.addAll(callSequenceTableModel.correctiveCallList.get(i).extractList);
         }
 
-        dropDown.removeAllItems();
+        return pickable;
+    }
 
-        if (callSequenceTable.getSelectedRow() > 0) {
-            for (int i = 0; i < callSequenceTable.getSelectedRow(); i++) {
-                List<ExtractText> extractTextList = callSequenceTableModel.correctiveCallList.get(i).extractList;
-                for (int j = 0; j < extractTextList.size(); j++) {
-                    dropDown.addItem(extractTextList.get(j));
+    /*
+    The "Occurrence:" field, defaulting to 1 when blank or not a number.
 
-                    if (extractTextList.get(j).equals(tempExtractText)) {
-                        dropDown.setSelectedIndex(j);
-                    }
-                }
+    Left out of the mandatory-field check above on purpose: a blank occurrence means "the first one",
+    which is what every replacement configured before this field existed meant.
+     */
+    static int parseOccurrence(String input, String replacementName) {
+        if (input == null || input.isBlank()) {
+            return 1;
+        }
+
+        try {
+            int parsed = Integer.parseInt(input.trim());
+
+            if (parsed < 1) {
+                DebugLog.log("[Error] Occurrence must be 1 or greater, got " + parsed
+                        + " for replacement '" + replacementName + "'. Using 1.");
+                return 1;
             }
+
+            return parsed;
+        }
+        catch (NumberFormatException e) {
+            DebugLog.log("[Error] Occurrence '" + input + "' is not a number for replacement '"
+                    + replacementName + "'. Using 1.");
+            return 1;
         }
     }
 }

@@ -8,8 +8,8 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import static burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse;
 
@@ -26,14 +26,23 @@ public class FollowUpController {
     public ReplacementTableModel followUpReplaceTableModel;
     public JTable followUpReplaceTable;
     
-    private ExtractionTableModel extractionTableModel;
+    private CorrectiveCallSetTableModel correctiveCallSetTableModel;
+    private JTable correctiveCallsSetsTable;
 
     private Model model;
 
     FollowUpController (View view, Model model, Controller controller) {
         setAttributes(model, view);
         
-        setTableDeleteContextMenu(followUpReplaceTable);
+        Utils.setTableDeleteContextMenu(followUpReplaceTable, null);
+
+        /*
+        Paired for the same reason as the other tabs, though it has no effect while this tab's response
+        editor is hidden behind the empty placeholder panel: a component nobody can click never fires
+        the listener, and only the request editor is read by "From Selection" here. Wired now so that
+        restoring the response editor does not silently reintroduce the stale-selection bug.
+         */
+        Utils.pairEditorCarets(requestEditor, responseEditor, "Followup Call");
         setReplaceDropDownListener();
         setReplaceAddButtonListener();
         setFromSelectionListener(fromSelect, inputFields);
@@ -46,26 +55,7 @@ public class FollowUpController {
         replaceDropDown.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
-
-                ExtractText tempExtractText;
-
-                if (replaceDropDown.getSelectedIndex() != -1) {
-                    tempExtractText = replaceDropDown.getItemAt(replaceDropDown.getSelectedIndex());
-                }
-                else {
-                    tempExtractText = null;
-                }
-
-                replaceDropDown.removeAllItems();
-
-                for (int row = 0; row < extractionTableModel.getRowCount(); row++) {
-                    ExtractText extractText = extractionTableModel.getExtractText(row);
-                    replaceDropDown.addItem(extractText);
-
-                    if (extractText.equals(tempExtractText)) {
-                        replaceDropDown.setSelectedIndex(row);
-                    }
-                }
+                Utils.repopulatePreservingSelection(replaceDropDown, pickableExtractions());
             }
 
             @Override
@@ -80,12 +70,32 @@ public class FollowUpController {
         });
     }
 
+    /*
+    Every extraction on the currently selected corrective call set. The followup runs after all of that
+    set's calls, so it may use any of their extractions, not just the earlier ones.
+
+    Sourced from the set rather than from the Corrective Calls panel's extraction table, whose list is
+    swapped to whichever single call is selected there. Reading that table meant the followup could
+    only reference the extractions of the one call that happened to be highlighted.
+     */
+    List<ExtractText> pickableExtractions() {
+        List<ExtractText> pickable = new ArrayList<>();
+
+        // The errored call runs before every set, so its extractions are always in scope.
+        pickable.addAll(model.errorCallExtractions());
+        pickable.addAll(CorrectiveCallSet.extractionsForSelectedSet(
+                correctiveCallSetTableModel.correctiveCallSetList,
+                correctiveCallsSetsTable.getSelectedRow()));
+
+        return pickable;
+    }
+
     private void setReplaceAddButtonListener() {
         ActionListener replaceAddButtonListener = e -> {
             ReplaceText replaceText = new ReplaceText();
             for (int i = 0; i < inputFields.length - 1; i++) {
                 if (inputFields[i].getText().isEmpty()) {
-                    Controller.montoyaApi.logging().logToOutput("Return hit");
+                    DebugLog.log("Followup replacement 'Add' clicked while an input field was empty.");
                     return;
                 }
             }
@@ -94,89 +104,18 @@ public class FollowUpController {
             replaceText.stopString = inputFields[2].getText();
             replaceText.selectedText = inputFields[3].getText();
             replaceText.extractText = (ExtractText) replaceDropDown.getSelectedItem();
+            replaceText.occurrence = ReplacementController.parseOccurrence(
+                    inputFields[4].getText(), replaceText.name);
             followUpReplaceTableModel.addRow(replaceText);
             DebugLog.log("Replace Text added to table: " + replaceText);
         };
         addButton.addActionListener(replaceAddButtonListener);
     }
 
-    // TODO could use cleanup. The hasBody argument is gone, Utils.getContentEnd() derives it from the message.
     private void setFromSelectionListener(JButton fromSelect, JTextField[] inputFields) {
         fromSelect.addActionListener(e -> {
-            int position;
-            String messageString;
-            String selectedContents;
-
-            position = requestEditor.caretPosition();
-            messageString = requestEditor.getRequest().toString();
-            selectedContents = requestEditor.selection().get().contents().toString();
-
-            inputFields[3].setText(selectedContents);
-
-            if (selectedContents.startsWith(" "))
-                inputFields[3].setToolTipText("⚠️ Selection includes whitespace, was this intentional?");
-            else
-                inputFields[3].setToolTipText(null);
-
-
-            String stopString = Utils.getStopString(position, messageString);
-            inputFields[2].setText(stopString);
-
-            int offset = selectedContents.length();
-            int startIndex = position - offset;
-
-            String startString = Utils.getStartString(startIndex, messageString);
-            inputFields[1].setText(startString);
-
-            DebugLog.log("'From Selection' button clicked in followup call. The following input fields were set.");
-            DebugLog.log("Selected Text: " + selectedContents);
-            DebugLog.log("Stop String: " + stopString);
-            DebugLog.log("Start String: " + startString);
-        });
-    }
-
-
-    // TODO need to go through all controllers and update them to use this method
-    public void setTableDeleteContextMenu(JTable table) {
-        JPopupMenu popupMenu = new JPopupMenu();
-        JMenuItem deleteItem = new JMenuItem("Delete");
-
-        // Deletes selected row when "Delete" is clicked.
-        deleteItem.addActionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow != -1) {
-                DeletableTableModel model = (DeletableTableModel) table.getModel();
-                DebugLog.log(table.getName() + ": User deleted row " + selectedRow);
-                model.removeRow(selectedRow);
-                Utils.resizeColumnsToFitContent(table);
-            }
-        });
-
-        popupMenu.add(deleteItem);
-
-        // Displays popup menu and selects row.
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showPopup(e);
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showPopup(e);
-                }
-            }
-
-            private void showPopup(MouseEvent e) {
-                int row = table.rowAtPoint(e.getPoint());
-                if (row >= 0) {
-                    table.setRowSelectionInterval(row, row);
-                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
-            }
+            String messageString = requestEditor.getRequest().toString();
+            Utils.applyFromSelection(requestEditor, messageString, inputFields, "Followup");
         });
     }
 
@@ -199,7 +138,8 @@ public class FollowUpController {
         followUpReplaceTableModel = view.followUpPanel.followUpReplaceTableModel;
         followUpReplaceTable = view.followUpPanel.followUpReplaceTable;
         
-        extractionTableModel = view.correctiveCallsPanel.extractionTableModel;
+        correctiveCallSetTableModel = view.correctiveCallsPanel.correctiveCallSetTableModel;
+        correctiveCallsSetsTable = view.correctiveCallsPanel.correctiveCallsSetsTable;
 
         this.model = model;
     }

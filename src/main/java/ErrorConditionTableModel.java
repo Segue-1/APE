@@ -3,9 +3,11 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 
-public class ErrorConditionTableModel extends AbstractTableModel {
+// Implements DeletableTableModel so Utils.setTableDeleteContextMenu() can drive the delete. It already
+// had the removeRow() method; it just never declared the interface.
+public class ErrorConditionTableModel extends AbstractTableModel implements DeletableTableModel {
     public ArrayList<ErrorCondition> errorConditions = new ArrayList<>();
-    private String[] columns = {"Name", "Category", "Value", "Description"};
+    private String[] columns = {"Name", "Category", "Match in", "Header", "Value", "Description"};
 
     @Override
     public int getRowCount() {
@@ -29,12 +31,16 @@ public class ErrorConditionTableModel extends AbstractTableModel {
         switch(columnIndex) {
             case 0: return errorCondition.name;
             case 1: return errorCondition.category;
-            case 2: return errorCondition.value;
-            case 3: return errorCondition.description;
+            // Status Code has no request form, so the source is not meaningful for it.
+            case 2: return errorCondition.category.equals("Status Code") ? "" : errorCondition.source();
+            case 3: return errorCondition.headerName == null ? "" : errorCondition.headerName;
+            case 4: return errorCondition.value;
+            case 5: return errorCondition.description;
             default: return null;
         }
     }
 
+    @Override
     public void removeRow(int rowIndex) {
         errorConditions.remove(rowIndex);
         resetNames(rowIndex);
@@ -49,9 +55,15 @@ public class ErrorConditionTableModel extends AbstractTableModel {
         fireTableRowsInserted(errorConditions.size() - 1, errorConditions.size() - 1);
     }
 
+    /*
+    Re-numbers the rows after a deletion. Calls the object's own setName() rather than rebuilding
+    the string here, which is how ErrorCondition rows ended up renamed from "Error Condition N" to
+    "Condition N" after a delete.
+     */
     private void resetNames(int start) {
         for (int i = start; i < errorConditions.size(); i++) {
-            errorConditions.get(i).name = "Condition " + --errorConditions.get(i).index;
+            errorConditions.get(i).index--;
+            errorConditions.get(i).setName();
         }
     }
 
