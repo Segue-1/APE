@@ -47,8 +47,8 @@ public class CorrectiveCallsController {
         Utils.setTableDeleteContextMenu(extractionTable, null);
         Utils.setTableDeleteContextMenu(replacementTable, null);
         setCallSetsButtonActionListeners();
-        setSelectedCorrectiveCallsSetListener();
-        setSelectedCorrectiveCallCallListener();
+        setCallSetSelectionListener();
+        setCallSelectionListener();
         initCallSequenceTable();
         Utils.pairEditorCarets(requestEditor, responseEditor, "Corrective Calls");
 
@@ -145,8 +145,7 @@ public class CorrectiveCallsController {
         removeSetButton.addActionListener(removeButtonListener);
     }
 
-    // TODO rename: poor naming between the following two methods
-    private void setSelectedCorrectiveCallsSetListener() {
+    private void setCallSetSelectionListener() {
         correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
             try {
                 if (!e.getValueIsAdjusting()) {
@@ -177,7 +176,7 @@ public class CorrectiveCallsController {
         });
     }
 
-    private void setSelectedCorrectiveCallCallListener() {
+    private void setCallSelectionListener() {
         callSequenceTable.getSelectionModel().addListSelectionListener(e -> {
             try {
                 if (!e.getValueIsAdjusting()) {

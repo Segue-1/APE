@@ -30,7 +30,6 @@ public class Model implements HttpHandler {
     private record Replaced(String request, int applied) {}
 
     public Model() {
-        // TODO Maybe just move this to controller
         if (Controller.montoyaApi != null) {
             Controller.montoyaApi.extension().setName("API Processing Engine");
             Controller.montoyaApi.http().registerHttpHandler(this);
@@ -45,10 +44,8 @@ public class Model implements HttpHandler {
         ToolType toolType = requestToBeSent.toolSource().toolType();
 
         /*
-        TODO: Make this work with extensions in an elegant way. Extensions currently disabled.
-         Since APE itself is an extension, it was triggering the processResponse function multiple
-         times. Need a way to make sure processResponse is not called for requests made by APE.
-         Currently no way to identify which extension sends a request.
+        TODO: Does not currently work with Extensions. There is no way to identify which Extension is associated with
+        a request. This will make APE endlessly process its own requests.
          */
         if (!enabledTools.contains(toolType) || toolType.toolName().equals("Extension")) {
             DebugLog.log("Model: Not processing response!");

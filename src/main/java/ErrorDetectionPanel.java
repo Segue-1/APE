@@ -94,7 +94,7 @@ public class ErrorDetectionPanel extends JPanel {
         gbc.gridx = 1;
         gbc.weightx = 0.33;
 
-        JPanel triggerConditionPanel = createTriggerConditionPanel();
+        JPanel triggerConditionPanel = createErrorConditionBuilderPanel();
         bottomPanel.add(triggerConditionPanel, gbc);
 
         gbc.gridx = 2;
@@ -136,8 +136,7 @@ public class ErrorDetectionPanel extends JPanel {
         return panel;
     }
 
-    // TODO rename this
-    private JPanel createTriggerConditionPanel() {
+    private JPanel createErrorConditionBuilderPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 

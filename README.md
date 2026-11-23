@@ -27,3 +27,10 @@ Detects API error responses, runs one or more sets of corrective calls, and retr
 
 By default, API Processing Engine works on all Repeater and Intruder requests. You can choose which
 tools APE works with in the **Settings** tab.
+
+## Testing
+
+[Test-API](https://github.com/Segue-1/Test-API) is a small local API built for trying APE out. Each of
+its endpoints fails in a predictable way (expired sessions, version conflicts, rate limits, maintenance
+mode), and its README walks through example test cases.
+
