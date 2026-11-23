@@ -13,6 +13,9 @@ public class ExtractionPanel extends JPanel {
     public JButton fromSelectButton;
     public JButton addButton;
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
+    // Fixed column count so setText() from From Selection doesn't resize the field.
+    private static final int FIELD_COLUMNS = 8;
+
 
 
     ExtractionPanel(){
@@ -23,7 +26,8 @@ public class ExtractionPanel extends JPanel {
         labels = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
                 "URL encode/decode:", "Extract from: "};
 
-        dropDown = new JComboBox<>();
+        // URL encode/decode choice. Model applies it to the extracted value.
+        dropDown = new JComboBox<>(new String[]{Utils.URL_NONE, Utils.URL_ENCODE, Utils.URL_DECODE});
         inputFields = new JTextField[labels.length - 1];
         fromSelectButton = new JButton();
         addButton = new JButton();
@@ -31,7 +35,7 @@ public class ExtractionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel extractFields = createInputTextFields("Extract", labels, dropDown, createRadionButtonPanel(),
+        JPanel extractFields = createInputTextFields("Extract", labels, dropDown, createRadioButtonPanel(),
                 inputFields, fromSelectButton, addButton);
 
         add(extractFields, gbc);
@@ -90,7 +94,7 @@ public class ExtractionPanel extends JPanel {
         gbc.weighty = 1;
 
         for (int i = 0; i < jTextFields.length; i++) {
-            jTextFields[i] = new JTextField();
+            jTextFields[i] = new JTextField(FIELD_COLUMNS);
         }
 
         for (int i = 0; i < fieldNames.length; i++) {
@@ -122,7 +126,7 @@ public class ExtractionPanel extends JPanel {
         return panel;
     }
 
-    private JPanel createRadionButtonPanel(){
+    private JPanel createRadioButtonPanel(){
         JPanel panel = new JPanel(new GridBagLayout());
 
         radioButtons = new JRadioButton[3];

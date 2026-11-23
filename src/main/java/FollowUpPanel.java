@@ -2,16 +2,16 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import java.awt.*;
 
 public class FollowUpPanel extends JPanel {
-    static Color followUpCallTextColor = new Color(9, 30, 172);
-    static Color conditionBuilderTextColor = new Color(143, 0, 197);
+    private static final Color followUpCallTextColor = new Color(9, 30, 172);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
+    // Fixed column count so setText() from From Selection doesn't resize the field.
+    private static final int FIELD_COLUMNS = 8;
+
 
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
@@ -90,9 +90,11 @@ public class FollowUpPanel extends JPanel {
         requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
         responseEditor = Controller.montoyaApi.userInterface().createHttpResponseEditor();
 
+        // Only the request is edited, so an empty panel takes the response editor's place. The editor
+        // still exists because setFollowUpCall() reads it.
         JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         editorPane.setLeftComponent(requestEditor.uiComponent());
-        editorPane.setRightComponent(responseEditor.uiComponent());
+        editorPane.setRightComponent(new JPanel());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
         editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 500));
@@ -160,7 +162,7 @@ public class FollowUpPanel extends JPanel {
         gbc.gridwidth = 1;
 
         for (int i = 0; i < jTextFields.length; i++) {
-            jTextFields[i] = new JTextField();
+            jTextFields[i] = new JTextField(FIELD_COLUMNS);
         }
 
         for (int i = 0; i < fieldNames.length; i++) {
@@ -191,7 +193,7 @@ public class FollowUpPanel extends JPanel {
         return panel;
     }
 
-    public JPanel createReplaceTable(String header, JTable table){
+    private JPanel createReplaceTable(String header, JTable table){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 

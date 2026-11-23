@@ -2,10 +2,12 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 
 import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CallSequenceTableModel extends AbstractTableModel implements DeletableTableModel {
-    public List<CorrectiveCall> correctiveCallList ;
+    // Initialised empty rather than left null, so getRowCount() is safe before loadCallSequence() runs.
+    public List<CorrectiveCall> correctiveCallList = new ArrayList<>();
     private String[] columns = {"Call Number", "Host", "URL", "Method", "Path"};
 
 

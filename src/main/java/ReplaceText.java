@@ -13,6 +13,7 @@ public class ReplaceText {
 
     @Override
     public String toString() {
+        // extractText is null when nothing was picked from the Pick from Extraction dropdown.
         return "ReplaceText{" +
                 "index=" + index +
                 ", name='" + name + '\'' +
@@ -20,7 +21,7 @@ public class ReplaceText {
                 ", startString='" + startString + '\'' +
                 ", stopString='" + stopString + '\'' +
                 ", selectedText='" + selectedText + '\'' +
-                ", extractText='" + extractText.debugString() + '\'' +
+                ", extractText='" + (extractText == null ? "null" : extractText.debugString()) + '\'' +
                 '}';
     }
 }

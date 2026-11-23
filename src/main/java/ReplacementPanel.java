@@ -11,6 +11,9 @@ public class ReplacementPanel extends JPanel {
     public JButton fromSelectButton;
     public JButton addButton;
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
+    // Fixed column count so setText() from From Selection doesn't resize the field.
+    private static final int FIELD_COLUMNS = 8;
+
 
 
     ReplacementPanel() {
@@ -88,7 +91,7 @@ public class ReplacementPanel extends JPanel {
         gbc.weighty = 1;
 
         for (int i = 0; i < jTextFields.length; i++) {
-            jTextFields[i] = new JTextField();
+            jTextFields[i] = new JTextField(FIELD_COLUMNS);
         }
 
         for (int i = 0; i < fieldNames.length; i++) {

@@ -49,6 +49,11 @@ public class SettingsPanel extends JPanel {
         // associates a ToolType with each checkbox. Adds them to checkBoxGrid.
         JCheckBox checkBox;
         for (ToolType toolType : ToolType.values()){
+            // APE's own calls come from the Extensions tool, so processing it recurses. Not offered.
+            if (toolType == ToolType.EXTENSIONS) {
+                continue;
+            }
+
             if (toolType.toolName().equals("Repeater") || toolType.toolName().equals("Intruder")){
                 checkBox = new JCheckBox(toolType.toolName(), true);
                 checkBox.putClientProperty("ToolType", toolType);

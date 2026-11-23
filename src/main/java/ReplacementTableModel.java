@@ -42,14 +42,17 @@ public class ReplacementTableModel extends AbstractTableModel implements Deletab
         return switch (columnIndex) {
             case 0 -> replaceText.name;
             case 1 -> replaceText.id;
-            case 2 -> replaceText.extractText.name;
+            // extractText is null when nothing was picked from the Pick from Extraction dropdown.
+            case 2 -> replaceText.extractText == null ? "(none)" : replaceText.extractText.name;
             default -> null;
         };
     }
 
+    // Re-numbers the rows after a deletion, via the object's own setId() so the format cannot drift.
     private void resetNames(int start) {
         for (int i = start; i < replaceTextList.size(); i++) {
-            replaceTextList.get(i).id = "Replacement-" + --replaceTextList.get(i).index;
+            replaceTextList.get(i).index--;
+            replaceTextList.get(i).setId();
         }
     }
 

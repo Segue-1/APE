@@ -1,4 +1,3 @@
-import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 
 import java.util.ArrayList;
@@ -9,6 +8,9 @@ public class CorrectiveCallSet {
     public String name;
     public String description;
     public List<CorrectiveCall> correctiveCallList = new ArrayList<>();
+
+    // This set's final call, sent after its corrective calls. Starts as a copy of the errored call.
+    public CorrectiveCall followupCall;
     //public List<HttpRequestResponse> callSequence = new ArrayList<>();
 
     CorrectiveCallSet() {
@@ -17,6 +19,33 @@ public class CorrectiveCallSet {
 
     public void setName () {
         name = "Set " + index;
+    }
+
+    // Every extraction configured on this set's corrective calls, in call order.
+    public List<ExtractText> allExtractions() {
+        List<ExtractText> extractions = new ArrayList<>();
+
+        for (CorrectiveCall correctiveCall : correctiveCallList) {
+            extractions.addAll(correctiveCall.extractList);
+        }
+
+        return extractions;
+    }
+
+    // Every extraction in the selected set. The followup runs last, so it can use any of them.
+    // A selectedRow of -1 is treated as Set 0.
+    public static List<ExtractText> extractionsForSelectedSet(List<CorrectiveCallSet> sets, int selectedRow) {
+        if (sets == null || sets.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        int row = selectedRow == -1 ? 0 : selectedRow;
+
+        if (row < 0 || row >= sets.size()) {
+            return new ArrayList<>();
+        }
+
+        return sets.get(row).allExtractions();
     }
 
     @Override

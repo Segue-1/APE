@@ -1,4 +1,3 @@
-import burp.api.montoya.http.message.HttpRequestResponse;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
@@ -66,9 +65,11 @@ public class TriggerConditionTableModel extends AbstractTableModel implements De
         }
     }
 
+    // Re-numbers the rows after a deletion.
     private void resetNames(int start) {
         for (int i = start; i < triggerConditions.size(); i++) {
-            triggerConditions.get(i).name = "Trigger Condition " + --triggerConditions.get(i).index;
+            triggerConditions.get(i).index--;
+            triggerConditions.get(i).setName();
         }
     }
 

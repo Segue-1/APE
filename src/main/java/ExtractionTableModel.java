@@ -40,9 +40,11 @@ public class ExtractionTableModel extends AbstractTableModel implements Deletabl
         fireTableRowsDeleted(rowIndex, rowIndex);
     }
 
+    // Re-numbers the rows after a deletion, via the object's own setId() so the format cannot drift.
     private void resetNames(int start) {
         for (int i = start; i < extractTextList.size(); i++) {
-            extractTextList.get(i).id = "Extraction-" + --extractTextList.get(i).index;
+            extractTextList.get(i).index--;
+            extractTextList.get(i).setId();
         }
     }
 

@@ -27,17 +27,22 @@ public class SettingsController {
 
         // Set up a listener which will track checkbox state in enabledTools
         ItemListener checkBoxListener = e -> {
-            JCheckBox source = (JCheckBox) e.getSource();
-            ToolType toolType = (ToolType) source.getClientProperty("ToolType");
+            try {
+                JCheckBox source = (JCheckBox) e.getSource();
+                ToolType toolType = (ToolType) source.getClientProperty("ToolType");
 
-            if (source.isSelected()) {
-                enabledTools.add(toolType);
-                DebugLog.log("ToolType " + toolType.toString() + " enabled in settings menu.");
-            } else {
-                enabledTools.remove(toolType);
-                DebugLog.log("ToolType " + toolType.toString() + " disabled in settings menu.");
+                if (source.isSelected()) {
+                    enabledTools.add(toolType);
+                    DebugLog.log("ToolType " + toolType.toString() + " enabled in settings menu.");
+                } else {
+                    enabledTools.remove(toolType);
+                    DebugLog.log("ToolType " + toolType.toString() + " disabled in settings menu.");
+                }
+                model.updateEnabledTools(enabledTools);
             }
-            model.updateEnabledTools(enabledTools);
+            catch (Exception ex) {
+                DebugLog.log("[Error] SettingsController: Updating enabled tools failed. " + ex);
+            }
         };
 
         // Attach the listener to each checkbox and store initial state of checkboxes

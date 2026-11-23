@@ -1,19 +1,11 @@
 import burp.api.montoya.http.message.HttpRequestResponse;
 
-import burp.api.montoya.repeater.HttpEditor;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
-import javax.swing.text.JTextComponent;
-import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
+import java.util.ArrayList;
 
 
 public class CorrectiveCallsController {
@@ -26,51 +18,42 @@ public class CorrectiveCallsController {
     private JRadioButton singleSetRadioButton;
     private JRadioButton multiSetRadioButton;
 
-    private JButton addSetBotton;
-    private JButton removeSetBotton;
+    private JButton addSetButton;
+    private JButton removeSetButton;
 
-    public JButton extractAddButton;
-    public JButton replaceAddButton;
 
-    public JButton extractFromSelect;
-    public JButton replaceFromSelect;
+    private ExtractionTableModel extractionTableModel;
+    private JTable extractionTable;
 
-    public JTextField[] extractInputFields;
-    public JTextField[] replaceInputFields;
+    private ReplacementTableModel replacementTableModel;
+    private JTable replacementTable;
 
-    public ExtractionTableModel extractionTableModel;
-    public JTable extractionTable;
-
-    public ReplacementTableModel replacementTableModel;
-    public JTable replacementTable;
-
-    public JComboBox<String> extractDropDown;
-    public JComboBox<ExtractText> replaceDropDown;
-
-    public HttpEditor httpEditor;
-
-    public HttpRequestEditor requestEditor;
-    public HttpResponseEditor responseEditor;
+    private HttpRequestEditor requestEditor;
+    private HttpResponseEditor responseEditor;
 
     private ReplacementController replacementController;
     private ExtractionController extractionController;
 
+    // Needed so ReplacementController can offer the errored call's extractions in its dropdown.
+    private Model model;
+
 
     CorrectiveCallsController(CorrectiveCallsPanel correctiveCallsPanel, Model model) {
+        this.model = model;
         setAttributes(correctiveCallsPanel);
 
         setRadioButtons();
-        setTableDeleteContextMenu(callSequenceTable);
-        setTableDeleteContextMenu(extractionTable);
-        setTableDeleteContextMenu(replacementTable);
+        Utils.setTableDeleteContextMenu(callSequenceTable, null);
+        Utils.setTableDeleteContextMenu(extractionTable, null);
+        Utils.setTableDeleteContextMenu(replacementTable, null);
         setCallSetsButtonActionListeners();
         setSelectedCorrectiveCallsSetListener();
         setSelectedCorrectiveCallCallListener();
         initCallSequenceTable();
-        setEditorFocusListener();
+        Utils.pairEditorCarets(requestEditor, responseEditor, "Corrective Calls");
 
         replacementController = new ReplacementController(correctiveCallsPanel.replacementPanel,
-                requestEditor, extractionTableModel, callSequenceTableModel, callSequenceTable);
+                requestEditor, callSequenceTableModel, callSequenceTable, model);
 
         extractionController = new ExtractionController(correctiveCallsPanel.extractionPanel,
                 requestEditor, responseEditor, callSequenceTableModel, callSequenceTable);
@@ -93,184 +76,129 @@ public class CorrectiveCallsController {
     }
 
     private void singleSet() {
-        addSetBotton.setEnabled(false);
-        removeSetBotton.setEnabled(false);
+        addSetButton.setEnabled(false);
+        removeSetButton.setEnabled(false);
         correctiveCallsSetsTable.setRowSelectionInterval(0, 0);
         correctiveCallsSetsTable.setEnabled(false);
     }
 
     private void multiSet() {
-        addSetBotton.setEnabled(true);
-        removeSetBotton.setEnabled(true);
+        addSetButton.setEnabled(true);
+        removeSetButton.setEnabled(true);
         correctiveCallsSetsTable.setEnabled(true);
-    }
-
-    private void setTableDeleteContextMenu(JTable table) {
-        JPopupMenu popupMenu = new JPopupMenu();
-        JMenuItem deleteItem = new JMenuItem("Delete");
-
-        // Deletes selected row when "Delete" is clicked.
-        deleteItem.addActionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow != -1) {
-                DeletableTableModel model = (DeletableTableModel) table.getModel();
-                DebugLog.log(table.getName() + ": User deleted row " + selectedRow);
-                model.removeRow(selectedRow);
-            }
-        });
-
-        popupMenu.add(deleteItem);
-
-        // Displays popup menu and selects row.
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showPopup(e);
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    showPopup(e);
-                }
-            }
-
-            private void showPopup(MouseEvent e) {
-                int row = table.rowAtPoint(e.getPoint());
-                if (row >= 0) {
-                    table.setRowSelectionInterval(row, row);
-                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
-            }
-        });
     }
 
     private void setCallSetsButtonActionListeners() {
         ActionListener addButtonListener = e -> {
-            correctiveCallSetTableModel.addRow(new CorrectiveCallSet());
-            Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
-            DebugLog.log("Add button clicked on corrective call set table. Call set "
-                    + correctiveCallSetTableModel.correctiveCallSetList.getLast().name
-                    + " has been added");
+            try {
+                CorrectiveCallSet newSet = new CorrectiveCallSet();
+
+                // A set added after Send to Error Detection gets its own followup call too.
+                if (model.errorCall.requestResponse != null) {
+                    newSet.followupCall = new CorrectiveCall(model.errorCall.requestResponse);
+                }
+
+                correctiveCallSetTableModel.addRow(newSet);
+                DebugLog.log("Add button clicked on corrective call set table. Call set "
+                        + correctiveCallSetTableModel.correctiveCallSetList.getLast().name
+                        + " has been added");
+            }
+            catch (Exception ex) {
+                DebugLog.log("[Error] CorrectiveCallsController: Adding corrective call set failed. " + ex);
+            }
         };
 
-        ActionListener removeBottonListener = e -> {
-            int selectedRow = correctiveCallsSetsTable.getSelectedRow();
-            correctiveCallSetTableModel.removeRow(selectedRow);
-            callSequenceTableModel.fireTableDataChanged();
-            Utils.resizeColumnsToFitContent(correctiveCallsSetsTable);
+        ActionListener removeButtonListener = e -> {
+            try {
+                int selectedRow = correctiveCallsSetsTable.getSelectedRow();
 
-            correctiveCallsSetsTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
+                if (selectedRow == -1) {
+                    DebugLog.log("Remove button clicked on corrective call set table with no set selected.");
+                    return;
+                }
 
-            DebugLog.log("Remove button clicked on corrective call set table. Call set "
-                    + correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).name
-                    + " has been deleted.");
+                // Set 0 can't be removed.
+                if (selectedRow == 0) {
+                    DebugLog.log("Set 0 cannot be removed. Remove button ignored.");
+                    return;
+                }
+
+                // Read before the row is removed.
+                String removedName = correctiveCallSetTableModel.getCorrectiveCallsSet(selectedRow).name;
+
+                correctiveCallSetTableModel.removeRow(selectedRow);
+
+                // Select the previous set and load its calls. The call sequence table still shows the deleted set.
+                int newSelection = selectedRow - 1;
+                correctiveCallsSetsTable.setRowSelectionInterval(newSelection, newSelection);
+                callSequenceTableModel.loadCallSequence(
+                        correctiveCallSetTableModel.getCorrectiveCallsSet(newSelection).correctiveCallList);
+
+                DebugLog.log("Remove button clicked on corrective call set table. Call set "
+                        + removedName + " has been deleted.");
+            }
+            catch (Exception ex) {
+                DebugLog.log("[Error] CorrectiveCallsController: Removing corrective call set failed. " + ex);
+            }
         };
-        addSetBotton.addActionListener(addButtonListener);
-        removeSetBotton.addActionListener(removeBottonListener);
+        addSetButton.addActionListener(addButtonListener);
+        removeSetButton.addActionListener(removeButtonListener);
     }
 
     // TODO rename: poor naming between the following two methods
     private void setSelectedCorrectiveCallsSetListener() {
         correctiveCallsSetsTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedRow = correctiveCallsSetsTable.getSelectedRow();
+            try {
+                if (!e.getValueIsAdjusting()) {
+                    int selectedRow = correctiveCallsSetsTable.getSelectedRow();
 
-                if (selectedRow != -1) {
-                    callSequenceTableModel.loadCallSequence(correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).correctiveCallList);
-                    DebugLog.log("Corrective call set selected. Loaded to call sequence table: " +
-                            correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).toString());
+                    if (selectedRow != -1) {
+                        callSequenceTableModel.loadCallSequence(correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).correctiveCallList);
+                        DebugLog.log("Corrective call set selected. Loaded to call sequence table: " +
+                                correctiveCallSetTableModel.correctiveCallSetList.get(selectedRow).toString());
+
+                        // Select the set's first call, which loads its editors, extractions and replacements.
+                        // An empty set clears them instead of leaving the previous set's showing.
+                        if (callSequenceTableModel.getRowCount() > 0) {
+                            callSequenceTable.setRowSelectionInterval(0, 0);
+                        }
+                        else {
+                            requestEditor.setRequest(null);
+                            responseEditor.setResponse(null);
+                            extractionTableModel.loadExtractList(new ArrayList<>());
+                            replacementTableModel.loadReplaceList(new ArrayList<>());
+                        }
+                    }
                 }
+            }
+            catch (Exception ex) {
+                DebugLog.log("[Error] CorrectiveCallsController: Loading selected corrective call set failed. " + ex);
             }
         });
     }
 
     private void setSelectedCorrectiveCallCallListener() {
         callSequenceTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                int selectedRow = callSequenceTable.getSelectedRow();
+            try {
+                if (!e.getValueIsAdjusting()) {
+                    int selectedRow = callSequenceTable.getSelectedRow();
 
-                if (selectedRow != -1) {
-                    HttpRequestResponse reqResp = callSequenceTableModel.getReqRes(selectedRow);
-                    requestEditor.setRequest(reqResp.request());
-                    responseEditor.setResponse(reqResp.response());
-                    DebugLog.log("Corrective call selected. Loaded call at row " + selectedRow + " to http editors.");
-                    extractionTableModel.loadExtractList(callSequenceTableModel.getCorrectiveCall(selectedRow).extractList);
-                    replacementTableModel.loadReplaceList(callSequenceTableModel.getCorrectiveCall(selectedRow).replaceList);
-                    replacementController.refreshDropDown();
+                    if (selectedRow != -1) {
+                        HttpRequestResponse reqResp = callSequenceTableModel.getReqRes(selectedRow);
+                        requestEditor.setRequest(reqResp.request());
+                        responseEditor.setResponse(reqResp.response());
+                        DebugLog.log("Corrective call selected. Loaded call at row " + selectedRow + " to http editors.");
+                        extractionTableModel.loadExtractList(callSequenceTableModel.getCorrectiveCall(selectedRow).extractList);
+                        replacementTableModel.loadReplaceList(callSequenceTableModel.getCorrectiveCall(selectedRow).replaceList);
+                        replacementController.refreshDropDown();
+                    }
                 }
+            }
+            catch (Exception ex) {
+                DebugLog.log("[Error] CorrectiveCallsController: Loading selected corrective call failed. " + ex);
             }
         });
     }
-
-    private void setEditorFocusListener() {
-        MouseAdapter requestListener = new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                responseEditor.setCaretPosition(0);
-                DebugLog.log("Mouse pressed on request editor.");
-                DebugLog.log("Caret position of request editor: " + requestEditor.caretPosition());
-                DebugLog.log("Caret position of response editor: " + responseEditor.caretPosition());
-            }
-        };
-
-        MouseAdapter responseListener = new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                requestEditor.setCaretPosition(0);
-                DebugLog.log("Mouse pressed on response editor.");
-                DebugLog.log("Caret position of request editor: " + requestEditor.caretPosition());
-                DebugLog.log("Caret position of response editor: " + responseEditor.caretPosition());
-            }
-        };
-
-        // Very hacky way of attaching a mouse listener to the text field within montoya http editors
-        // Iterates through all components of the editor and looks for a JTextComponent with a parent JViewport
-        try {
-            boolean found = false;
-            Deque<Component> stack = new ArrayDeque<>();
-            stack.push(requestEditor.uiComponent());
-            while (!stack.isEmpty()) {
-                Component c = stack.pop();
-                if (c instanceof JTextComponent && c.getParent() instanceof JViewport) {
-                    c.addMouseListener(requestListener);
-                    found = true;
-                }
-                if (c instanceof Container) {
-                    for (Component child : ((Container) c).getComponents()) stack.push(child);
-                }
-            }
-            if (!found)
-                DebugLog.log("Corrective Call Controller: Could not attach listener to request editor text component.");
-        } catch (Exception ex) {
-            DebugLog.log("Corrective Call Controller: Error attaching request editor listener: " + ex);
-        }
-
-        try {
-            boolean found = false;
-            Deque<Component> stack = new ArrayDeque<>();
-            stack.push(responseEditor.uiComponent());
-            while (!stack.isEmpty()) {
-                Component c = stack.pop();
-                if (c instanceof JTextComponent && c.getParent() instanceof JViewport) {
-                    DebugLog.log("Component name " + c.getName());
-                    c.addMouseListener(responseListener);
-                    found = true;
-                }
-                if (c instanceof Container) {
-                    for (Component child : ((Container) c).getComponents()) stack.push(child);
-                }
-            }
-            if (!found)
-                DebugLog.log("Corrective Call Controller: Could not attach listener to response editor text component.");
-        } catch (Exception ex) {
-            DebugLog.log("Corrective Call Controller: Error attaching response editor listener: " + ex);
-        }
-    }
-
-
 
     private void setAttributes(CorrectiveCallsPanel correctiveCallsPanel) {
         correctiveCallSetTableModel = correctiveCallsPanel.correctiveCallSetTableModel;
@@ -279,26 +207,15 @@ public class CorrectiveCallsController {
         callSequenceTableModel = correctiveCallsPanel.callSequenceTableModel;
         callSequenceTable = correctiveCallsPanel.callSequenceTable;
 
-        singleSetRadioButton = correctiveCallsPanel.singleSetRadionButton;
+        singleSetRadioButton = correctiveCallsPanel.singleSetRadioButton;
         multiSetRadioButton = correctiveCallsPanel.multiSetRadioButton;
 
-        addSetBotton = correctiveCallsPanel.addSetBotton;
-        removeSetBotton = correctiveCallsPanel.removeSetBotton;
+        addSetButton = correctiveCallsPanel.addSetButton;
+        removeSetButton = correctiveCallsPanel.removeSetButton;
 
-        extractAddButton = correctiveCallsPanel.extractionPanel.addButton;
-        replaceAddButton = correctiveCallsPanel.replacementPanel.addButton;
-
-        extractFromSelect = correctiveCallsPanel.extractFromSelect;
-        replaceFromSelect = correctiveCallsPanel.replaceFromSelect;
-
-        extractInputFields = correctiveCallsPanel.extractInputFields;
-        replaceInputFields = correctiveCallsPanel.replaceInputFields;
 
         extractionTableModel = correctiveCallsPanel.extractionPanel.tableModel;
         replacementTableModel = correctiveCallsPanel.replacementPanel.tableModel;
-
-        extractDropDown = correctiveCallsPanel.extractDropDown;
-        replaceDropDown = correctiveCallsPanel.replaceDropDown;
 
         extractionTable = correctiveCallsPanel.extractionPanel.table;
         replacementTable = correctiveCallsPanel.replacementPanel.table;
