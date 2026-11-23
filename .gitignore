@@ -34,3 +34,6 @@ build
 .gradle
 
 /Test-API/
+
+### IntelliJ module files ###
+*.iml
