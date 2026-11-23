@@ -2,6 +2,25 @@
 
 Detects API error responses, runs one or more sets of corrective calls, and retries the request.
 
+## How it works
+
+APE sits in Burp's HTTP handler. For every request from an enabled tool (Repeater and Intruder by
+default), it sends the request and checks the response before Burp sees it.
+
+1. **Error conditions** describe what a failure looks like: a status code, text in the body, or a
+   header value, in the request or the response.
+2. **Trigger conditions** combine error conditions with AND, OR and NOT, and each one points to a
+   corrective call set. They are checked in order, and only the first match fires.
+3. **Corrective call set:** the matched set's calls are sent in order, for example a login call.
+   Values can be extracted from any of these responses, or from the original error response, and
+   inserted into later calls.
+4. **Followup call:** each set ends with a followup, a retry of the original request with extracted
+   values swapped in, such as a fresh session token.
+5. The followup's response is returned to Burp in place of the original error. If nothing matches,
+   or the followup gets no response, the original response is returned unchanged.
+
+Every step uses Burp's own networking, so upstream proxies and other Burp settings still apply.
+
 ## Usage
 
 1. In Repeater, right-click the HTTP request that returned the error response you want to handle.
