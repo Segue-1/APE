@@ -46,7 +46,7 @@ public class TriggerConditionController {
 
         addButton.addActionListener(e -> {
             try {
-                JComboBox<CorrectiveCallSet> correctiveCallsSetDropdown = (JComboBox<CorrectiveCallSet>) inputPanel.getComponent(1);
+                JComboBox<CorrectiveCallSet> correctiveCallsSetDropdown = getCorrectiveCallsSetDropdown();
                 CorrectiveCallSet correctiveCallSet = (CorrectiveCallSet) correctiveCallsSetDropdown.getSelectedItem();
 
                 if (correctiveCallSet == null) {
@@ -220,6 +220,7 @@ public class TriggerConditionController {
 
         for (Component component : inputPanel.getComponents()) {
             if (component instanceof JComboBox && "ErrorConditionDropdown".equals(((JComboBox) component).getName())) {
+                @SuppressWarnings("unchecked") // only ErrorCondition dropdowns are named "ErrorConditionDropdown"
                 JComboBox<ErrorCondition> errorConditionDropdown = (JComboBox<ErrorCondition>) component;
                 errorConditionDropdown.removeAllItems();
 
