@@ -3,7 +3,6 @@ import burp.api.montoya.MontoyaApi;
 
 
 public class Controller implements BurpExtension {
-    // TODO don't need to pass around montoyaAPI since it is static
     public static MontoyaApi montoyaApi;
     private Model model;
     private View view;
@@ -27,7 +26,6 @@ public class Controller implements BurpExtension {
         view = new View();
         model = new Model();
 
-        // TODO reorganize parameters, all should consistent, model, view, controller
         settingsController = new SettingsController(view.settingsPanel, model);
         contextMenusController = new ContextMenusController(view, model, this);
         errorDetectionController = new ErrorDetectionController(view.errorDetectionPanel, model);
