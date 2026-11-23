@@ -28,6 +28,19 @@ Detects API error responses, runs one or more sets of corrective calls, and retr
 By default, API Processing Engine works on all Repeater and Intruder requests. You can choose which
 tools APE works with in the **Settings** tab.
 
+## Building
+
+Requires Java 21 or newer. Gradle itself is not needed; the included wrapper downloads it.
+
+```
+./gradlew jar
+```
+
+The extension is written to `build/libs/APE.jar`. In Burp, go to **Extensions > Add**, choose
+**Java**, and select that file.
+
+The only dependency is the Montoya API, which Gradle downloads from Maven Central on the first build.
+
 ## Testing
 
 [Test-API](https://github.com/Segue-1/Test-API) is a small local API built for trying APE out. Each of
