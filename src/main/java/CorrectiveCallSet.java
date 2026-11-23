@@ -1,4 +1,3 @@
-import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 
 import java.util.ArrayList;
@@ -9,6 +8,9 @@ public class CorrectiveCallSet {
     public String name;
     public String description;
     public List<CorrectiveCall> correctiveCallList = new ArrayList<>();
+
+    // This set's final call, sent after its corrective calls. Starts as a copy of the errored call.
+    public CorrectiveCall followupCall;
     //public List<HttpRequestResponse> callSequence = new ArrayList<>();
 
     CorrectiveCallSet() {
@@ -30,24 +32,8 @@ public class CorrectiveCallSet {
         return extractions;
     }
 
-    /*
-    Every extraction on the selected set, which is what the followup call may reference.
-
-    The followup always runs last, after every call in the set has returned, so it may use the
-    extractions of ANY call in that set, including the final one. It is scoped to the selected set
-    because only one set runs per intercepted request, so another set's extractions would never have a
-    value to insert.
-
-    The followup has no extractions of its own, only replacements; there is no UI to add any and
-    Model.sendFollowupCall() does not process them.
-
-    Contrast with a corrective call's own replacements, which may only reference extractions from
-    EARLIER calls in the same set: replacements are applied to a call before it is sent and extractions
-    happen after it returns, so a later call's extraction cannot exist yet.
-
-    selectedRow of -1 means nothing is selected, which is treated as Set 0, the same default
-    CorrectiveCallSetTableModel.addRequestResponse() applies.
-     */
+    // Every extraction in the selected set. The followup runs last, so it can use any of them.
+    // A selectedRow of -1 is treated as Set 0.
     public static List<ExtractText> extractionsForSelectedSet(List<CorrectiveCallSet> sets, int selectedRow) {
         if (sets == null || sets.isEmpty()) {
             return new ArrayList<>();

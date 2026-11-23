@@ -2,14 +2,11 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
 import java.awt.*;
 
 public class ErrorDetectionPanel extends JPanel {
     // Color / font
-    static Color errorTextColor = new Color(198, 39, 3);
+    private static final Color errorTextColor = new Color(198, 39, 3);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font labelFont = new Font("Dialog", Font.PLAIN, 12);
@@ -24,7 +21,7 @@ public class ErrorDetectionPanel extends JPanel {
     public JTextField headerNameField;
     public JTextField headerValueField;
     // Which half of the exchange a Body or Header condition looks at.
-    public JRadioButton matchResponseButton;
+    private JRadioButton matchResponseButton;
     public JRadioButton matchRequestButton;
     private JLabel matchSourceLabel;
     private JPanel conditionCards;
@@ -34,11 +31,7 @@ public class ErrorDetectionPanel extends JPanel {
     public ErrorConditionTableModel errorConditionTableModel;
     public JTable errorConditionTable;
 
-    /*
-    Extractions taken from the errored call itself. The same ExtractionPanel the Corrective Calls tab
-    uses, so the two behave identically; what differs is only which exchange it reads and which list it
-    writes to. Wired by ErrorDetectionController.setUpErroredCallExtraction().
-     */
+    // Extractions from the errored call. Wired by ErrorDetectionController.
     public ExtractionPanel errorExtractionPanel;
 
 
@@ -73,16 +66,7 @@ public class ErrorDetectionPanel extends JPanel {
         editorPane.setRightComponent(responseEditor.uiComponent());
         editorPane.setDividerLocation(0.5);
         editorPane.setResizeWeight(0.5);
-        /*
-        Preferred height, not a cap: the editor still absorbs spare vertical space on a tall window,
-        because BoxLayout hands slack to whatever has room to grow and the bottom panel is capped at
-        400. What this number decides is how much the panel asks for in total, and so whether the
-        bottom row gets its preferred 250 or is squeezed when the window is short.
-
-        Was 875, which left the bottom row short on anything but a tall window -- and that row now
-        holds three sub-panels: the condition table, the condition builder, and the errored call
-        extraction panel.
-         */
+        // Preferred height, not a cap. Leaves the bottom row its full 250 on a shorter window.
         editorPane.setPreferredSize(new Dimension(Integer.MAX_VALUE, 600));
         editorPane.setMinimumSize(new Dimension(Integer.MAX_VALUE, 200));
         add(editorPane, BorderLayout.CENTER);
@@ -123,7 +107,7 @@ public class ErrorDetectionPanel extends JPanel {
         add(bottomPanel);
     }
 
-    public JPanel createTable(){
+    private JPanel createTable(){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -153,7 +137,7 @@ public class ErrorDetectionPanel extends JPanel {
     }
 
     // TODO rename this
-    public JPanel createTriggerConditionPanel() {
+    private JPanel createTriggerConditionPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
@@ -170,14 +154,7 @@ public class ErrorDetectionPanel extends JPanel {
         dropdown = new JComboBox<>(options);
         panel.add(dropdown, gbc);
 
-        /*
-        Body and Header conditions can be aimed at the request or the response. Status Code only exists
-        on a response, so the choice is disabled for it.
-
-        Worth having because the editors above show both halves of the exchange, so picking a header
-        out of the request -- "Connection", for instance -- looks like it should work, and before this
-        existed such a condition silently never fired.
-         */
+        // Request or response. Disabled for Status Code, which only exists on a response.
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
@@ -199,11 +176,7 @@ public class ErrorDetectionPanel extends JPanel {
         conditionTextField.setLineWrap(true);
         JScrollPane scrollPane = new JScrollPane(conditionTextField);
 
-        /*
-        Status Code and Body take a single value, so they keep the plain text area. Header needs two
-        values, a header name and the value it should contain, so the same cell swaps to a pair of
-        labelled fields. A CardLayout keeps both built and shows whichever the dropdown selects.
-         */
+        // Header needs name and value fields, the others a single text area. CardLayout swaps between them.
         conditionCards = new JPanel(new CardLayout());
         conditionCards.add(scrollPane, CARD_SINGLE);
         conditionCards.add(createHeaderFieldsPanel(), CARD_HEADER);
@@ -247,8 +220,7 @@ public class ErrorDetectionPanel extends JPanel {
         return panel;
     }
 
-    // Header name and the value it must contain, side by side with their labels. Only shown for the
-    // "Header" category.
+    // Header name and value fields. Only shown for the Header category.
     private JPanel createHeaderFieldsPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();

@@ -4,7 +4,7 @@ import java.util.List;
 
 public class ReplacementTableModel extends AbstractTableModel implements DeletableTableModel {
     private List<ReplaceText> replaceTextList = new ArrayList<>();
-    private String[] columns = {"Name", "Id", "Extracted Text", "Occurrence"};
+    private String[] columns = {"Name", "Id", "Extracted Text"};
 
     @Override
     public int getRowCount() {
@@ -42,12 +42,8 @@ public class ReplacementTableModel extends AbstractTableModel implements Deletab
         return switch (columnIndex) {
             case 0 -> replaceText.name;
             case 1 -> replaceText.id;
-            // extractText is null when the replacement was added without picking anything from the
-            // "Pick from Extraction" dropdown, which both add buttons allow. Dereferencing it threw a
-            // NullPointerException out of the table renderer, which breaks the whole panel rather than
-            // just the one cell.
+            // extractText is null when nothing was picked from the Pick from Extraction dropdown.
             case 2 -> replaceText.extractText == null ? "(none)" : replaceText.extractText.name;
-            case 3 -> replaceText.occurrence;
             default -> null;
         };
     }

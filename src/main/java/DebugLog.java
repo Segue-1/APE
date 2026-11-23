@@ -13,20 +13,16 @@ public class DebugLog {
     private static FileWriter logWriter;
     private static Path logFilePath;
 
-    /*
-    Guards logWriter. Burp calls the HTTP handler on many threads at once, so log() runs concurrently;
-    unsynchronized writes to a shared FileWriter can interleave mid-line and produce entries that are
-    two messages spliced together.
-     */
+    // Guards logWriter. Burp calls the HTTP handler on many threads, so writes could interleave.
     private static final Object WRITE_LOCK = new Object();
 
-    // Where log files go. Overridable so the log can be redirected, which is also how the flush
-    // behaviour below gets tested.
+    // System property that overrides the log directory. Used by the test harnesses.
     public static final String LOG_DIR_PROPERTY = "ape.log.dir";
 
-    public static void init (MontoyaApi montoyaApi){
+    public static void init(MontoyaApi montoyaApi) {
         api = montoyaApi;
 
+        // Lines always go to Burp's extension output. Only debug mode writes a file as well.
         if (BuildConfig.DEBUG) {
             try {
                 String override = System.getProperty(LOG_DIR_PROPERTY);
@@ -43,58 +39,70 @@ public class DebugLog {
                 logFilePath = logDir.resolve(filename);
 
                 logWriter = new FileWriter(logFilePath.toFile(), false);
-                // The parameter, not Controller.montoyaApi, so init() does not depend on the static
-                // having been assigned first.
                 montoyaApi.logging().logToOutput("Log saved to: " + logFilePath);
-                DebugLog.log("=== Logging session started ===");
+                log("=== Logging session started ===");
             }
             catch (Exception e) {
-                api.logging().logToError("Failed to create log file: " + e.getMessage());
+                montoyaApi.logging().logToError("Failed to create log file: " + e.getMessage());
             }
         }
 
         montoyaApi.extension().registerUnloadingHandler(() -> {
-            DebugLog.log("Extension is being unloaded or burp closed");
-            DebugLog.close();
+            log("Extension is being unloaded or burp closed");
+            close();
         });
     }
 
-    public static void log (String message) {
-        if (BuildConfig.DEBUG) {
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
-            String logMessage = "[" + timestamp + "] " + message;
+    public static void log(String message) {
+        log(message, null);
+    }
 
-            // Outside of Burp (e.g. the logic harness in src/test/java) there is no Montoya API to
-            // log to, so fall back to stdout.
-            if (api != null) {
+    // An [Error] line with the exception's stack trace, for errors Burp wouldn't otherwise report.
+    public static void error(String message, Throwable cause) {
+        log("[Error] " + message + " " + cause, cause);
+    }
+
+    private static void log(String message, Throwable cause) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss.SSS"));
+        String logMessage = "[" + timestamp + "] " + message;
+        boolean isError = message.startsWith("[Error]");
+
+        // [Error] lines go to Burp's Errors tab, everything else to Output. No Montoya API outside of
+        // Burp (the test harnesses), so fall back to stdout / stderr.
+        if (api != null) {
+            if (!isError) {
                 api.logging().logToOutput(logMessage);
             }
+            else if (cause != null) {
+                api.logging().logToError(logMessage, cause);
+            }
             else {
-                System.out.println(logMessage);
+                api.logging().logToError(logMessage);
+            }
+        }
+        else {
+            (isError ? System.err : System.out).println(logMessage);
+            if (cause != null) {
+                cause.printStackTrace();
+            }
+        }
+
+        // Flushed every line so the last lines before a crash aren't lost.
+        synchronized (WRITE_LOCK) {
+            if (logWriter == null) {
+                return;
             }
 
-            /*
-            One writer shared by every Burp thread, so the write is serialised. Flushed on every line
-            rather than left in FileWriter's buffer: the log exists to diagnose crashes and hangs, and
-            an unflushed buffer loses exactly the last few lines before one, which are the interesting
-            ones. Debug logging is not on a hot path, so the cost does not matter.
-             */
-            synchronized (WRITE_LOCK) {
-                if (logWriter == null) {
-                    return;
+            try {
+                logWriter.write(logMessage + System.lineSeparator());
+                logWriter.flush();
+            }
+            catch (IOException e) {
+                if (api != null) {
+                    api.logging().logToError("Log write failed: " + e.getMessage());
                 }
-
-                try {
-                    logWriter.write(logMessage + System.lineSeparator());
-                    logWriter.flush();
-                }
-                catch (IOException e) {
-                    if (api != null) {
-                        api.logging().logToError("Log write failed: " + e.getMessage());
-                    }
-                    else {
-                        System.err.println("Log write failed: " + e.getMessage());
-                    }
+                else {
+                    System.err.println("Log write failed: " + e.getMessage());
                 }
             }
         }
@@ -106,7 +114,6 @@ public class DebugLog {
     }
 
     public static void close() {
-        // Logged outside the lock, since log() takes it itself.
         log("=== Logging session ended ===");
 
         synchronized (WRITE_LOCK) {
@@ -121,14 +128,13 @@ public class DebugLog {
                 // Ignore
             }
             finally {
-                // Cleared so a log() arriving after unload is dropped rather than writing to a closed
-                // writer. Burp can keep calling into an extension briefly while it unloads.
+                // Burp can still call log() briefly while unloading.
                 logWriter = null;
             }
         }
     }
 
-    // The file being written, or null when no log file was opened. Used by the test harness.
+    // The file being written, or null when no log file was opened. Used by the test harnesses.
     static Path logFilePath() {
         return logFilePath;
     }

@@ -8,12 +8,12 @@ public class Controller implements BurpExtension {
     private Model model;
     private View view;
 
-    public SettingsController settingsController;
-    public ContextMenusController contextMenusController;
+    private SettingsController settingsController;
+    private ContextMenusController contextMenusController;
     public ErrorDetectionController errorDetectionController;
-    public CorrectiveCallsController correctiveCallsController;
+    private CorrectiveCallsController correctiveCallsController;
     public FollowUpController followUpController;
-    public TriggerConditionController triggerConditionController;
+    private TriggerConditionController triggerConditionController;
 
 
     // This class is automatically instantiated by burp suite. Burp calls initialize first and

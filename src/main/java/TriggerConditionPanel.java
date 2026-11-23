@@ -2,13 +2,11 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import java.awt.*;
 
 
 public class TriggerConditionPanel extends JPanel {
-    static Color conditionBuilderTextColor = new Color(143, 0, 197);
+    private static final Color conditionBuilderTextColor = new Color(143, 0, 197);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
@@ -22,9 +20,7 @@ public class TriggerConditionPanel extends JPanel {
     public TriggerConditionTableModel triggerConditionTableModel;
     public JTable triggerConditionTable;
 
-    // Sub-panel with its own controller, the way CorrectiveCallsPanel owns its extraction and
-    // replacement panels. Added at the same position the inline test call panel occupied, so the
-    // getComponent() indices this tab's controller relies on are unchanged.
+    // Test Calls sub-panel. Kept at the same position so the controller's getComponent() indices hold.
     public TestCallPanel testCallPanel;
 
 
@@ -149,7 +145,7 @@ public class TriggerConditionPanel extends JPanel {
         return scrollPane;
     }
 
-    public JPanel createTriggerConditionTable(String header, JTable table){
+    private JPanel createTriggerConditionTable(String header, JTable table){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 

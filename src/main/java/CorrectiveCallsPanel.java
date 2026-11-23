@@ -5,7 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class CorrectiveCallsPanel extends JPanel {
-    static Color correctiveCallsTextColor = new Color(26, 90, 2);
+    private static final Color correctiveCallsTextColor = new Color(26, 90, 2);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
@@ -13,21 +13,21 @@ public class CorrectiveCallsPanel extends JPanel {
     public HttpRequestEditor requestEditor;
     public HttpResponseEditor responseEditor;
 
-    public JRadioButton singleSetRadionButton;
+    public JRadioButton singleSetRadioButton;
     public JRadioButton multiSetRadioButton;
 
-    public JPanel saveCallSequencePanel;
+    private JPanel saveCallSequencePanel;
 
     public CallSequenceTableModel callSequenceTableModel;
     public JTable callSequenceTable;
-    public JScrollPane callSequenceScrollPane;
+    private JScrollPane callSequenceScrollPane;
 
     public CorrectiveCallSetTableModel correctiveCallSetTableModel;
     public JTable correctiveCallsSetsTable;
-    public JScrollPane saveCallSequenceScrollPane;
+    private JScrollPane saveCallSequenceScrollPane;
 
-    public JButton addSetBotton;
-    public JButton removeSetBotton;
+    public JButton addSetButton;
+    public JButton removeSetButton;
 
     public ExtractionTableModel extractionTableModel;
     public ReplacementTableModel replacementTableModel;
@@ -118,7 +118,7 @@ public class CorrectiveCallsPanel extends JPanel {
         saveCallSequencePanel.add(createRadioButtonPanel(), gbc);
 
         ButtonGroup buttonGroup = new ButtonGroup();
-        buttonGroup.add(singleSetRadionButton);
+        buttonGroup.add(singleSetRadioButton);
         buttonGroup.add(multiSetRadioButton);
 
         gbc.gridx = 0; gbc.gridy = 1;
@@ -128,6 +128,8 @@ public class CorrectiveCallsPanel extends JPanel {
 
         correctiveCallsSetsTable = new JTable(correctiveCallSetTableModel);
         correctiveCallsSetsTable.setRowSelectionInterval(0,0);
+        // Fixed Name column width, so adding or removing sets doesn't shrink it.
+        correctiveCallsSetsTable.getColumnModel().getColumn(0).setMinWidth(75);
         correctiveCallsSetsTable.getColumnModel().getColumn(0).setMaxWidth(75);
         correctiveCallsSetsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         saveCallSequenceScrollPane = new JScrollPane(correctiveCallsSetsTable);
@@ -148,8 +150,8 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        singleSetRadionButton = new JRadioButton("Single Set", true);
-        panel.add(singleSetRadionButton, gbc);
+        singleSetRadioButton = new JRadioButton("Single Set", true);
+        panel.add(singleSetRadioButton, gbc);
 
         gbc.gridx = 1;
 
@@ -167,13 +169,13 @@ public class CorrectiveCallsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        addSetBotton = new JButton("Add");
-        panel.add(addSetBotton, gbc);
+        addSetButton = new JButton("Add");
+        panel.add(addSetButton, gbc);
 
         gbc.gridx = 1;
 
-        removeSetBotton = new JButton("Remove");
-        panel.add(removeSetBotton, gbc);
+        removeSetButton = new JButton("Remove");
+        panel.add(removeSetButton, gbc);
 
         return panel;
     }

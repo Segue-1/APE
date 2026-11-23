@@ -2,23 +2,14 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 import java.awt.*;
 
 public class FollowUpPanel extends JPanel {
-    static Color followUpCallTextColor = new Color(9, 30, 172);
-    static Color conditionBuilderTextColor = new Color(143, 0, 197);
+    private static final Color followUpCallTextColor = new Color(9, 30, 172);
     private Font headerFont = new Font("Dialog", Font.BOLD, 14);
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
     private Font subTextFont = new Font("Dialog", Font.PLAIN, 12);
-    /*
-    Column count for the input fields. A JTextField built with no column count reports a preferred width
-    based on whatever text it currently holds, so "From Selection" dropping a long selected string into a
-    field grew that field's preferred width and GridBagLayout re-laid out the whole panel. With a column
-    count the preferred width is fixed and setText() no longer moves anything. fill = BOTH still expands
-    the fields to the full cell, so this is only a floor, not the displayed width.
-     */
+    // Fixed column count so setText() from From Selection doesn't resize the field.
     private static final int FIELD_COLUMNS = 8;
 
 
@@ -99,9 +90,8 @@ public class FollowUpPanel extends JPanel {
         requestEditor = Controller.montoyaApi.userInterface().createHttpRequestEditor();
         responseEditor = Controller.montoyaApi.userInterface().createHttpResponseEditor();
 
-        // The followup call only edits a request, so the response editor has nothing to show and was
-        // collapsing to its minimum size. It is still created because setfollowUpCall() reads
-        // getResponse() off it, but an empty panel holds the space instead.
+        // Only the request is edited, so an empty panel takes the response editor's place. The editor
+        // still exists because setFollowUpCall() reads it.
         JSplitPane editorPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         editorPane.setLeftComponent(requestEditor.uiComponent());
         editorPane.setRightComponent(new JPanel());
@@ -126,7 +116,7 @@ public class FollowUpPanel extends JPanel {
         gbc.weightx = .75; gbc.weighty = 1;
 
         String[] fieldLabels = {"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
-                "Occurrence:", "Pick from Extraction"};
+                "Pick from Extraction"};
         dropDown = new JComboBox<>();
         inputFields = new JTextField[fieldLabels.length - 1];
         fromSelect = new JButton();
@@ -172,11 +162,7 @@ public class FollowUpPanel extends JPanel {
         gbc.gridwidth = 1;
 
         for (int i = 0; i < jTextFields.length; i++) {
-            // "Occurrence:" is optional and defaults to the first match, so it carries a placeholder.
-            // Matched on the label rather than a fixed index so reordering the fields cannot break it.
-            jTextFields[i] = "Occurrence:".equals(fieldNames[i])
-                    ? new HintTextField("Optional", FIELD_COLUMNS)
-                    : new JTextField(FIELD_COLUMNS);
+            jTextFields[i] = new JTextField(FIELD_COLUMNS);
         }
 
         for (int i = 0; i < fieldNames.length; i++) {
@@ -207,7 +193,7 @@ public class FollowUpPanel extends JPanel {
         return panel;
     }
 
-    public JPanel createReplaceTable(String header, JTable table){
+    private JPanel createReplaceTable(String header, JTable table){
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 

@@ -13,13 +13,7 @@ public class ExtractionPanel extends JPanel {
     public JButton fromSelectButton;
     public JButton addButton;
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
-    /*
-    Column count for the input fields. A JTextField built with no column count reports a preferred width
-    based on whatever text it currently holds, so "From Selection" dropping a long selected string into a
-    field grew that field's preferred width and GridBagLayout re-laid out the whole panel. With a column
-    count the preferred width is fixed and setText() no longer moves anything. fill = BOTH still expands
-    the fields to the full cell, so this is only a floor, not the displayed width.
-     */
+    // Fixed column count so setText() from From Selection doesn't resize the field.
     private static final int FIELD_COLUMNS = 8;
 
 
@@ -32,9 +26,7 @@ public class ExtractionPanel extends JPanel {
         labels = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Response:",
                 "URL encode/decode:", "Extract from: "};
 
-        // The "URL encode/decode:" selector. Was created empty, so getSelectedItem() returned null and
-        // the feature did nothing. Populated here; the controller stores the choice on the ExtractText
-        // and Model applies it to the extracted value.
+        // URL encode/decode choice. Model applies it to the extracted value.
         dropDown = new JComboBox<>(new String[]{Utils.URL_NONE, Utils.URL_ENCODE, Utils.URL_DECODE});
         inputFields = new JTextField[labels.length - 1];
         fromSelectButton = new JButton();
@@ -43,7 +35,7 @@ public class ExtractionPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.weightx = 1; gbc.weighty = 1;
 
-        JPanel extractFields = createInputTextFields("Extract", labels, dropDown, createRadionButtonPanel(),
+        JPanel extractFields = createInputTextFields("Extract", labels, dropDown, createRadioButtonPanel(),
                 inputFields, fromSelectButton, addButton);
 
         add(extractFields, gbc);
@@ -134,7 +126,7 @@ public class ExtractionPanel extends JPanel {
         return panel;
     }
 
-    private JPanel createRadionButtonPanel(){
+    private JPanel createRadioButtonPanel(){
         JPanel panel = new JPanel(new GridBagLayout());
 
         radioButtons = new JRadioButton[3];

@@ -44,60 +44,59 @@ public class ContextMenusController implements ContextMenuItemsProvider {
 
     private void attachListeners() {
         view.contextMenus.sendToErrorDetection.addActionListener(e -> {
-            if (contextMenuEvent.messageEditorRequestResponse().isPresent()){
-                HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
+            try {
+                if (contextMenuEvent.messageEditorRequestResponse().isPresent()){
+                    HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
 
-                // Pass call to error detection panel
-                view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
-                view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
-                controller.errorDetectionController.errorCall = reqResp;
-                // Also on the Model's error call, so the object the extractions belong to carries the
-                // exchange they were configured against.
-                model.errorCall.requestResponse = reqResp;
+                    // Pass call to error detection panel
+                    view.errorDetectionPanel.requestEditor.setRequest(reqResp.request());
+                    view.errorDetectionPanel.responseEditor.setResponse(reqResp.response());
+                    // Also set on the Model's error call, which its extractions run against.
+                    model.errorCall.requestResponse = reqResp;
 
-                // Pass call to follow up call panel
-                view.followUpPanel.requestEditor.setRequest(reqResp.request());
-                controller.followUpController.setfollowUpCall();
-               // view.followUpPanel.responseEditor.setResponse(reqResp.response());
+                    // Each set's followup call starts as a copy of the errored call.
+                    controller.followUpController.setFollowUpCall(reqResp);
 
-                DebugLog.log("Context menu 'Send to Error Detection' was clicked. Call sent to Error Detection panel.");
+                    DebugLog.log("Context menu 'Send to Error Detection' was clicked. Call sent to Error Detection panel.");
+                }
+            }
+            catch (Exception ex) {
+                DebugLog.log("[Error] ContextMenusController: 'Send to Error Detection' failed. " + ex);
             }
         });
 
         view.contextMenus.sendCorrectiveCalls.addActionListener(e -> {
-            if (contextMenuEvent.messageEditorRequestResponse().isPresent()){
-                HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
-                view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
-                view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
+            try {
+                if (contextMenuEvent.messageEditorRequestResponse().isPresent()){
+                    HttpRequestResponse reqResp = contextMenuEvent.messageEditorRequestResponse().get().requestResponse();
+                    view.correctiveCallsPanel.requestEditor.setRequest(reqResp.request());
+                    view.correctiveCallsPanel.responseEditor.setResponse(reqResp.response());
 
-                /*
-                Resolve the target row once. addRequestResponse() maps -1 to Set 0, and the log below
-                used to re-read the selection without that mapping and index the list with -1.
-                 */
-                int targetRow = correctiveCallsSetsTable.getSelectedRow();
-                if (targetRow == -1) {
-                    targetRow = 0;
+                    // No selection maps to Set 0, same as addRequestResponse().
+                    int targetRow = correctiveCallsSetsTable.getSelectedRow();
+                    if (targetRow == -1) {
+                        targetRow = 0;
+                    }
+
+                    // Stores call in currently selected corrective calls set.
+                    CorrectiveCallSet targetSet = correctiveCallSetTableModel.getCorrectiveCallsSet(targetRow);
+                    correctiveCallSetTableModel.addRequestResponse(reqResp, targetRow);
+                    DebugLog.log("Context menu 'Send to Corrective Calls' was clicked. " +
+                                 "Call sent to Corrective Calls panel and stored in corrective call set: " +
+                                  targetSet);
+
+                    // Show the set the call was added to, which may not be the one displayed.
+                    callSequenceTableModel.loadCallSequence(targetSet.correctiveCallList);
+
+                    int lastRow = callSequenceTableModel.getRowCount() - 1;
+                    if (lastRow >= 0) {
+                        callSequenceTable.setRowSelectionInterval(lastRow, lastRow);
+                    }
+                    Utils.resizeColumnsToFitContent(callSequenceTable);
                 }
-
-                // Stores call in currently selected corrective calls set.
-                CorrectiveCallSet targetSet = correctiveCallSetTableModel.getCorrectiveCallsSet(targetRow);
-                correctiveCallSetTableModel.addRequestResponse(reqResp, targetRow);
-                DebugLog.log("Context menu 'Send to Corrective Calls' was clicked. " +
-                             "Call sent to Corrective Calls panel and stored in corrective call set: " +
-                              targetSet);
-
-                /*
-                Point the call sequence table at the set the call was actually added to. It could still
-                be showing a different set's list, in which case fireTableDataChanged() on its own
-                redrew the wrong calls and the row selection below could land out of range.
-                 */
-                callSequenceTableModel.loadCallSequence(targetSet.correctiveCallList);
-
-                int lastRow = callSequenceTableModel.getRowCount() - 1;
-                if (lastRow >= 0) {
-                    callSequenceTable.setRowSelectionInterval(lastRow, lastRow);
-                }
-                Utils.resizeColumnsToFitContent(callSequenceTable);
+            }
+            catch (Exception ex) {
+                DebugLog.log("[Error] ContextMenusController: 'Send to Corrective Calls' failed. " + ex);
             }
         });
     }

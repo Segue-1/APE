@@ -11,13 +11,7 @@ public class ReplacementPanel extends JPanel {
     public JButton fromSelectButton;
     public JButton addButton;
     private Font subHeaderFont = new Font("Dialog", Font.BOLD, 12);
-    /*
-    Column count for the input fields. A JTextField built with no column count reports a preferred width
-    based on whatever text it currently holds, so "From Selection" dropping a long selected string into a
-    field grew that field's preferred width and GridBagLayout re-laid out the whole panel. With a column
-    count the preferred width is fixed and setText() no longer moves anything. fill = BOTH still expands
-    the fields to the full cell, so this is only a floor, not the displayed width.
-     */
+    // Fixed column count so setText() from From Selection doesn't resize the field.
     private static final int FIELD_COLUMNS = 8;
 
 
@@ -28,7 +22,7 @@ public class ReplacementPanel extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
 
         labels = new String[]{"Name:", "Start string:", "Stop string:", "Selected Text from Request:",
-                "Occurrence:", "Pick from Extraction"};
+                "Pick from Extraction"};
 
         dropDown = new JComboBox<>();
         inputFields = new JTextField[labels.length - 1];
@@ -97,11 +91,7 @@ public class ReplacementPanel extends JPanel {
         gbc.weighty = 1;
 
         for (int i = 0; i < jTextFields.length; i++) {
-            // "Occurrence:" is optional and defaults to the first match, so it carries a placeholder.
-            // Matched on the label rather than a fixed index so reordering the fields cannot break it.
-            jTextFields[i] = "Occurrence:".equals(fieldNames[i])
-                    ? new HintTextField("Optional", FIELD_COLUMNS)
-                    : new JTextField(FIELD_COLUMNS);
+            jTextFields[i] = new JTextField(FIELD_COLUMNS);
         }
 
         for (int i = 0; i < fieldNames.length; i++) {

@@ -6,16 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /*
-The Test Calls table: what APE did, step by step, during the last test run.
-
-Populated from Model.runTestCall(). Each row is one request APE sent (or decided not to send), and
-selecting a row loads its request/response pair into the editors below, the same way the call
-sequence table works.
-
-The columns replace the earlier "Description / Object / Object Detail" placeholders. The table is wide
-and this is the only place a user can see why a trigger condition did or did not fire, so it carries
-the status code, which conditions hit and missed, and how many extractions and replacements actually
-landed rather than merely being configured.
+Table model for the Test Calls table. One row per step of the last test run.
 */
 public class TestCallTableModel extends AbstractTableModel implements DeletableTableModel {
 
@@ -88,11 +79,7 @@ public class TestCallTableModel extends AbstractTableModel implements DeletableT
         return steps.get(rowIndex);
     }
 
-    /*
-    The exchange behind a row, or null for a step that never sent anything -- a followup that was not
-    configured, or a run that could not start. The controller checks for null before loading the
-    editors.
-     */
+    // null for a step that never sent anything.
     public HttpRequestResponse getReqRes(int rowIndex) {
         return steps.get(rowIndex).requestResponse;
     }

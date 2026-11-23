@@ -1,10 +1,7 @@
-import burp.api.montoya.http.message.HttpRequestResponse;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 
-// Implements DeletableTableModel so Utils.setTableDeleteContextMenu() can drive the delete. It already
-// had the removeRow() method; it just never declared the interface.
 public class ErrorConditionTableModel extends AbstractTableModel implements DeletableTableModel {
     public ArrayList<ErrorCondition> errorConditions = new ArrayList<>();
     private String[] columns = {"Name", "Category", "Match in", "Header", "Value", "Description"};
@@ -55,11 +52,7 @@ public class ErrorConditionTableModel extends AbstractTableModel implements Dele
         fireTableRowsInserted(errorConditions.size() - 1, errorConditions.size() - 1);
     }
 
-    /*
-    Re-numbers the rows after a deletion. Calls the object's own setName() rather than rebuilding
-    the string here, which is how ErrorCondition rows ended up renamed from "Error Condition N" to
-    "Condition N" after a delete.
-     */
+    // Re-numbers the rows after a deletion.
     private void resetNames(int start) {
         for (int i = start; i < errorConditions.size(); i++) {
             errorConditions.get(i).index--;

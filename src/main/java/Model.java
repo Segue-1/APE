@@ -12,58 +12,36 @@ import java.util.List;
 import java.util.Map;
 
 
-public class Model implements HttpHandler{
+public class Model implements HttpHandler {
 
-    // Logical operators as they appear in the UI dropdown (TriggerConditionController).
-    public static final String AND = "AND";
-    public static final String OR = "OR";
+    // Logical operators as they appear in the trigger condition builder dropdown.
+    private static final String AND = "AND";
+    private static final String OR = "OR";
 
-    /*
-    Initialised empty rather than left null. Model's constructor registers the HTTP handler before
-    SettingsController gets a chance to push the initial checkbox state, so a request arriving in that
-    window used to NPE on enabledTools.contains() in handleHttpRequestToBeSent().
-     */
-    public EnumSet<ToolType> enabledTools = EnumSet.noneOf(ToolType.class);
-    public Boolean triggerConditionIsSet;
+    // Empty rather than null, since requests can arrive before SettingsController sets it.
+    private EnumSet<ToolType> enabledTools = EnumSet.noneOf(ToolType.class);
     public List<TriggerCondition> triggerConditions;
-    public CorrectiveCall followupCall;
 
-    /*
-    The intercepted call that triggered APE, as a corrective call that never fires.
-
-    Only its extractList is used. It exists because the most natural way for an API to tell you how to
-    fix a request is in the error response itself -- a 409 carrying the version you should have sent, a
-    401 carrying a fresh nonce -- and until now nothing could read that: processCorrectiveCalls() only
-    ever extracted from a corrective call's own request or response, so recovering such a value needed
-    a corrective call that re-provoked the same error purely to extract from it.
-
-    Modelled as a single CorrectiveCall on the Model rather than a copy injected into every
-    CorrectiveCallSet. One object means no per-request mutation of shared config, nothing to keep in
-    sync across sets, and no index offset in the call sequence table. Its extractions run against the
-    REAL intercepted exchange each time, and land in that request's extraction map before any trigger
-    condition is evaluated, so every corrective call and the followup can use them -- including the
-    first call in a set, which has no earlier call to draw on.
-     */
+    // The call sent to the Error Detection tab. Only its extractList is used, to extract from the
+    // intercepted exchange before any corrective calls run.
     public CorrectiveCall errorCall = new CorrectiveCall(null);
 
-    public Model () {
+    // Result of applying a replace list to a request. request is null when nothing applied.
+    private record Replaced(String request, int applied) {}
+
+    public Model() {
         // TODO Maybe just move this to controller
-        // Guarded so Model can be built outside of Burp (the logic harness in src/test/java does this).
         if (Controller.montoyaApi != null) {
-            Controller.montoyaApi.extension().setName("APE");
+            Controller.montoyaApi.extension().setName("API Processing Engine");
             Controller.montoyaApi.http().registerHttpHandler(this);
         }
     }
 
 
-
     // HTTP Handler which will intercept all traffic generated in burp
     @Override
     public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent requestToBeSent) {
-
-
         // This determines which tool (Repeater, Intruder, etc.) a request came from.
-        // TODO make sure this check makes sense on the response.
         ToolType toolType = requestToBeSent.toolSource().toolType();
 
         /*
@@ -72,99 +50,81 @@ public class Model implements HttpHandler{
          times. Need a way to make sure processResponse is not called for requests made by APE.
          Currently no way to identify which extension sends a request.
          */
-
-
         if (!enabledTools.contains(toolType) || toolType.toolName().equals("Extension")) {
             DebugLog.log("Model: Not processing response!");
             return RequestToBeSentAction.continueWith(requestToBeSent);
         }
 
-        /*
-        What each extraction pulled out, for this request only. Declared here so it is a local of this
-        handler invocation and therefore confined to the thread serving this request. Burp calls this
-        handler on many threads at once, and ExtractText objects are long lived config, one instance per
-        row in the extraction table, shared by every request that triggers. Holding the extracted value
-        on that shared object let two concurrent requests overwrite each other, so a followup call could
-        go out carrying a token extracted for a different request. Keyed by identity because ExtractText
-        does not override equals/hashCode, which is the comparison being relied on anyway.
-
-        A fresh map per request is also empty per request, so nothing needs clearing and a failed
-        extraction cannot fall back on a value left over from an earlier request.
-         */
+        // Extracted values for this request only. Keyed by identity since ExtractText is shared config.
         Map<ExtractText, String> extracted = new IdentityHashMap<>();
 
-        HttpRequestResponse requestResponse = Controller.montoyaApi.http().sendRequest(requestToBeSent);
+        // Nothing went out if the send throws, so it is safe to let Burp send it instead.
+        HttpRequestResponse requestResponse;
+        try {
+            requestResponse = Controller.montoyaApi.http().sendRequest(requestToBeSent);
+        }
+        catch (Exception e) {
+            DebugLog.log("[Error] Model: Sending the intercepted request threw: " + e
+                    + ". Handing it back to Burp.");
+            return RequestToBeSentAction.continueWith(requestToBeSent);
+        }
 
-        /*
-        A send that never completed (connection refused, timeout, TLS failure) comes back with a null
-        response. There is nothing to evaluate trigger conditions against and nothing to spoof, so hand
-        the request back to Burp and let it do its own send and report its own connection error.
-
-        This is the one path where continueWith() is correct despite the note below. That note is about
-        not sending a request twice, and the send above produced no response at all, so Burp trying it
-        is the user's single real attempt rather than a duplicate.
-
-        Guarding here rather than at each spoof() below, because detectErrorCondition() reads the
-        response too.
-         */
+        // No response (connection refused, timeout) means nothing to evaluate. Let Burp report the error.
         if (requestResponse.response() == null) {
             DebugLog.log("[Error] Model: Request produced no response. Handing it back to Burp.");
             return RequestToBeSentAction.continueWith(requestToBeSent);
         }
 
-        /*
-        Before any trigger condition is evaluated, so whatever the errored exchange yields is already
-        in the map by the time the first corrective call builds its replacements.
-         */
-        extractFromErrorCall(requestResponse, extracted);
+        // The request has already been sent, so from here on always spoof. continueWith() would send it twice.
+        try {
+            List<TriggerCondition> matched = matchingTriggerConditions(requestResponse.request(),
+                    requestResponse.response(), null);
 
-        boolean triggered = detectErrorCondition(requestResponse, extracted);
+            if (matched.isEmpty()) {
+                DebugLog.log("Model: No trigger condition matched. Returning the original response.");
+                return RequestToBeSentAction.spoof(requestResponse.response());
+            }
 
-        /*
-        The request above has already gone out, so every path from here has to spoof a response rather
-        than continueWith(). Returning continueWith() would hand the request back to Burp and send it a
-        second time.
-         */
-        if (!triggered) {
-            DebugLog.log("Model: No trigger condition matched. Returning the original response.");
+            HttpResponse followupCallResponse = correct(matched, requestResponse, extracted, null);
+
+            if (followupCallResponse == null) {
+                DebugLog.log("[Error] Model: No followup call returned a response. Returning the original response.");
+                return RequestToBeSentAction.spoof(requestResponse.response());
+            }
+
+            return RequestToBeSentAction.spoof(followupCallResponse);
+        }
+        catch (Exception e) {
+            DebugLog.log("[Error] Model: Processing the intercepted request threw: " + e
+                    + ". Returning the original response.");
             return RequestToBeSentAction.spoof(requestResponse.response());
         }
+    }
 
-        // followupCall stays null until the user configures one on the Followup Call tab. This used to be
-        // called unconditionally, which meant an unconfigured followup call threw a NullPointerException.
-        if (followupCall == null) {
-            DebugLog.log("[Error] Model: Trigger condition matched but no followup call is configured. "
-                    + "Returning the original response.");
-            return RequestToBeSentAction.spoof(requestResponse.response());
+    @Override
+    public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
+        return ResponseReceivedAction.continueWith(responseReceived);
+    }
+
+    // Allows controller to update model's enabledTools
+    public void updateEnabledTools(EnumSet<ToolType> enabledTools) {
+        this.enabledTools = EnumSet.copyOf(enabledTools);
+    }
+
+    // Extractions on the errored call. Available to every corrective call and the followup.
+    public List<ExtractText> errorCallExtractions() {
+        if (errorCall == null) {
+            return new ArrayList<>();
         }
-
-        HttpResponse followupCallResponse = sendFollowupCall(extracted, null);
-
-        if (followupCallResponse == null) {
-            DebugLog.log("[Error] Model: Followup call returned no response. Returning the original response.");
-            return RequestToBeSentAction.spoof(requestResponse.response());
-        }
-
-        return RequestToBeSentAction.spoof(followupCallResponse);
+        return new ArrayList<>(errorCall.extractList);
     }
 
 
     /*
     ------------------------------------------------------------------ Test Call
 
-    Replays the errored call and reports, step by step, what APE does with it.
-
-    Sends the request stored on errorCall -- the one sent to the Error Detection tab -- then runs the
-    exact same pipeline a live interception does: errored-call extractions, trigger condition
-    evaluation, the corrective call sets belonging to whichever conditions matched, and the followup.
-    The only difference is that each send is recorded as a TestCallStep.
-
-    Deliberately shares matchingTriggerConditions(), processCorrectiveCalls() and sendFollowupCall()
-    with handleHttpRequestToBeSent() rather than reimplementing the sequence, because a test that can
-    drift away from what interception actually does is worse than no test button at all.
-
-    The returned list is never null. A run that cannot start comes back as a single step explaining
-    why, so the table can show the reason instead of silently staying empty.
+    Replays the errored call through the same pipeline as handleHttpRequestToBeSent(), recording each
+    send as a TestCallStep. Never returns null; a run that can't start returns one step saying why.
      */
     public List<TestCallStep> runTestCall() {
         List<TestCallStep> trace = new ArrayList<>();
@@ -186,6 +146,23 @@ public class Model implements HttpHandler{
             return trace;
         }
 
+        // Keeps the steps that ran and adds a row saying what broke.
+        try {
+            runTestCall(trace);
+        }
+        catch (Exception e) {
+            DebugLog.log("[Error] Model: Test call threw: " + e);
+            TestCallStep step = new TestCallStep(trace.size() + 1,
+                    trace.isEmpty() ? TestCallStep.ERRORED : trace.getLast().type,
+                    "Error", null, TestCallStep.ERROR);
+            step.detail = "test call stopped: " + e;
+            trace.add(step);
+        }
+
+        return trace;
+    }
+
+    private void runTestCall(List<TestCallStep> trace) {
         Map<ExtractText, String> extracted = new IdentityHashMap<>();
         HttpRequest request = errorCall.requestResponse.request();
 
@@ -201,13 +178,8 @@ public class Model implements HttpHandler{
         if (requestResponse.response() == null) {
             first.detail = "the call produced no response, so nothing could be evaluated";
             DebugLog.log("[Error] Model: Test call got no response. Stopping.");
-            return trace;
+            return;
         }
-
-        // Same order as interception: errored-call extractions first, so corrective calls can use them.
-        int before = extracted.size();
-        extractFromErrorCall(requestResponse, extracted);
-        first.extractionsHit = extracted.size() - before;
 
         List<String> conditionResults = new ArrayList<>();
         List<TriggerCondition> matched = matchingTriggerConditions(requestResponse.request(),
@@ -218,25 +190,12 @@ public class Model implements HttpHandler{
 
         if (matched.isEmpty()) {
             DebugLog.log("Model: Test call matched no trigger condition. Stopping after one step.");
-            return trace;
+            return;
         }
 
-        for (TriggerCondition triggerCondition : matched) {
-            processCorrectiveCalls(triggerCondition, extracted, trace);
-        }
-
-        if (followupCall == null || followupCall.requestResponse == null) {
-            TestCallStep step = new TestCallStep(trace.size() + 1, TestCallStep.FOLLOWUP, "Followup",
-                    null, TestCallStep.NOT_RUN);
-            step.detail = "no followup call configured on the Followup Call tab";
-            trace.add(step);
-            return trace;
-        }
-
-        sendFollowupCall(extracted, trace);
+        correct(matched, requestResponse, extracted, trace);
 
         DebugLog.log("Model: Test call finished in " + trace.size() + " step(s).");
-        return trace;
     }
 
     // A single row explaining why a test run could not start.
@@ -248,112 +207,55 @@ public class Model implements HttpHandler{
         return step;
     }
 
-    /*
-    Runs the extractions configured against the errored call on the Error Detection tab, reading the
-    exchange that actually triggered this interception rather than whatever was last sent to the panel.
 
-    A failed extraction simply puts nothing in the map, and any replacement pointing at it is skipped
-    downstream rather than inserting the text "null", which is the same contract corrective call
-    extractions already have.
+    /*
+    ------------------------------------------------------------------ Trigger conditions
      */
-    private void extractFromErrorCall(HttpRequestResponse requestResponse,
-                                      Map<ExtractText, String> extracted) {
-        if (errorCall == null || errorCall.extractList.isEmpty()) {
-            return;
+
+    /*
+    First match wins: only the first matched trigger condition, in table order, fires. Runs the errored
+    call's extractions, that trigger condition's corrective calls, then its set's followup call. Returns
+    the followup's response, or null if none came back.
+     */
+    private HttpResponse correct(List<TriggerCondition> matched, HttpRequestResponse requestResponse,
+                                 Map<ExtractText, String> extracted, List<TestCallStep> trace) {
+        TriggerCondition triggerCondition = matched.getFirst();
+        CorrectiveCallSet set = triggerCondition.correctiveCallSet;
+
+        if (matched.size() > 1) {
+            DebugLog.log("Model: " + matched.size() + " trigger conditions matched. Only the first, "
+                    + triggerCondition.name + ", fires.");
         }
 
-        String rawRequest = requestResponse.request().toString();
-        String rawResponse = requestResponse.response().toString();
+        int hits = extractFromErrorCall(requestResponse, extracted);
+        if (trace != null && !trace.isEmpty()) {
+            trace.getFirst().extractionsHit = hits;
+        }
 
-        DebugLog.log("Model: Running " + errorCall.extractList.size()
-                + " extraction(s) against the errored call.");
+        DebugLog.log("Model: Trigger condition matched: " + triggerCondition.name + ". Making corrective calls.");
+        processCorrectiveCalls(triggerCondition, extracted, trace);
 
-        for (ExtractText extractText : errorCall.extractList) {
-            String source = extractText.extractFromRequest ? rawRequest : rawResponse;
-            String from = extractText.extractFromRequest ? "request" : "response";
+        CorrectiveCall followupCall = set.followupCall;
 
-            DebugLog.log("Model: Extracting from errored " + from + ": " + extractText.debugString());
-            String extractedText = extractBetween(source, extractText.startString, extractText.stopString);
+        if (followupCall == null || followupCall.requestResponse == null) {
+            DebugLog.log("[Error] Model: " + set.name + " has no followup call configured.");
 
-            if (extractedText != null) {
-                extractedText = Utils.applyUrlTransform(extractedText, extractText.urlEncodeDecode);
-                extracted.put(extractText, extractedText);
-                DebugLog.log("Model: Extracted from errored call: " + extractedText);
+            if (trace != null) {
+                TestCallStep step = new TestCallStep(trace.size() + 1, TestCallStep.FOLLOWUP,
+                        set.name + " / Followup", null, TestCallStep.NOT_RUN);
+                step.detail = "no followup call configured for " + set.name;
+                trace.add(step);
             }
-            else {
-                DebugLog.log("[Error] Model: Extraction from the errored call found nothing: "
-                        + extractText.name);
-            }
-        }
-    }
-
-    // The extractions defined against the errored call. Available to every corrective call and to the
-    // followup, since the errored exchange precedes all of them.
-    public List<ExtractText> errorCallExtractions() {
-        if (errorCall == null) {
-            return new ArrayList<>();
-        }
-        return new ArrayList<>(errorCall.extractList);
-    }
-
-
-    @Override
-    public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived) {
-        return ResponseReceivedAction.continueWith(responseReceived);
-    }
-
-    // Allows controller to update model's enabledTools
-    public void updateEnabledTools(EnumSet<ToolType> enabledTools) {
-        this.enabledTools = EnumSet.copyOf(enabledTools);
-    }
-
-
-
-    /*
-    Detects error conditions and makes the corrective calls belonging to whichever trigger conditions
-    matched. A response triggers APE if ANY of the configured trigger conditions evaluates to true.
-
-    Returns true if at least one trigger condition matched, so the caller knows whether the followup call
-    is supposed to run at all.
-     */
-    boolean detectErrorCondition(HttpRequestResponse requestResponse, Map<ExtractText, String> extracted) {
-        return detectErrorCondition(requestResponse, extracted, null);
-    }
-
-    boolean detectErrorCondition(HttpRequestResponse requestResponse, Map<ExtractText, String> extracted,
-                                 List<TestCallStep> trace) {
-        List<TriggerCondition> matched = matchingTriggerConditions(requestResponse.request(),
-                requestResponse.response(), null);
-
-        for (TriggerCondition triggerCondition : matched) {
-            DebugLog.log("Model: Trigger condition matched: " + triggerCondition.name
-                    + ". Making corrective calls.");
-            processCorrectiveCalls(triggerCondition, extracted, trace);
+            return null;
         }
 
-        DebugLog.log("Model: Finished evaluating "
-                + (triggerConditions == null ? 0 : triggerConditions.size())
-                + " trigger condition(s). Triggered: " + !matched.isEmpty());
-
-        return !matched.isEmpty();
+        return sendFollowupCall(followupCall, set.name, extracted, trace);
     }
 
-    /*
-    Which trigger conditions match a response, deciding only -- nothing is sent here.
-
-    Separated from firing the corrective calls so the Test Call button can report which conditions hit
-    and which missed before anything goes on the wire, and so both it and the live interception path
-    run the same evaluation rather than two implementations that can drift apart.
-
-    results, when supplied, is filled with one human readable line per condition for the Test Calls
-    table.
-     */
-    List<TriggerCondition> matchingTriggerConditions(HttpResponse response, List<String> results) {
-        return matchingTriggerConditions(null, response, results);
-    }
-
+    // Which trigger conditions match, without sending anything. results, if given, gets one line per
+    // condition for the Test Calls table. Package-private for the test harnesses.
     List<TriggerCondition> matchingTriggerConditions(HttpRequest request, HttpResponse response,
-                                                     List<String> results) {
+                                                             List<String> results) {
         List<TriggerCondition> matched = new ArrayList<>();
 
         if (triggerConditions == null || triggerConditions.isEmpty()) {
@@ -364,9 +266,20 @@ public class Model implements HttpHandler{
             return matched;
         }
 
-        for (TriggerCondition triggerCondition : triggerConditions) {
+        // A copy, so adding or deleting a trigger condition in the UI can't disturb this loop.
+        for (TriggerCondition triggerCondition : new ArrayList<>(triggerConditions)) {
             DebugLog.log("Model: Evaluating trigger condition: " + triggerCondition.name);
-            boolean hit = evaluateTriggerCondition(triggerCondition, request, response);
+
+            // A condition that throws counts as a miss. The rest are still evaluated.
+            boolean hit;
+            try {
+                hit = evaluateTriggerCondition(triggerCondition, request, response);
+            }
+            catch (Exception e) {
+                DebugLog.log("[Error] Model: Trigger condition '" + triggerCondition.name
+                        + "' threw while evaluating. Treating it as not matched. " + e);
+                hit = false;
+            }
 
             if (results != null) {
                 results.add(triggerCondition.name + (hit ? ": HIT" : ": miss"));
@@ -380,32 +293,33 @@ public class Model implements HttpHandler{
         return matched;
     }
 
-    /*
-    Evaluates one trigger condition in three steps, which is the only logic the UI can express:
-      1. evaluate each error condition on its own and apply its negation checkbox
-      2. collapse every AND (AND binds tighter than OR)
-      3. collapse every remaining OR
-    The working lists are local, so nothing carries over between responses or between trigger conditions.
-     */
-    Boolean evaluateTriggerCondition(TriggerCondition triggerCondition, HttpResponse response) {
+    // Package-private for the test harnesses. Request-side conditions never match without a request.
+    boolean evaluateTriggerCondition(TriggerCondition triggerCondition, HttpResponse response) {
         return evaluateTriggerCondition(triggerCondition, null, response);
     }
 
-    Boolean evaluateTriggerCondition(TriggerCondition triggerCondition, HttpRequest request,
-                                     HttpResponse response) {
+    /*
+    Evaluates in three steps:
+      1. each error condition on its own, with its negation applied
+      2. collapse every AND (AND binds tighter than OR)
+      3. collapse every remaining OR
+    Package-private for the test harnesses.
+     */
+    boolean evaluateTriggerCondition(TriggerCondition triggerCondition, HttpRequest request,
+                                             HttpResponse response) {
         DebugLog.log("Model: Evaluating trigger condition " + triggerCondition.name
                 + ". Condition string: " + triggerCondition.conditionString);
 
         List<Boolean> conditions = new ArrayList<>();
         List<String> operators = new ArrayList<>();
 
-        // Step 1: each error condition on its own, negation applied immediately.
+        // Step 1
         for (int i = 0; i < triggerCondition.errorConditions.size(); i++) {
             ErrorCondition errorCondition = triggerCondition.errorConditions.get(i);
 
-            Boolean raw = evaluateErrorCondition(errorCondition, request, response);
-            Boolean isNegated = triggerCondition.isNegated.get(i);
-            Boolean result = evaluateNegation(raw, isNegated);
+            boolean raw = evaluateErrorCondition(errorCondition, request, response);
+            boolean isNegated = triggerCondition.isNegated.get(i);
+            boolean result = isNegated != raw;
 
             DebugLog.log("Model: Error condition " + i + " evaluated: " + errorCondition.name
                     + ". Category: '" + errorCondition.category + "', value: '" + errorCondition.value + "'");
@@ -414,30 +328,27 @@ public class Model implements HttpHandler{
             conditions.add(result);
         }
 
-        // TriggerCondition leaves logicalOperator null when there is only one error condition.
+        // logicalOperator is null when there is only one error condition.
         if (triggerCondition.logicalOperator != null) {
             operators.addAll(triggerCondition.logicalOperator);
         }
 
         DebugLog.log("Model: Parsed trigger condition. Conditions: " + conditions + ", operators: " + operators);
 
-        // One operator joins each adjacent pair of error conditions, so there is always one fewer
-        // operator than condition. Anything else means the UI handed us something malformed.
+        // There must be exactly one operator between each pair of conditions.
         if (operators.size() != conditions.size() - 1) {
             DebugLog.log("[Error] Malformed trigger condition: " + triggerCondition.name + ". Found "
                     + conditions.size() + " condition(s) and " + operators.size() + " operator(s).");
-            DebugLog.log("A trigger condition must have exactly " + (conditions.size() - 1)
-                    + " operator(s) for " + conditions.size() + " condition(s)");
             return false;
         }
 
-        // Step 2 then step 3.
+        // Steps 2 and 3
         evalAND(conditions, operators);
         evalOR(conditions, operators);
 
         if (conditions.size() != 1 || !operators.isEmpty()) {
-            DebugLog.log("[Error] Trigger condition did not collapse to a single value: " + triggerCondition.name);
-            DebugLog.log("Conditions: " + conditions + ", operators: " + operators);
+            DebugLog.log("[Error] Trigger condition did not collapse to a single value: " + triggerCondition.name
+                    + ". Conditions: " + conditions + ", operators: " + operators);
             return false;
         }
 
@@ -448,8 +359,7 @@ public class Model implements HttpHandler{
 
     /*
     Collapses every AND in place, left to right. operators.get(i) joins conditions.get(i) and
-    conditions.get(i+1), so folding an AND replaces that pair with a single value at index i and
-    drops the operator. Mutates both lists.
+    conditions.get(i + 1), so each AND folds that pair into index i. Package-private for the test harnesses.
      */
     void evalAND(List<Boolean> conditions, List<String> operators) {
         DebugLog.log("Model: evalAND() input. Conditions: " + conditions + ", operators: " + operators);
@@ -461,25 +371,22 @@ public class Model implements HttpHandler{
                 continue;
             }
 
-            Boolean left = conditions.get(i);
-            Boolean right = conditions.get(i + 1);
-            Boolean result = left && right;
+            boolean result = conditions.get(i) && conditions.get(i + 1);
 
-            DebugLog.log("Model: Collapsing AND at operator " + i + ". " + left + " AND " + right + " = " + result);
+            DebugLog.log("Model: Collapsing AND at operator " + i + ". " + conditions.get(i) + " AND "
+                    + conditions.get(i + 1) + " = " + result);
 
-            operators.remove(i);       // operator is consumed
-            conditions.remove(i + 1);  // right operand folds into the left one
-            conditions.set(i, result); // which now holds the result
+            operators.remove(i);
+            conditions.remove(i + 1);
+            conditions.set(i, result);
 
-            // int "i" is deliberately not advanced. operators.get(i) is now whatever followed the pair we
-            // just folded, e.g. the second AND of "A AND B AND C", which must fold into this result.
-            DebugLog.log("Model: Collapsed to conditions: " + conditions + ", operators: " + operators);
+            // i is not advanced, so a following AND (A AND B AND C) folds into this result.
         }
 
         DebugLog.log("Model: evalAND() output. Conditions: " + conditions + ", operators: " + operators);
     }
 
-    // Same collapse as evalAND. Runs second, so by now every remaining operator should be an OR.
+    // Same as evalAND. Runs second, so every remaining operator should be an OR.
     void evalOR(List<Boolean> conditions, List<String> operators) {
         DebugLog.log("Model: evalOR() input. Conditions: " + conditions + ", operators: " + operators);
 
@@ -492,34 +399,25 @@ public class Model implements HttpHandler{
                 continue;
             }
 
-            Boolean left = conditions.get(i);
-            Boolean right = conditions.get(i + 1);
-            Boolean result = left || right;
+            boolean result = conditions.get(i) || conditions.get(i + 1);
 
-            DebugLog.log("Model: Collapsing OR at operator " + i + ". " + left + " OR " + right + " = " + result);
+            DebugLog.log("Model: Collapsing OR at operator " + i + ". " + conditions.get(i) + " OR "
+                    + conditions.get(i + 1) + " = " + result);
 
             operators.remove(i);
             conditions.remove(i + 1);
             conditions.set(i, result);
-
-            DebugLog.log("Model: Collapsed to conditions: " + conditions + ", operators: " + operators);
         }
 
         DebugLog.log("Model: evalOR() output. Conditions: " + conditions + ", operators: " + operators);
     }
 
-    private Boolean evaluateErrorCondition(ErrorCondition errorCondition, HttpRequest request,
+    private boolean evaluateErrorCondition(ErrorCondition errorCondition, HttpRequest request,
                                            HttpResponse response) {
-        boolean result = false; //Should use only primitive boolean not obj Boolean because there is no use for it, and it is more expensive
-
-        /*
-        Body and Header conditions may be aimed at either half of the exchange. A condition set to
-        match the request when no request is available -- the back-compatible two argument
-        evaluateTriggerCondition(), used by the condition parser tests -- cannot match, and says so
-        rather than quietly returning false.
-         */
+        boolean result = false;
         boolean useRequest = errorCondition.matchInRequest;
 
+        // Status Code always reads the response, so only Body and Header need a request.
         if (useRequest && request == null && !errorCondition.category.equals("Status Code")) {
             DebugLog.log("[Error] Model: Error condition '" + errorCondition.name + "' matches the "
                     + "request, but no request was supplied. Treating it as not matched.");
@@ -528,7 +426,6 @@ public class Model implements HttpHandler{
 
         switch (errorCondition.category) {
             case "Status Code":
-                // Responses have status codes; requests do not. matchInRequest is ignored here.
                 result = String.valueOf(response.statusCode()).equals(errorCondition.value);
                 DebugLog.log("Model: Status code " + response.statusCode() + " compared to '"
                         + errorCondition.value + "'. Result: " + result);
@@ -541,22 +438,18 @@ public class Model implements HttpHandler{
                 return result;
             case "Header":
                 List<HttpHeader> headers = useRequest ? request.headers() : response.headers();
+                boolean anyValue = errorCondition.value == null || errorCondition.value.isEmpty();
 
+                // Header names are case-insensitive. A blank value matches on the header's presence alone.
                 for (HttpHeader header : headers) {
-                    // Match the configured header by name, case-insensitively, since header names are not
-                    // case sensitive. A blank value means presence alone triggers; a non-blank value means
-                    // the matched header's value must also contain it.
-                    if (header.name().equalsIgnoreCase(errorCondition.headerName)) {
-                        if (errorCondition.value == null || errorCondition.value.isEmpty()
-                                || header.value().contains(errorCondition.value)) {
-                            result = true;
-                        }
+                    if (header.name().equalsIgnoreCase(errorCondition.headerName)
+                            && (anyValue || header.value().contains(errorCondition.value))) {
+                        result = true;
                     }
                 }
                 DebugLog.log("Model: " + headers.size() + " " + errorCondition.source()
                         + " header(s) searched for name '" + errorCondition.headerName + "'"
-                        + (errorCondition.value == null || errorCondition.value.isEmpty()
-                                ? "" : " containing '" + errorCondition.value + "'")
+                        + (anyValue ? "" : " containing '" + errorCondition.value + "'")
                         + ". Result: " + result);
                 return result;
             default:
@@ -566,264 +459,135 @@ public class Model implements HttpHandler{
     }
 
 
-    // Applies the negation checkbox that belongs to a single error condition. Through the UI, negation
-    // can only be attached to an individual error condition, never to a group of them.
-    private Boolean evaluateNegation(Boolean result, Boolean isNegated) {
-        if (isNegated) {
-            DebugLog.log("Model: Error condition is negated. Negating result " + result + ".");
-            return !result;
-        }
-        else {
-            return result;
-        }
-    }
+    /*
+    ------------------------------------------------------------------ Corrective and followup calls
+     */
 
-
-    // Processes text replacements and extractions and sends requests.
-    private void processCorrectiveCalls(TriggerCondition triggerCondition, Map<ExtractText, String> extracted) {
-        processCorrectiveCalls(triggerCondition, extracted, null);
-    }
-
-    // trace, when supplied, collects one TestCallStep per corrective call for the Test Calls table.
+    // Sends each call in the trigger condition's set. trace, if given, gets one TestCallStep per call.
     private void processCorrectiveCalls(TriggerCondition triggerCondition, Map<ExtractText, String> extracted,
                                         List<TestCallStep> trace) {
         DebugLog.log("Model: Processing corrective call set: " + triggerCondition.correctiveCallSet.name
                 + ". Call sequence size: " + triggerCondition.correctiveCallSet.correctiveCallList.size());
 
         int callIndex = 0;
-        String rawRequest;
-        String rawResponse;
 
-        for (CorrectiveCall correctiveCall : triggerCondition.correctiveCallSet.correctiveCallList) {
-            HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
-            rawRequest = correctiveCallRequest.toString();
+        for (CorrectiveCall correctiveCall : new ArrayList<>(triggerCondition.correctiveCallSet.correctiveCallList)) {
+            // A call that throws is skipped. The rest of the set still runs.
+            try {
+                processCorrectiveCall(triggerCondition, correctiveCall, callIndex, extracted, trace);
+            }
+            catch (Exception e) {
+                DebugLog.log("[Error] Model: Corrective call at row " + callIndex + " threw, skipping it. " + e);
 
-            // Declared inside the loop on purpose. It used to be declared outside, which meant a call with
-            // no replacements of its own re-sent the previous call's modified request.
-            String updatedRequest = null;
-
-            HttpRequestResponse sentRequestResponse;
-            HttpResponse sentResponse;
-
-            DebugLog.log("Model: Processing corrective call at row " + callIndex + ". Replacements: "
-                    + correctiveCall.replaceList.size() + ", extractions: " + correctiveCall.extractList.size());
-
-            callIndex++;
-
-            int replacementsApplied = 0;
-
-            if (!correctiveCall.replaceList.isEmpty()) {
-                for (ReplaceText replaceText : correctiveCall.replaceList) {
-                    DebugLog.log("Model: Applying replacement to corrective call request: " + replaceText);
-
-                    /*
-                    The extraction this replacement points at has nothing in the map until it actually
-                    runs. Without this guard the replacement inserts the four characters "null" into the
-                    request. extractText itself is null when the user adds a replacement without picking
-                    anything from the "Pick from Extraction" dropdown.
-                     */
-                    String replacement = replaceText.extractText == null
-                            ? null
-                            : extracted.get(replaceText.extractText);
-
-                    if (replacement == null) {
-                        DebugLog.log("[Error] Model: Replacement has no extracted text to insert, skipping it: "
-                                + replaceText.name);
-                        continue;
-                    }
-
-                    // Each replacement works on the result of the one before it, not on rawRequest, so that
-                    // every replacement in the list survives instead of only the last one.
-                    String textToReplace = updatedRequest != null ? updatedRequest : rawRequest;
-                    String replacedRequest = replaceBetween(textToReplace, replaceText.startString,
-                            replaceText.stopString, replacement, replaceText.occurrence);
-
-                    if (replacedRequest != null) {
-                        updatedRequest = replacedRequest;
-                        replacementsApplied++;
-                    }
-                    else {
-                        // Hold on to whatever the earlier replacements produced. Overwriting updatedRequest with
-                        // null here used to throw away replacements that had already applied cleanly.
-                        DebugLog.log("[Error] Model: Replacement did not apply, leaving request as it was: "
-                                + replaceText.name);
-                    }
+                if (trace != null) {
+                    TestCallStep step = new TestCallStep(trace.size() + 1, TestCallStep.CORRECTIVE,
+                            triggerCondition.correctiveCallSet.name + " / Call " + callIndex,
+                            null, TestCallStep.ERROR);
+                    step.detail = "threw: " + e;
+                    trace.add(step);
                 }
             }
 
-            if (updatedRequest != null) {
-                DebugLog.log("Model: Sending corrective call with replaced request body.");
-                HttpRequest rebuiltRequest = HttpRequest.httpRequest(correctiveCallRequest.httpService(), updatedRequest);
-                rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
-                sentRequestResponse = Controller.montoyaApi.http().sendRequest(rebuiltRequest);
+            callIndex++;
+        }
+    }
+
+    // One corrective call: apply its replacements, send it, run its extractions.
+    private void processCorrectiveCall(TriggerCondition triggerCondition, CorrectiveCall correctiveCall,
+                                       int callIndex, Map<ExtractText, String> extracted,
+                                       List<TestCallStep> trace) {
+        HttpRequest correctiveCallRequest = correctiveCall.requestResponse.request();
+        String rawRequest = correctiveCallRequest.toString();
+
+        DebugLog.log("Model: Processing corrective call at row " + callIndex + ". Replacements: "
+                + correctiveCall.replaceList.size() + ", extractions: " + correctiveCall.extractList.size());
+
+        Replaced replaced = applyReplacements(rawRequest, correctiveCall.replaceList, extracted);
+        HttpRequestResponse sentRequestResponse = send(correctiveCallRequest, replaced.request());
+        HttpResponse sentResponse = sentRequestResponse.response();
+
+        // Added before the extractions run, so the row exists even if they fail.
+        TestCallStep step = null;
+        if (trace != null) {
+            step = new TestCallStep(trace.size() + 1, TestCallStep.CORRECTIVE,
+                    triggerCondition.correctiveCallSet.name + " / Call " + callIndex,
+                    sentRequestResponse,
+                    sentResponse == null ? TestCallStep.NO_RESPONSE : TestCallStep.SENT);
+            step.replacementsTotal = correctiveCall.replaceList.size();
+            step.replacementsApplied = replaced.applied();
+            step.extractionsRun = correctiveCall.extractList.size();
+            step.detail = "fired by " + triggerCondition.name;
+            trace.add(step);
+        }
+
+        // No response means only request extractions can run. The rest of the set still gets its chance.
+        if (sentResponse == null) {
+            DebugLog.log("[Error] Model: Corrective call at row " + callIndex
+                    + " produced no response. Its response extractions cannot run.");
+        }
+
+        for (ExtractText extractText : new ArrayList<>(correctiveCall.extractList)) {
+            String source;
+
+            if (extractText.extractFromResponse) {
+                if (sentResponse == null) {
+                    DebugLog.log("[Error] Model: No response to extract from, skipping extraction: "
+                            + extractText.name);
+                    continue;
+                }
+                source = sentResponse.toString();
+            }
+            else if (extractText.extractFromRequest) {
+                source = rawRequest;
             }
             else {
-                DebugLog.log("Model: Sending corrective call with unmodified request body.");
-                sentRequestResponse = Controller.montoyaApi.http().sendRequest(correctiveCallRequest);
+                DebugLog.log("[Error] Extraction is set to extract from neither the request nor the response: "
+                        + extractText.debugString());
+                continue;
             }
-            sentResponse = sentRequestResponse.response();
 
-            /*
-            Recorded before the extractions run, so the row exists even if an extraction below fails.
-            The extraction tallies are filled in afterwards.
-             */
-            TestCallStep step = null;
+            if (extract(extractText, source, extracted, "corrective call") && step != null) {
+                step.extractionsHit++;
+            }
+        }
+    }
+
+    // The followup has replacements only, no extractions of its own.
+    private HttpResponse sendFollowupCall(CorrectiveCall followupCall, String setName,
+                                          Map<ExtractText, String> extracted, List<TestCallStep> trace) {
+        HttpRequest followupCallRequest = followupCall.requestResponse.request();
+
+        DebugLog.log("Model: Processing followup call for " + setName + ". Replacements: " + followupCall.replaceList.size());
+
+        Replaced replaced = applyReplacements(followupCallRequest.toString(), followupCall.replaceList, extracted);
+
+        // Callers already treat a null response as "return the original response".
+        HttpRequestResponse sentRequestResponse;
+        try {
+            sentRequestResponse = send(followupCallRequest, replaced.request());
+        }
+        catch (Exception e) {
+            DebugLog.log("[Error] Model: Sending the followup call threw: " + e);
+
             if (trace != null) {
-                step = new TestCallStep(trace.size() + 1, TestCallStep.CORRECTIVE,
-                        triggerCondition.correctiveCallSet.name + " / Call " + (callIndex - 1),
-                        sentRequestResponse,
-                        sentResponse == null ? TestCallStep.NO_RESPONSE : TestCallStep.SENT);
-                step.replacementsTotal = correctiveCall.replaceList.size();
-                step.replacementsApplied = replacementsApplied;
-                step.extractionsRun = correctiveCall.extractList.size();
-                step.detail = "fired by " + triggerCondition.name;
+                TestCallStep step = new TestCallStep(trace.size() + 1, TestCallStep.FOLLOWUP, setName + " / Followup",
+                        null, TestCallStep.ERROR);
+                step.replacementsTotal = followupCall.replaceList.size();
+                step.replacementsApplied = replaced.applied();
+                step.detail = "send threw: " + e;
                 trace.add(step);
             }
 
-            /*
-            A corrective call that never completed (connection refused, timeout, TLS failure) comes
-            back with a null response, exactly as the intercepted request can. This used to be
-            dereferenced unguarded a few lines down and threw NullPointerException out of the HTTP
-            handler, taking the whole interception with it.
-
-            Carrying on rather than abandoning the set: an extraction reading this call's own REQUEST
-            still works without a response, and any replacement whose extraction did not run is already
-            skipped downstream instead of inserting the text "null". So the remaining calls and the
-            followup still get their chance, and what is lost is only what genuinely depended on the
-            response that never arrived.
-             */
-            if (sentResponse == null) {
-                DebugLog.log("[Error] Model: Corrective call at row " + (callIndex - 1)
-                        + " produced no response. Its response extractions cannot run.");
-            }
-
-            if (!correctiveCall.extractList.isEmpty()) {
-                for (ExtractText extractText : correctiveCall.extractList) {
-                    if (extractText.extractFromResponse) { // Needs to come AFTER corrective call is made, this extracts from whatever is sent from repeater
-                        DebugLog.log("Model: Extracting from corrective call response: " + extractText.debugString());
-
-                        // Nothing to read when the call never completed. See the null check above.
-                        if (sentResponse == null) {
-                            DebugLog.log("[Error] Model: No response to extract from, skipping extraction: "
-                                    + extractText.name);
-                            continue;
-                        }
-
-                        rawResponse = sentResponse.toString();
-                        String extractedText = extractBetween(rawResponse, extractText.startString, extractText.stopString);
-
-                        if (extractedText != null) {
-                            extractedText = Utils.applyUrlTransform(extractedText, extractText.urlEncodeDecode);
-                            extracted.put(extractText, extractedText);
-                            DebugLog.log("Model: Extracted text: " + extractedText);
-                            if (step != null) {
-                                step.extractionsHit++;
-                            }
-                        }
-                    }
-                    else if (extractText.extractFromRequest) {
-                        DebugLog.log("Model: Extracting from corrective call request: " + extractText.debugString());
-
-                        String extractedText = extractBetween(rawRequest, extractText.startString, extractText.stopString);
-                        if (extractedText != null) {
-                            extractedText = Utils.applyUrlTransform(extractedText, extractText.urlEncodeDecode);
-                            extracted.put(extractText, extractedText);
-                            DebugLog.log("Model: Extracted text: " + extractedText);
-                            if (step != null) {
-                                step.extractionsHit++;
-                            }
-                        }
-                    }
-                    else {
-                        // Not possible but whatever
-                        DebugLog.log("[Error] Extraction is set to extract from neither the request nor the response: "
-                                + extractText.debugString());
-                    }
-                }
-            }
+            return null;
         }
-    }
-
-    private HttpResponse sendFollowupCall(Map<ExtractText, String> extracted) {
-        return sendFollowupCall(extracted, null);
-    }
-
-    private HttpResponse sendFollowupCall(Map<ExtractText, String> extracted, List<TestCallStep> trace) {
-        DebugLog.log("Model: Sending followup call...");
-
-        String rawRequest;
-        String updatedRequest = null;
-
-
-        HttpRequest followupCallRequest = followupCall.requestResponse.request();
-        rawRequest = followupCallRequest.toString();
-
-        HttpRequestResponse sentRequestResponse;
-        HttpResponse sentResponse;
-
-        /*
-        Replacements only. The followup call has no extractions of its own: there is no UI to add any
-        (the Followup tab's dropdown only CONSUMES extractions made on corrective calls) and nothing
-        here processes followupCall.extractList. This used to log that list's size, which is always 0
-        and read as though the feature existed.
-         */
-        DebugLog.log("Model: Processing followup call. Replacements: "
-                + followupCall.replaceList.size());
-
-
-        int replacementsApplied = 0;
-
-        if (!followupCall.replaceList.isEmpty()) {
-            for (ReplaceText replaceText : followupCall.replaceList) {
-                DebugLog.log("Model: Applying replacement to followup call request: " + replaceText);
-
-                // Same as processCorrectiveCalls(). Nothing to insert means skip the replacement rather
-                // than writing "null" into the request.
-                String replacement = replaceText.extractText == null
-                        ? null
-                        : extracted.get(replaceText.extractText);
-
-                if (replacement == null) {
-                    DebugLog.log("[Error] Model: Replacement has no extracted text to insert, skipping it: "
-                            + replaceText.name);
-                    continue;
-                }
-
-                // Same as processCorrectiveCalls(). Chain off the previous result so every replacement
-                // survives, and keep the previous result if one of them fails to apply.
-                String textToReplace = updatedRequest != null ? updatedRequest : rawRequest;
-                String replacedRequest = replaceBetween(textToReplace, replaceText.startString,
-                        replaceText.stopString, replacement, replaceText.occurrence);
-
-                if (replacedRequest != null) {
-                    updatedRequest = replacedRequest;
-                    replacementsApplied++;
-                }
-                else {
-                    DebugLog.log("[Error] Model: Replacement did not apply, leaving request as it was: "
-                            + replaceText.name);
-                }
-            }
-        }
-
-        if (updatedRequest != null) {
-            DebugLog.log("Model: Sending followup call with replaced request body.");
-            HttpRequest rebuiltRequest = HttpRequest.httpRequest(followupCallRequest.httpService(), updatedRequest);
-            rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
-            sentRequestResponse = Controller.montoyaApi.http().sendRequest(rebuiltRequest);
-        }
-        else {
-            DebugLog.log("Model: Sending followup call with unmodified request body.");
-            sentRequestResponse = Controller.montoyaApi.http().sendRequest(followupCallRequest);
-        }
-        sentResponse = sentRequestResponse.response();
+        HttpResponse sentResponse = sentRequestResponse.response();
 
         if (trace != null) {
-            TestCallStep step = new TestCallStep(trace.size() + 1, TestCallStep.FOLLOWUP, "Followup",
+            TestCallStep step = new TestCallStep(trace.size() + 1, TestCallStep.FOLLOWUP, setName + " / Followup",
                     sentRequestResponse,
                     sentResponse == null ? TestCallStep.NO_RESPONSE : TestCallStep.SENT);
             step.replacementsTotal = followupCall.replaceList.size();
-            step.replacementsApplied = replacementsApplied;
+            step.replacementsApplied = replaced.applied();
             step.detail = "response returned to the caller";
             trace.add(step);
         }
@@ -831,108 +595,184 @@ public class Model implements HttpHandler{
         return sentResponse;
     }
 
-    private String replaceBetween(String text, String start, String stop, String replacement) {
-        return replaceBetween(text, start, stop, replacement, 1);
-    }
-
-    private String replaceBetween(String text, String start, String stop, String replacement,
-                                  int occurrence) {
-        DebugLog.log("Model: replaceBetween() start string: '" + start + "', stop string: '" + stop
-                + "', occurrence: " + occurrence + ", within text : '" + text + "'");
-
-
-        int s = findStart(text, start, occurrence, "replaced");
-        if (s == -1) {
-            return null;
+    // Sends original, or updatedRequest rebuilt against original's service when there is one.
+    private HttpRequestResponse send(HttpRequest original, String updatedRequest) {
+        if (updatedRequest == null) {
+            DebugLog.log("Model: Sending request unmodified.");
+            return Controller.montoyaApi.http().sendRequest(original);
         }
 
-        int e = findStop(text, stop, s, "replaced");
-        if (e == -1) {
-            return null;
-        }
-
-        DebugLog.log("Model: Replacing text between index " + s + " and index " + e + ".");
-        return text.substring(0, s) + replacement + text.substring(e);
-    }
-
-    private String extractBetween(String text, String start, String stop) {
-        DebugLog.log("Model: extractBetween() start string: '" + start + "', stop string: '" + stop + "' within text : '" + text + "'");
-
-        // Extractions always take the first occurrence. ReplaceText carries an occurrence field;
-        // ExtractText does not yet, and adding one is the same three line change plus a UI field.
-        int s = findStart(text, start, 1, "extracted");
-        if (s == -1) {
-            return null;
-        }
-
-        int e = findStop(text, stop, s, "extracted");
-        if (e == -1) {
-            return null;
-        }
-
-        DebugLog.log("Model: Extracting text between index " + s + " and index " + e + ".");
-        return text.substring(s, e);
+        DebugLog.log("Model: Sending request with replacements applied.");
+        HttpRequest rebuiltRequest = HttpRequest.httpRequest(original.httpService(), updatedRequest);
+        rebuiltRequest = rebuiltRequest.withBody(rebuiltRequest.bodyToString()); // recalculates content-length
+        return Controller.montoyaApi.http().sendRequest(rebuiltRequest);
     }
 
     /*
-    Resolves a start string to the index the extraction or replacement should begin at, or -1 if it
-    cannot be found.
-
-    Utils.START_OF_LINE is a marker rather than real text, so there is nothing in the message to
-    indexOf(). It means the very beginning of the message, which is index 0. It used to be fed straight
-    into indexOf(), which always returned -1, so every selection made at the very start of a message
-    quietly did nothing at all.
+    Applies each replacement in turn, each working on the previous one's result. A replacement whose
+    extraction found nothing is skipped rather than inserting "null".
      */
-    private int findStart(String text, String start, int occurrence, String action) {
-        if (start.equals(Utils.START_OF_LINE)) {
-            DebugLog.log("Model: Start string is " + Utils.START_OF_LINE + ". Starting at index 0.");
+    private Replaced applyReplacements(String rawRequest, List<ReplaceText> replaceList,
+                                       Map<ExtractText, String> extracted) {
+        String updatedRequest = null;
+        int applied = 0;
+
+        for (ReplaceText replaceText : new ArrayList<>(replaceList)) {
+            DebugLog.log("Model: Applying replacement: " + replaceText);
+
+            // extractText is null when nothing was picked from the "Pick from Extraction" dropdown.
+            String replacement = replaceText.extractText == null ? null : extracted.get(replaceText.extractText);
+
+            if (replacement == null) {
+                DebugLog.log("[Error] Model: Replacement has no extracted text to insert, skipping it: "
+                        + replaceText.name);
+                continue;
+            }
+
+            String textToReplace = updatedRequest != null ? updatedRequest : rawRequest;
+            String replacedRequest = replaceBetween(textToReplace, replaceText.startString,
+                    replaceText.stopString, replacement);
+
+            if (replacedRequest != null) {
+                updatedRequest = replacedRequest;
+                applied++;
+            }
+            else {
+                DebugLog.log("[Error] Model: Replacement did not apply, leaving request as it was: "
+                        + replaceText.name);
+            }
+        }
+
+        return new Replaced(updatedRequest, applied);
+    }
+
+
+    /*
+    ------------------------------------------------------------------ Extraction
+     */
+
+    // Runs the errored call's extractions against the intercepted exchange. Returns how many found something.
+    private int extractFromErrorCall(HttpRequestResponse requestResponse, Map<ExtractText, String> extracted) {
+        if (errorCall == null || errorCall.extractList.isEmpty()) {
             return 0;
         }
 
-        /*
-        Walks forward to the requested occurrence. Matches are counted as non-overlapping, stepping
-        past each one by the whole key, because "the 2nd time this string appears" is how someone
-        reading the message counts them. Anything below 1 is treated as the first occurrence.
-         */
-        int wanted = Math.max(1, occurrence);
-        int from = 0;
-        int s = -1;
+        String rawRequest = requestResponse.request().toString();
+        String rawResponse = requestResponse.response().toString();
+        int hits = 0;
 
-        for (int n = 0; n < wanted; n++) {
-            s = text.indexOf(start, from);
+        DebugLog.log("Model: Running " + errorCall.extractList.size()
+                + " extraction(s) against the errored call.");
 
-            if (s == -1) {
-                if (n == 0) {
-                    DebugLog.log("Model: Start string not found in text. Nothing " + action + ".");
-                }
-                else {
-                    DebugLog.log("Model: Start string found only " + n + " time(s), occurrence "
-                            + wanted + " requested. Nothing " + action + ".");
-                }
-                return -1;
+        for (ExtractText extractText : new ArrayList<>(errorCall.extractList)) {
+            String source = extractText.extractFromRequest ? rawRequest : rawResponse;
+            if (extract(extractText, source, extracted, "errored call")) {
+                hits++;
             }
-
-            from = s + start.length();
         }
 
-        if (wanted > 1) {
-            DebugLog.log("Model: Using occurrence " + wanted + " of the start string, at index " + s + ".");
+        return hits;
+    }
+
+    // Runs one extraction against source and stores the result. Returns false if nothing was extracted.
+    private boolean extract(ExtractText extractText, String source, Map<ExtractText, String> extracted,
+                            String from) {
+        try {
+            DebugLog.log("Model: Extracting from " + from + ": " + extractText.debugString());
+            String extractedText = extractBetween(source, extractText.startString, extractText.stopString);
+
+            if (extractedText == null) {
+                DebugLog.log("[Error] Model: Extraction from " + from + " found nothing: " + extractText.name);
+                return false;
+            }
+
+            extractedText = Utils.applyUrlTransform(extractedText, extractText.urlEncodeDecode);
+            extracted.put(extractText, extractedText);
+            DebugLog.log("Model: Extracted text: " + extractedText);
+            return true;
+        }
+        catch (Exception e) {
+            DebugLog.log("[Error] Model: Extraction from " + from + " threw, skipping it: "
+                    + extractText.name + ". " + e);
+            return false;
+        }
+    }
+
+    // Returns null if the start or stop string isn't found.
+    private String replaceBetween(String text, String start, String stop, String replacement) {
+        DebugLog.log("Model: replaceBetween() start string: '" + start + "', stop string: '" + stop
+                + "' within text : '" + text + "'");
+
+        try {
+            int s = findStart(text, start, "replaced");
+            if (s == -1) {
+                return null;
+            }
+
+            int e = findStop(text, stop, s, "replaced");
+            if (e == -1) {
+                return null;
+            }
+
+            DebugLog.log("Model: Replacing text between index " + s + " and index " + e + ".");
+            return text.substring(0, s) + replacement + text.substring(e);
+        }
+        catch (Exception ex) {
+            DebugLog.log("[Error] Model: replaceBetween() threw. Nothing replaced. " + ex);
+            return null;
+        }
+    }
+
+    // Returns null if the start or stop string isn't found.
+    private String extractBetween(String text, String start, String stop) {
+        DebugLog.log("Model: extractBetween() start string: '" + start + "', stop string: '" + stop + "' within text : '" + text + "'");
+
+        try {
+            int s = findStart(text, start, "extracted");
+            if (s == -1) {
+                return null;
+            }
+
+            int e = findStop(text, stop, s, "extracted");
+            if (e == -1) {
+                return null;
+            }
+
+            DebugLog.log("Model: Extracting text between index " + s + " and index " + e + ".");
+            return text.substring(s, e);
+        }
+        catch (Exception ex) {
+            DebugLog.log("[Error] Model: extractBetween() threw. Nothing extracted. " + ex);
+            return null;
+        }
+    }
+
+    // Index just past the first occurrence of start, or -1 if not found. Utils.START_OF_MESSAGE means index 0.
+    private int findStart(String text, String start, String action) {
+        if (start.equals(Utils.START_OF_MESSAGE)) {
+            DebugLog.log("Model: Start string is " + Utils.START_OF_MESSAGE + ". Starting at index 0.");
+            return 0;
+        }
+
+        int s = text.indexOf(start);
+        if (s == -1) {
+            DebugLog.log("Model: Start string not found in text. Nothing " + action + ".");
+            return -1;
         }
 
         return s + start.length();
     }
 
-    // Same as findStart(). Utils.END_OF_LINE means the very end of the message, which is index length().
+    // Index of stop at or after fromIndex, or -1 if not found. Utils.END_OF_MESSAGE means the end of text.
     private int findStop(String text, String stop, int fromIndex, String action) {
-        if (stop.equals(Utils.END_OF_LINE)) {
-            DebugLog.log("Model: Stop string is " + Utils.END_OF_LINE + ". Stopping at index " + text.length() + ".");
+        if (stop.equals(Utils.END_OF_MESSAGE)) {
+            DebugLog.log("Model: Stop string is " + Utils.END_OF_MESSAGE + ". Stopping at index " + text.length() + ".");
             return text.length();
         }
 
         int e = text.indexOf(stop, fromIndex);
         if (e == -1) {
             DebugLog.log("Model: Stop string not found after start string. Nothing " + action + ".");
-            return -1;
         }
 
         return e;

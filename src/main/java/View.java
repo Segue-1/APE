@@ -3,7 +3,7 @@ import java.awt.*;
 
 
 public class View {
-    public JPanel mainPanel;
+    private JPanel mainPanel;
     public ErrorDetectionPanel errorDetectionPanel;
     public CorrectiveCallsPanel correctiveCallsPanel;
     public FollowUpPanel followUpPanel;

@@ -1,4 +1,3 @@
-import burp.api.montoya.http.message.HttpRequestResponse;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
@@ -66,11 +65,7 @@ public class TriggerConditionTableModel extends AbstractTableModel implements De
         }
     }
 
-    /*
-    Re-numbers the rows after a deletion. Calls the object's own setName() rather than rebuilding
-    the string here, which is how ErrorCondition rows ended up renamed from "Error Condition N" to
-    "Condition N" after a delete.
-     */
+    // Re-numbers the rows after a deletion.
     private void resetNames(int start) {
         for (int i = start; i < triggerConditions.size(); i++) {
             triggerConditions.get(i).index--;

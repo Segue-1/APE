@@ -42,7 +42,7 @@ public class TriggerCondition {
         name = "Trigger Condition " + index;
     }
 
-    public void buildConditionString() {
+    private void buildConditionString() {
         StringBuilder conditionStringBuilder = new StringBuilder();
         conditionString = "";
 

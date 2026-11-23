@@ -3,19 +3,10 @@ public class ErrorCondition {
     public String name;
     public String category;
     public String value;
-    // Only used by the "Header" category: the name of the response header to look for. The value field
-    // then holds an optional substring the header's value must contain. Null for Status Code / Body.
+    // Header category only: the header name to match. value is then an optional substring of its value.
     public String headerName;
 
-    /*
-    Whether to match the REQUEST rather than the response. Defaults to false, the response, which is
-    what every condition did before this existed.
-
-    Body and Header conditions can meaningfully apply to either half of the exchange: the Error
-    Detection panel shows both editors, so a header a user picked out of the request -- "Connection",
-    say -- is a natural thing to want to match, and until now it silently never fired because only the
-    response was ever examined. Status Code has no request equivalent and ignores this.
-     */
+    // Match the request instead of the response. Ignored by Status Code.
     public boolean matchInRequest;
 
     public String description;
@@ -45,7 +36,7 @@ public class ErrorCondition {
         name = "Error Condition " + index;
     }
 
-    public void setDescription(String input) {
+    private void setDescription(String input) {
         switch (category) {
             case "Status Code" -> description = "APE will trigger if Status Code is " + input;
             case "Body" -> description = "APE will trigger if text '" + input + "' is found in the "
